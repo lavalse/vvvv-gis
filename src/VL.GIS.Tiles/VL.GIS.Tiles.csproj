@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <AssemblyName>VL.GIS.Tiles</AssemblyName>
+    <RootNamespace>VL.GIS.Tiles</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>VL.GIS Contributors</Authors>
+    <Description>Map tile fetching nodes for vvvv gamma (OSM, WMTS, XYZ)</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BruTile" Version="6.0.0" />
+    <PackageReference Include="BruTile.MbTiles" Version="6.0.0" />
+    <PackageReference Include="System.Reactive" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VL.GIS.Core\VL.GIS.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    VL.GIS — vvvv GIS Library Entry Point
+
+    This file is the vvvv patch that bootstraps the VL.GIS package.
+    It references the three C# assemblies so their public static methods
+    appear as nodes in the vvvv NodeBrowser.
+
+    To use VL.GIS in a vvvv patch:
+      1. Open vvvv gamma
+      2. Go to Quad menu → Manage NuGet Packages
+      3. Add VL.GIS (or reference the local build DLLs via Edit → Preferences → Paths)
+      4. Press Ctrl+N to open NodeBrowser
+      5. Type "GIS" to find all nodes
+-->
+<Document xmlns="l3">
+
+    <!-- ── Assembly References ──────────────────────────────────────────── -->
+    <!-- These tell vvvv which DLLs to scan for node-generating classes.    -->
+    <!-- When installed as a NuGet package the paths are resolved by vvvv.  -->
+
+    <NuGetDependencies>
+        <Package name="NetTopologySuite" version="2.6.0" />
+        <Package name="ProjNet" version="2.1.0" />
+        <Package name="BruTile" version="6.0.0" />
+        <Package name="BruTile.MbTiles" version="6.0.0" />
+        <Package name="System.Reactive" version="6.0.1" />
+        <Package name="NetTopologySuite.IO.GeoJSON" version="4.0.0" />
+    </NuGetDependencies>
+
+    <!-- ── Node Categories ───────────────────────────────────────────────── -->
+    <!--
+        Node paths in vvvv NodeBrowser:
+
+        GIS.Geometry
+          CreatePoint, CreatePolygon, CreateLineString, CreateBoundingBox
+          Buffer, BufferWithStyle, Intersection, Union, Difference, SymmetricDifference
+          ConvexHull, Centroid, Envelope, Simplify
+          Intersects, Contains, Within, Touches, Disjoint, Covers
+          Area, Length, Distance
+          GetGeometries, GetCoordinates
+
+        GIS.Projection
+          Wgs84, WebMercator, CreateUtm
+          ParseWkt, CreateTransformation
+          ReprojectPoint, ReprojectPointGeometry, ReprojectGeometry, ReprojectPoints
+          LonLatToWebMercator, WebMercatorToLonLat
+          UtmZoneFromLongitude, MetresPerDegreeLongitude, MetresPerDegreeLatitude
+
+        GIS.Serialization
+          ParseWkt, TryParseWkt, ToWkt
+          ParseWkb, ToWkb, ParseHexWkb, ToHexWkb
+          ParseGeoJsonGeometry, TryParseGeoJsonGeometry, ToGeoJsonGeometry
+          GetBoundingBox, BoundingBoxCenter
+
+        GIS.Tiles
+          OsmTileSource, OpenTopoMapTileSource, XyzTileSource, WmtsTileSource
+          TileSchemaName, TileSchemaZoomRange, TileAttribution
+          CreateTileIndex, TileIndexFromLonLat, TileIndicesForBounds, TileBounds
+          FetchTileBytes, FetchTileToFile, FetchTileAsync, FetchTilesAsync
+          CreateFileCache, IsTileCached
+
+        GIS.Stride.Coordinates
+          CreateSceneOrigin, LonLatToLocal, LocalToLonLat
+          WebMercatorToLocal, CreateWebMercatorOrigin
+
+        GIS.Stride.Tessellation
+          TessellatePolygon, TessellateMultiPolygon
+          LineStringToPositions, LineStringToRibbonMesh
+          CreateTileQuad
+
+        GIS.Stride.Elevation
+          CreateFlatHeightmap, HeightmapFromArray, NormalizeHeightmap
+          SampleHeightmap, GenerateNormals, HeightmapToMesh
+    -->
+
+    <!-- ── Entry patch (empty — nodes come from C# assemblies) ──────────── -->
+    <MainPatch>
+        <!--
+            VL.GIS nodes are exposed purely via C# static methods.
+            No vvvv-level definitions are needed here for Phase 1.
+            Future phases may add VL-defined composite nodes (e.g. MapView).
+        -->
+    </MainPatch>
+
+</Document>

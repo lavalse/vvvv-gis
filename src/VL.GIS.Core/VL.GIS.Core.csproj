@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <AssemblyName>VL.GIS.Core</AssemblyName>
+    <RootNamespace>VL.GIS.Core</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>VL.GIS Contributors</Authors>
+    <Description>Core GIS geometry and projection nodes for vvvv gamma</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NuspecFile>..\..\VL.GIS.nuspec</NuspecFile>
+    <NuspecBasePath>..\..\</NuspecBasePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NetTopologySuite" Version="2.6.0" />
+    <PackageReference Include="ProjNet" Version="2.1.0" />
+  </ItemGroup>
+
+</Project>

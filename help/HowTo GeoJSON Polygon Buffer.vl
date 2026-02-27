@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    HowTo: Parse a GeoJSON polygon, buffer it, and reproject to Web Mercator.
+
+    Demonstrates:
+    - ParseGeoJsonGeometry: parse a GeoJSON string into an NTS Geometry
+    - Buffer: expand the polygon by a given distance
+    - Wgs84 / WebMercator: get CRS objects
+    - CreateTransformation: build a WGS84→WebMercator transform
+    - ReprojectGeometry: apply the transform to the buffered polygon
+    - ToWkt: export the result to WKT for inspection
+
+    Patch layout (pseudo-code):
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  [IOBox: GeoJSON string] ──────► [ParseGeoJsonGeometry]             │
+    │                                          │                          │
+    │  [IOBox: Buffer distance=0.001] ─────────┤► [Buffer] ─────────┐    │
+    │  [IOBox: Segments=32] ───────────────────┘                     │    │
+    │                                                                 │    │
+    │  [Wgs84]     ─────────────────────────────────────────────┐    │    │
+    │  [WebMercator] ───────────────────────────────────────────┤    │    │
+    │                                          [CreateTransform] ◄───┘    │
+    │                                                 │                   │
+    │                                  [ReprojectGeometry] ◄──────────┘   │
+    │                                                 │                   │
+    │                                             [ToWkt]                 │
+    │                                                 │                   │
+    │                                    [IOBox (display output)]         │
+    └─────────────────────────────────────────────────────────────────────┘
+
+    Example GeoJSON input (Brandenburg Gate, Berlin):
+    {
+      "type": "Polygon",
+      "coordinates": [[[13.376, 52.515],[13.380, 52.515],
+                        [13.380, 52.517],[13.376, 52.517],[13.376, 52.515]]]
+    }
+-->
+<Document xmlns="l3">
+  <MainPatch>
+    <Nodes>
+      <Node id="1" name="IOBox (String)" bounds="50, 50, 400, 80">
+        <Properties>
+          <Property name="value" value='{"type":"Polygon","coordinates":[[[13.376,52.515],[13.380,52.515],[13.380,52.517],[13.376,52.517],[13.376,52.515]]]}' />
+          <Property name="label" value="GeoJSON Polygon" />
+        </Properties>
+      </Node>
+      <Node id="2" name="ParseGeoJsonGeometry [GIS.Serialization]" bounds="50, 160, 280, 40" />
+      <Node id="3" name="IOBox (Value)" bounds="50, 220, 160, 30">
+        <Properties>
+          <Property name="value" type="double" value="0.001" />
+          <Property name="label" value="Buffer Distance (degrees)" />
+        </Properties>
+      </Node>
+      <Node id="4" name="Buffer [GIS.Geometry]" bounds="380, 160, 200, 40" />
+      <Node id="5" name="Wgs84 [GIS.Projection]" bounds="50, 300, 160, 40" />
+      <Node id="6" name="WebMercator [GIS.Projection]" bounds="240, 300, 160, 40" />
+      <Node id="7" name="CreateTransformation [GIS.Projection]" bounds="430, 300, 240, 40" />
+      <Node id="8" name="ReprojectGeometry [GIS.Projection]" bounds="380, 380, 240, 40" />
+      <Node id="9" name="ToWkt [GIS.Serialization]" bounds="380, 460, 200, 40" />
+    </Nodes>
+  </MainPatch>
+</Document>

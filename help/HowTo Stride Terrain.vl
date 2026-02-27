@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    HowTo: Generate a terrain mesh from a heightmap in Stride.
+
+    Demonstrates:
+    - CreateSceneOrigin: define a lon/lat reference point for the scene
+    - CreateWebMercatorOrigin: alternative metric origin for tile-aligned scenes
+    - LonLatToLocal: convert WGS84 coordinates to scene-local Vector3
+    - HeightmapFromArray: wrap elevation data into a float[]
+    - NormalizeHeightmap: normalize 0–1 for Stride heightmap component
+    - HeightmapToMesh: generate vertices/indices for a terrain mesh
+    - GenerateNormals: compute surface normals for lighting
+
+    Patch layout (pseudo-code):
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  [IOBox: Lon=13.405] ──────────────────────────────────────────┐    │
+    │  [IOBox: Lat=52.52]  ──────────────────────────────────────────┤    │
+    │                                         [CreateSceneOrigin] ◄──┘    │
+    │                                                 │                   │
+    │  [ElevationData (float[][])] ──► [HeightmapFromArray]               │
+    │                                          │                          │
+    │                              [NormalizeHeightmap] ──► [minElev]     │
+    │                                          │           [maxElev]      │
+    │                                          ▼                          │
+    │  [IOBox: Width=256]  ──────────► [HeightmapToMesh] ──► [positions]  │
+    │  [IOBox: Height=256] ──────────►                   ──► [uvs]        │
+    │  [IOBox: ScaleX=10]  ──────────►                   ──► [indices]    │
+    │  [IOBox: ScaleZ=10]  ──────────►                                    │
+    │                                                                     │
+    │                     [Stride MeshDraw] ◄── positions, uvs, indices   │
+    └─────────────────────────────────────────────────────────────────────┘
+
+    For a simpler approach, use the Stride Heightmap component directly:
+    pass the float[] from NormalizeHeightmap to Stride.Engine.Heightmap.
+-->
+<Document xmlns="l3">
+  <MainPatch>
+    <Nodes>
+      <Node id="1" name="IOBox (Value)" bounds="50, 50, 160, 30">
+        <Properties>
+          <Property name="value" type="double" value="13.405" />
+          <Property name="label" value="Origin Longitude" />
+        </Properties>
+      </Node>
+      <Node id="2" name="IOBox (Value)" bounds="50, 100, 160, 30">
+        <Properties>
+          <Property name="value" type="double" value="52.52" />
+          <Property name="label" value="Origin Latitude" />
+        </Properties>
+      </Node>
+      <Node id="3" name="CreateSceneOrigin [GIS.Stride.Coordinates]" bounds="280, 60, 260, 40" />
+      <Node id="4" name="HeightmapFromArray [GIS.Stride.Elevation]" bounds="280, 180, 260, 40" />
+      <Node id="5" name="NormalizeHeightmap [GIS.Stride.Elevation]" bounds="280, 250, 260, 40" />
+      <Node id="6" name="HeightmapToMesh [GIS.Stride.Elevation]" bounds="280, 340, 260, 40" />
+    </Nodes>
+  </MainPatch>
+</Document>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <AssemblyName>VL.GIS.Stride</AssemblyName>
+    <RootNamespace>VL.GIS.Stride</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>VL.GIS Contributors</Authors>
+    <Description>3D GIS visualization helpers for vvvv gamma via Stride3D</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NetTopologySuite" Version="2.6.0" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VL.GIS.Core\VL.GIS.Core.csproj" />
+  </ItemGroup>
+
+</Project>

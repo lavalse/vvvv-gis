@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>VL.GIS</id>
+    <version>0.1.0</version>
+    <title>VL.GIS — GIS Library for vvvv gamma</title>
+    <authors>VL.GIS Contributors</authors>
+    <owners>VL.GIS Contributors</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/vvvv/VL.GIS</projectUrl>
+    <description>
+      Geographic Information System (GIS) library for vvvv gamma.
+
+      Provides nodes for:
+      - Geometry: create and manipulate Points, Lines, Polygons (NetTopologySuite)
+      - Projection: reproject coordinates between CRS (ProjNet, EPSG:4326, EPSG:3857, UTM)
+      - Serialization: parse/write WKT, WKB, GeoJSON
+      - Tiles: fetch map tiles from OSM, WMTS, XYZ sources (BruTile)
+      - 3D Stride: coordinate conversion, polygon tessellation, heightmap/terrain helpers
+
+      Built for vvvv gamma 7.0 / .NET 8.
+    </description>
+    <summary>GIS geometry, projection, map tiles, and 3D visualization nodes for vvvv gamma.</summary>
+    <releaseNotes>
+      0.1.0 - Initial release (Phase 1 MVP):
+      - Core geometry nodes via NetTopologySuite 2.6.0
+      - Coordinate reprojection via ProjNet 2.1.0
+      - Map tile fetching via BruTile 6.0.0
+      - 3D Stride helpers: CoordinateConverter, GeometryTessellator, ElevationNodes
+    </releaseNotes>
+    <copyright>Copyright 2026 VL.GIS Contributors</copyright>
+    <tags>vvvv gamma gis geospatial geography map tiles projection geometry stride</tags>
+
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="NetTopologySuite"           version="2.6.0" />
+        <dependency id="NetTopologySuite.IO.GeoJSON" version="4.0.0" />
+        <dependency id="ProjNet"                    version="2.1.0" />
+        <dependency id="BruTile"                    version="6.0.0" />
+        <dependency id="BruTile.MbTiles"            version="6.0.0" />
+        <dependency id="System.Reactive"            version="6.0.1" />
+      </group>
+    </dependencies>
+  </metadata>
+
+  <files>
+    <!-- VL entry point -->
+    <file src="VL.GIS.vl"
+          target="VL.GIS.vl" />
+
+    <!-- Core library -->
+    <file src="src\VL.GIS.Core\bin\Release\net8.0\VL.GIS.Core.dll"
+          target="lib\net8.0\VL.GIS.Core.dll" />
+    <file src="src\VL.GIS.Core\bin\Release\net8.0\VL.GIS.Core.xml"
+          target="lib\net8.0\VL.GIS.Core.xml" />
+
+    <!-- Tiles library -->
+    <file src="src\VL.GIS.Tiles\bin\Release\net8.0\VL.GIS.Tiles.dll"
+          target="lib\net8.0\VL.GIS.Tiles.dll" />
+    <file src="src\VL.GIS.Tiles\bin\Release\net8.0\VL.GIS.Tiles.xml"
+          target="lib\net8.0\VL.GIS.Tiles.xml" />
+
+    <!-- Stride helpers library -->
+    <file src="src\VL.GIS.Stride\bin\Release\net8.0\VL.GIS.Stride.dll"
+          target="lib\net8.0\VL.GIS.Stride.dll" />
+    <file src="src\VL.GIS.Stride\bin\Release\net8.0\VL.GIS.Stride.xml"
+          target="lib\net8.0\VL.GIS.Stride.xml" />
+
+    <!-- Help patches -->
+    <file src="help\**\*.*" target="help\" />
+  </files>
+</package>
