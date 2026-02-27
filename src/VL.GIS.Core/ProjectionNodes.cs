@@ -17,23 +17,23 @@ public static class ProjectionNodes
 
     // Well-known CRS instances
     /// <summary>WGS84 geographic CRS (EPSG:4326) — longitude/latitude in degrees.</summary>
-    public static ICoordinateSystem Wgs84() => GeographicCoordinateSystem.WGS84;
+    public static CoordinateSystem Wgs84() => GeographicCoordinateSystem.WGS84;
 
     /// <summary>Web Mercator projected CRS (EPSG:3857) — used by OSM/Google/Bing tiles.</summary>
-    public static ICoordinateSystem WebMercator()
+    public static CoordinateSystem WebMercator()
         => ProjectedCoordinateSystem.WebMercator;
 
     // ── CRS Parsing ───────────────────────────────────────────────────────────
 
     /// <summary>Parse a CRS from a WKT (Well-Known Text) string.</summary>
-    public static ICoordinateSystem ParseWkt(string wkt)
+    public static CoordinateSystem ParseWkt(string wkt)
         => CsFactory.CreateFromWkt(wkt);
 
     /// <summary>
     /// Create a UTM projected CRS for a given zone number and hemisphere.
     /// Useful for metric distance/area calculations.
     /// </summary>
-    public static ICoordinateSystem CreateUtm(int zoneNumber, bool isNorthernHemisphere = true)
+    public static CoordinateSystem CreateUtm(int zoneNumber, bool isNorthernHemisphere = true)
         => ProjectedCoordinateSystem.WGS84_UTM(zoneNumber, isNorthernHemisphere);
 
     /// <summary>
@@ -50,8 +50,8 @@ public static class ProjectionNodes
     /// Cache and reuse this for bulk reprojection.
     /// </summary>
     public static ICoordinateTransformation CreateTransformation(
-        ICoordinateSystem source,
-        ICoordinateSystem target)
+        CoordinateSystem source,
+        CoordinateSystem target)
         => CtFactory.CreateFromCoordinateSystems(source, target);
 
     /// <summary>Reproject a single (x, y) coordinate using a pre-built transformation.</summary>
@@ -69,8 +69,8 @@ public static class ProjectionNodes
     /// </summary>
     public static Point ReprojectPointGeometry(
         Point point,
-        ICoordinateSystem source,
-        ICoordinateSystem target)
+        CoordinateSystem source,
+        CoordinateSystem target)
     {
         var transform = CtFactory.CreateFromCoordinateSystems(source, target);
         double[] pt = transform.MathTransform.Transform(new[] { point.X, point.Y });
@@ -84,8 +84,8 @@ public static class ProjectionNodes
     /// </summary>
     public static Geometry ReprojectGeometry(
         Geometry geometry,
-        ICoordinateSystem source,
-        ICoordinateSystem target)
+        CoordinateSystem source,
+        CoordinateSystem target)
     {
         var transform = CtFactory.CreateFromCoordinateSystems(source, target);
         var filter = new CoordinateTransformFilter(transform.MathTransform);
@@ -134,7 +134,7 @@ public static class ProjectionNodes
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static int GetSrid(ICoordinateSystem cs)
+    private static int GetSrid(CoordinateSystem cs)
     {
         // Best-effort: parse EPSG authority code from the CRS
         if (cs is ProjectedCoordinateSystem pcs)
