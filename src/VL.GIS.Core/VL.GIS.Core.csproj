@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
-    <PackageReference Include="NetTopologySuite.IO.GeoJSON4STJ" Version="4.0.0" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />
     <PackageReference Include="ProjNet" Version="2.1.0" />
   </ItemGroup>
 

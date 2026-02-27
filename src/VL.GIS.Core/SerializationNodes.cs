@@ -1,7 +1,6 @@
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 using System;
-using System.Text.Json;
 
 namespace VL.GIS.Core;
 
