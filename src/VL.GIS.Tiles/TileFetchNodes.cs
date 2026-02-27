@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -87,8 +86,7 @@ public static class TileFetchNodes
     {
         try
         {
-            return tileSource.GetTileAsync(new TileInfo { Index = tileIndex })
-                              .GetAwaiter().GetResult();
+            return tileSource.GetTile(new TileInfo { Index = tileIndex });
         }
         catch
         {
@@ -126,18 +124,12 @@ public static class TileFetchNodes
     public static IObservable<byte[]?> FetchTileAsync(
         ITileSource tileSource,
         TileIndex tileIndex)
-        => Observable.FromAsync(async ct =>
-        {
-            try
+        => Observable.FromAsync(ct =>
+            Task.Run(() =>
             {
-                return await tileSource.GetTileAsync(
-                    new TileInfo { Index = tileIndex });
-            }
-            catch
-            {
-                return null;
-            }
-        });
+                try { return tileSource.GetTile(new TileInfo { Index = tileIndex }); }
+                catch { return null; }
+            }, ct));
 
     /// <summary>
     /// Fetch multiple tiles in parallel, returning an IObservable that emits
@@ -153,11 +145,11 @@ public static class TileFetchNodes
             foreach (var idx in tileIndices)
             {
                 var localIdx = idx;
-                tasks.Add(Task.Run(async () =>
+                tasks.Add(Task.Run(() =>
                 {
                     try
                     {
-                        byte[]? bytes = await tileSource.GetTileAsync(
+                        byte[]? bytes = tileSource.GetTile(
                             new TileInfo { Index = localIdx });
                         observer.OnNext((localIdx, bytes));
                     }

@@ -76,20 +76,11 @@ public static class TileProviderNodes
         string capabilitiesUrl,
         string layerIdentifier)
     {
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)");
-        var capabilitiesData = client.GetByteArrayAsync(capabilitiesUrl).GetAwaiter().GetResult();
-        var tileSources = BruTile.Wmts.WmtsParser.Parse(capabilitiesData);
-        foreach (var source in tileSources)
-        {
-            if (source.Name?.Contains(layerIdentifier, StringComparison.OrdinalIgnoreCase) == true)
-                return source;
-        }
-        // Return first available if no match
-        foreach (var source in tileSources)
-            return source;
-        throw new InvalidOperationException(
-            $"No WMTS layer found for identifier '{layerIdentifier}' at {capabilitiesUrl}");
+        // BruTile 6.0 removed WmtsParser. Use BruTile.Wmts.WmtsCapabilities or
+        // construct an HttpTileSource manually from the WMTS GetTile URL template.
+        throw new NotSupportedException(
+            "WmtsTileSource requires BruTile.Wmts API that was removed in BruTile 6.0. " +
+            "Use XyzTileSource with a manual WMTS tile URL template instead.");
     }
 
     // ── Tile Schema Info ──────────────────────────────────────────────────────
@@ -104,19 +95,19 @@ public static class TileProviderNodes
         out int maxZoom)
     {
         var resolutions = tileSource.Schema.Resolutions;
-        minZoom = 0;
-        maxZoom = 0;
+        minZoom = int.MaxValue;
+        maxZoom = int.MinValue;
         foreach (var kv in resolutions)
         {
-            if (int.TryParse(kv.Key, out int z))
-            {
-                if (z < minZoom) minZoom = z;
-                if (z > maxZoom) maxZoom = z;
-            }
+            int z = kv.Key; // already int in BruTile 6.0
+            if (z < minZoom) minZoom = z;
+            if (z > maxZoom) maxZoom = z;
         }
+        if (minZoom == int.MaxValue) minZoom = 0;
+        if (maxZoom == int.MinValue) maxZoom = 0;
     }
 
     /// <summary>Return the attribution text for a tile source (if available).</summary>
     public static string TileAttribution(ITileSource tileSource)
-        => tileSource.Attribution?.Text ?? string.Empty;
+        => tileSource.Attribution.Text ?? string.Empty;
 }
