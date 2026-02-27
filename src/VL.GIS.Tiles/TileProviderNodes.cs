@@ -16,11 +16,13 @@ namespace VL.GIS.Tiles;
 public static class TileProviderNodes
 {
     // Shared HttpClient for all web tile sources
-    private static readonly HttpClient SharedHttpClient = new HttpClient
+    private static readonly HttpClient SharedHttpClient;
+
+    static TileProviderNodes()
     {
-        Timeout = TimeSpan.FromSeconds(30),
-        DefaultRequestHeaders = { { "User-Agent", "VL.GIS/0.1 (vvvv gamma; https://vvvv.org)" } }
-    };
+        SharedHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        SharedHttpClient.DefaultRequestHeaders.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)");
+    }
 
     // ── OSM / OpenStreetMap ───────────────────────────────────────────────────
 

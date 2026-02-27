@@ -1,8 +1,10 @@
 using BruTile;
 using BruTile.Cache;
+using BruTile.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +17,15 @@ namespace VL.GIS.Tiles;
 /// </summary>
 public static class TileFetchNodes
 {
+    // Shared HttpClient — reuse across all fetch calls (BruTile 6.0 requires caller to supply it)
+    private static readonly HttpClient SharedClient;
+
+    static TileFetchNodes()
+    {
+        SharedClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        SharedClient.DefaultRequestHeaders.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)");
+    }
+
     // ── Tile Index ────────────────────────────────────────────────────────────
 
     /// <summary>
@@ -82,11 +93,12 @@ public static class TileFetchNodes
     /// Fetch a single tile as raw bytes synchronously.
     /// Returns null on failure (e.g. 404, network error).
     /// </summary>
-    public static byte[]? FetchTileBytes(ITileSource tileSource, TileIndex tileIndex)
+    public static byte[]? FetchTileBytes(IHttpTileSource tileSource, TileIndex tileIndex)
     {
         try
         {
-            return tileSource.GetTile(new TileInfo { Index = tileIndex });
+            return tileSource.GetTileAsync(SharedClient, new TileInfo { Index = tileIndex })
+                             .GetAwaiter().GetResult();
         }
         catch
         {
@@ -99,7 +111,7 @@ public static class TileFetchNodes
     /// Useful for caching tiles locally.
     /// </summary>
     public static string? FetchTileToFile(
-        ITileSource tileSource,
+        IHttpTileSource tileSource,
         TileIndex tileIndex,
         string cacheDirectory)
     {
@@ -122,21 +134,27 @@ public static class TileFetchNodes
     /// Emits null if the tile could not be fetched.
     /// </summary>
     public static IObservable<byte[]?> FetchTileAsync(
-        ITileSource tileSource,
+        IHttpTileSource tileSource,
         TileIndex tileIndex)
-        => Observable.FromAsync(ct =>
-            Task.Run(() =>
+        => Observable.FromAsync(async ct =>
+        {
+            try
             {
-                try { return tileSource.GetTile(new TileInfo { Index = tileIndex }); }
-                catch { return null; }
-            }, ct));
+                return await tileSource.GetTileAsync(SharedClient,
+                    new TileInfo { Index = tileIndex }, ct);
+            }
+            catch
+            {
+                return null;
+            }
+        });
 
     /// <summary>
     /// Fetch multiple tiles in parallel, returning an IObservable that emits
     /// (TileIndex, bytes) pairs as they arrive.
     /// </summary>
     public static IObservable<(TileIndex index, byte[]? bytes)> FetchTilesAsync(
-        ITileSource tileSource,
+        IHttpTileSource tileSource,
         IEnumerable<TileIndex> tileIndices)
     {
         return Observable.Create<(TileIndex, byte[]?)>(async (observer, ct) =>
@@ -145,12 +163,12 @@ public static class TileFetchNodes
             foreach (var idx in tileIndices)
             {
                 var localIdx = idx;
-                tasks.Add(Task.Run(() =>
+                tasks.Add(Task.Run(async () =>
                 {
                     try
                     {
-                        byte[]? bytes = tileSource.GetTile(
-                            new TileInfo { Index = localIdx });
+                        byte[]? bytes = await tileSource.GetTileAsync(SharedClient,
+                            new TileInfo { Index = localIdx }, ct);
                         observer.OnNext((localIdx, bytes));
                     }
                     catch
