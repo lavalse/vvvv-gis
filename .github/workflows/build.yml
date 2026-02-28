@@ -18,6 +18,22 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Validate VL.GIS.vl
+        shell: pwsh
+        run: |
+          [xml]$vl = Get-Content VL.GIS.vl
+          if ($vl.Document -eq $null) { throw "Missing <Document> root element" }
+          $ns = $vl.Document.GetAttribute("xmlns:p")
+          if ($ns -ne "property") { throw "Missing xmlns:p='property' namespace" }
+          $deps = $vl.Document.NugetDependency
+          if ($deps.Count -eq 0) { throw "No <NugetDependency> elements found" }
+          foreach ($dep in $deps) {
+            if (-not $dep.Id) { throw "NugetDependency missing Id: $($dep.Location)" }
+            if (-not $dep.Location) { throw "NugetDependency missing Location" }
+            if (-not $dep.Version) { throw "NugetDependency missing Version" }
+          }
+          Write-Host "VL.GIS.vl validation passed — $($deps.Count) dependencies found"
+
       - name: Restore
         run: dotnet restore VL.GIS.sln
 

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>VL.GIS</id>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
     <title>VL.GIS — GIS Library for vvvv gamma</title>
     <authors>VL.GIS Contributors</authors>
     <owners>VL.GIS Contributors</owners>
@@ -23,6 +23,7 @@
     </description>
     <summary>GIS geometry, projection, map tiles, and 3D visualization nodes for vvvv gamma.</summary>
     <releaseNotes>
+      0.0.4 - Fix VL.GIS.vl: rewrite with correct vvvv gamma schema (NugetDependency + Location attrs)
       0.0.3 - Fix VL.GIS.vl: remove invalid MainPatch element that crashed vvvv deserializer
       0.0.2 - Remove BruTile.MbTiles dependency (pre-release sqlite-net-base conflict)
       0.0.1 - Initial release (Phase 1 MVP):
