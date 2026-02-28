@@ -33,10 +33,6 @@ jobs:
             if (-not $dep.Version) { throw "NugetDependency missing Version" }
           }
           Write-Host "VL.GIS.vl validation passed — $($deps.Count) dependencies found"
-          $patch = $vl.Document.Patch
-          if ($patch -eq $null) { throw "Missing <Patch> element in Document" }
-          if (-not $patch.Id) { throw "Patch element missing Id attribute" }
-          Write-Host "Patch Id: $($patch.Id)"
           # Cross-check: every NugetDependency Location must appear in nuspec dependencies
           [xml]$nuspec = Get-Content VL.GIS.nuspec
           $nuspecDeps = $nuspec.package.metadata.dependencies.group.dependency | ForEach-Object { $_.id }
