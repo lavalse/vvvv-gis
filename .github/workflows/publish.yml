@@ -14,10 +14,19 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      # nuget.exe is needed to pack a .nuspec file; dotnet pack only works with .csproj
+      - uses: nuget/setup-nuget@v2
+
       - run: dotnet restore VL.GIS.sln
 
       - run: dotnet build VL.GIS.sln -c Release --no-restore
 
-      - run: dotnet pack src/VL.GIS.Core/VL.GIS.Core.csproj -c Release --no-build -o nupkg/
+      # Extract version number from the git tag (v0.0.1 → 0.0.1) and pack
+      - name: Pack
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          nuget pack VL.GIS.nuspec -Version $version -OutputDirectory nupkg/
 
-      - run: dotnet nuget push "nupkg/*.nupkg" --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json
+      - name: Push
+        run: dotnet nuget push "nupkg/VL.GIS.*.nupkg" --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json

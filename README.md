@@ -11,8 +11,10 @@ A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). Wraps m
 - [What's included](#whats-included)
 - [Prerequisites](#prerequisites)
 - [Getting started](#getting-started)
-  - [Option A — Direct DLL import (fastest for development)](#option-a--direct-dll-import-fastest-for-development)
-  - [Option B — Local NuGet feed (for distribution)](#option-b--local-nuget-feed-for-distribution)
+  - [Option A — Direct DLL reference (fastest for development)](#option-a--direct-dll-reference-fastest-for-development)
+  - [Option B — Local NuGet package (test packaging locally)](#option-b--local-nuget-package-test-packaging-locally)
+  - [Option C — Publish to nuget.org (distribute to everyone)](#option-c--publish-to-nugetorg-distribute-to-everyone)
+- [Releasing a new version](#releasing-a-new-version)
 - [Node reference](#node-reference)
   - [GIS.Geometry](#gisgeometry)
   - [GIS.Projection](#gisprojection)
@@ -51,15 +53,23 @@ A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). Wraps m
 
 ## Getting started
 
-> **WSL2 note:** If your source lives in WSL2, run the commands below inside WSL. The built output is accessible from Windows at `\\wsl$\<distro>\home\<user>\...`. vvvv itself must run on Windows.
+> **WSL2 note:** If your source lives in WSL2, run the `dotnet` commands below inside WSL. The built output is accessible from Windows at `\\wsl$\<distro>\home\<user>\...`. vvvv itself must run on Windows.
+
+**Which option should I use?**
+
+| Situation | Use |
+|---|---|
+| Working on the library itself, want fast rebuild → test cycle | Option A |
+| Want to test the full package experience without going public | Option B |
+| Ready to share with the vvvv community | Option C |
 
 ---
 
 ### Option A — Direct DLL reference (fastest for development)
 
-No packaging needed. Best while iterating on the library.
+No packaging needed. Best while iterating on the library itself.
 
-**1. Restore and build**
+**1. Build**
 
 ```bash
 dotnet restore VL.GIS.sln
@@ -74,46 +84,59 @@ src/VL.GIS.Tiles/bin/Release/net8.0/VL.GIS.Tiles.dll
 src/VL.GIS.Stride/bin/Release/net8.0/VL.GIS.Stride.dll
 ```
 
-All transitive dependencies (NTS, BruTile, ProjNet, etc.) are also copied into those same `net8.0/` folders by the build, so vvvv can resolve them automatically.
+All transitive dependencies (NTS, BruTile, ProjNet, etc.) are copied into the same `net8.0/` folder by the build, so vvvv can resolve them automatically.
 
 **2. Tell vvvv where the DLLs are**
 
-1. Open vvvv gamma and open (or create) any patch
-2. Quad menu → **Edit** → **Preferences** → **Paths** tab
-3. Under **Extra Assembly Search Paths**, click **+** and add the three `net8.0/` output folders above (or their common parent if you prefer)
-4. Restart vvvv
+1. Open vvvv gamma → Quad menu → **Edit** → **Preferences** → **Paths** tab
+2. Under **Extra Assembly Search Paths**, click **+** and add the three `net8.0/` output folders (or their common parent)
+3. Restart vvvv
 
 **3. Reference the assemblies in your patch**
 
-1. With your patch open, go to the **Dependencies** panel (Quad menu → **Edit** → **Dependencies**)
+1. With your patch open: Quad menu → **Edit** → **Dependencies**
 2. Click **+** → **Add .NET Assembly** → browse to `VL.GIS.Core.dll` → Add
 3. Repeat for `VL.GIS.Tiles.dll` and `VL.GIS.Stride.dll`
 
-**4. Verify nodes appear**
+**4. Verify**
 
-Press `Ctrl+N` to open the NodeBrowser → type `GIS` → you should see nodes grouped under `GIS.Geometry`, `GIS.Projection`, `GIS.Tiles`, etc.
+`Ctrl+N` → type `GIS` → nodes appear under `GIS.Geometry`, `GIS.Projection`, `GIS.Tiles`, etc.
 
 ---
 
-### Option B — Local NuGet package (closer to how end users install)
+### Option B — Local NuGet package (test packaging locally)
 
-Packs the library into a `.nupkg` file and installs it through vvvv's package manager — no manual DLL browsing.
+Packs everything into one `VL.GIS.nupkg` and installs it via vvvv's package manager, exactly like a real release — but stays on your machine.
 
-**1. Build and pack**
+**Why one package?** `VL.GIS.nuspec` bundles all three DLLs (`VL.GIS.Core`, `VL.GIS.Tiles`, `VL.GIS.Stride`) plus the `VL.GIS.vl` entry point into a single `VL.GIS` package. Users install one thing and get everything. This is the standard pattern for vvvv libraries.
 
-```bash
-dotnet restore VL.GIS.sln
-dotnet build VL.GIS.sln -c Release
-dotnet pack VL.GIS.sln -c Release -o nupkg/
+**1. Install nuget.exe** (one-time — `dotnet pack` cannot read `.nuspec` files directly)
+
+```powershell
+# Windows PowerShell — downloads nuget.exe to the repo root
+Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile nuget.exe
 ```
 
-This produces `nupkg/VL.GIS.0.1.0.nupkg` (version comes from `VL.GIS.nuspec`).
+Or install via Chocolatey: `choco install nuget.commandline`
 
-**2. Add a local NuGet source in vvvv**
+**2. Build and pack**
 
-vvvv gamma uses NuGet internally. You can point it at a local folder:
+```bash
+# In WSL or a terminal at the repo root
+dotnet restore VL.GIS.sln
+dotnet build VL.GIS.sln -c Release
+```
 
-1. In the repo root, create (or edit) `nuget.config`:
+```powershell
+# In Windows PowerShell at the repo root
+.\nuget.exe pack VL.GIS.nuspec -OutputDirectory nupkg/
+```
+
+This produces `nupkg/VL.GIS.0.0.1.nupkg` (version comes from `<version>` in `VL.GIS.nuspec`).
+
+**3. Add a local NuGet source**
+
+Create `nuget.config` in the repo root (already in `.gitignore`-able, or commit it for team use):
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -124,13 +147,74 @@ vvvv gamma uses NuGet internally. You can point it at a local folder:
 </configuration>
 ```
 
-2. Open vvvv gamma
-3. Quad menu → **Edit** → **Manage NuGet Packages**
-4. The **VL.GIS local** source should appear in the source dropdown
-5. Search for **VL.GIS** → **Install**
-6. Restart vvvv → `Ctrl+N` → type `GIS` → nodes appear
+**4. Install in vvvv**
 
-> **Tip:** bump `<version>` in `VL.GIS.nuspec` each time you repack, otherwise vvvv's package cache may serve the old version.
+1. Open vvvv gamma → Quad menu → **Edit** → **Manage NuGet Packages**
+2. Select source **VL.GIS local** from the dropdown
+3. Search **VL.GIS** → **Install**
+4. Restart vvvv → `Ctrl+N` → type `GIS`
+
+> **Tip:** Every time you rebuild and repack, bump `<version>` in `VL.GIS.nuspec` (e.g. `0.0.1` → `0.0.2`). vvvv's NuGet cache won't pick up a new `.nupkg` for the same version number.
+
+---
+
+### Option C — Publish to nuget.org (distribute to everyone)
+
+Once published, any vvvv user can install `VL.GIS` from the built-in package manager with no manual steps.
+
+**One-time setup (do this once in your browser + GitHub)**
+
+1. Create an account at [nuget.org](https://www.nuget.org)
+2. nuget.org → your avatar → **API Keys** → **+ Create**
+   - Key name: `vvvv-gis-publish`
+   - Glob pattern: `VL.GIS*`
+   - Permission: **Push new packages and package versions**
+   - Copy the key immediately (it's only shown once)
+3. GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+   - Name: `NUGET_KEY`
+   - Value: paste the key
+
+**That's it for setup.** Publishing is now automated — see [Releasing a new version](#releasing-a-new-version) below.
+
+---
+
+## Releasing a new version
+
+This is the full workflow for every release after setup is complete.
+
+**1. Update the version in `VL.GIS.nuspec`**
+
+```xml
+<version>0.0.1</version>   <!-- change this -->
+```
+
+Also update `<releaseNotes>` with what changed.
+
+**2. Commit and tag**
+
+```bash
+git add VL.GIS.nuspec
+git commit -m "chore: bump version to 0.0.1"
+git tag v0.0.1
+git push && git push --tags
+```
+
+**3. GitHub Actions does the rest**
+
+Pushing the `v0.0.1` tag triggers `.github/workflows/publish.yml`, which:
+- Builds all three projects in Release mode
+- Runs `nuget pack VL.GIS.nuspec -Version 0.0.1` (version taken from the tag)
+- Runs `dotnet nuget push` with your `NUGET_KEY` secret
+
+Watch it at: `https://github.com/<you>/vvvv-gis/actions`
+
+**4. Verify on nuget.org**
+
+The package appears at `https://www.nuget.org/packages/VL.GIS` within a few minutes (indexing can take up to 15 minutes for it to appear in search).
+
+**5. Install in vvvv**
+
+Quad menu → **Edit** → **Manage NuGet Packages** → search **VL.GIS** → **Install** → restart vvvv → `Ctrl+N` → type `GIS`.
 
 ---
 
