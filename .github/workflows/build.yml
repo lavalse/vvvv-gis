@@ -33,9 +33,61 @@ jobs:
             if (-not $dep.Version) { throw "NugetDependency missing Version" }
           }
           Write-Host "VL.GIS.vl validation passed — $($deps.Count) dependencies found"
+          $patch = $vl.Document.Patch
+          if ($patch -eq $null) { throw "Missing <Patch> element in Document" }
+          if (-not $patch.Id) { throw "Patch element missing Id attribute" }
+          Write-Host "Patch Id: $($patch.Id)"
+          # Cross-check: every NugetDependency Location must appear in nuspec dependencies
+          [xml]$nuspec = Get-Content VL.GIS.nuspec
+          $nuspecDeps = $nuspec.package.metadata.dependencies.group.dependency | ForEach-Object { $_.id }
+          foreach ($dep in $deps) {
+            if ($dep.Location -eq "VL.CoreLib") { continue }
+            if (-not ($nuspecDeps -contains $dep.Location)) {
+              throw "VL.GIS.vl declares NugetDependency '$($dep.Location)' but it is missing from VL.GIS.nuspec <dependencies>"
+            }
+          }
+          Write-Host "Dependency cross-check passed."
 
       - name: Restore
         run: dotnet restore VL.GIS.sln
 
       - name: Build
         run: dotnet build VL.GIS.sln --no-restore -c Release
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Pack NuGet
+        run: nuget pack VL.GIS.nuspec -OutputDirectory nupkg/
+
+      - name: Validate package contents
+        shell: pwsh
+        run: |
+          $nupkg = Get-Item nupkg\*.nupkg | Select-Object -First 1
+          Write-Host "Package: $($nupkg.Name)"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
+          $entries = $zip.Entries | ForEach-Object { $_.FullName }
+          $zip.Dispose()
+
+          $required = @(
+            "VL.GIS.vl",
+            "lib/net8.0/VL.GIS.Core.dll",
+            "lib/net8.0/VL.GIS.Core.xml",
+            "lib/net8.0/VL.GIS.Tiles.dll",
+            "lib/net8.0/VL.GIS.Tiles.xml",
+            "lib/net8.0/VL.GIS.Stride.dll",
+            "lib/net8.0/VL.GIS.Stride.xml"
+          )
+          foreach ($r in $required) {
+            $found = $entries | Where-Object { $_ -like "*$r*" }
+            if (-not $found) { throw "Missing from package: $r" }
+            Write-Host "OK: $r"
+          }
+          Write-Host "Package structure validated."
+
+      - name: Upload nupkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VL.GIS-nupkg
+          path: nupkg/*.nupkg

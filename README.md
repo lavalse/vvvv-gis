@@ -14,6 +14,8 @@ A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). Wraps m
   - [Option A — Direct DLL reference (fastest for development)](#option-a--direct-dll-reference-fastest-for-development)
   - [Option B — Local NuGet package (test packaging locally)](#option-b--local-nuget-package-test-packaging-locally)
   - [Option C — Publish to nuget.org (distribute to everyone)](#option-c--publish-to-nugetorg-distribute-to-everyone)
+- [Local Testing](#local-testing)
+- [Pre-publish Validation](#pre-publish-validation)
 - [Releasing a new version](#releasing-a-new-version)
 - [Node reference](#node-reference)
   - [GIS.Geometry](#gisgeometry)
@@ -175,6 +177,78 @@ Once published, any vvvv user can install `VL.GIS` from the built-in package man
    - Value: paste the key
 
 **That's it for setup.** Publishing is now automated — see [Releasing a new version](#releasing-a-new-version) below.
+
+---
+
+## Local Testing
+
+The fastest way to exercise the **vvvv document-loading code path** without publishing to NuGet.org. vvvv's `--package-repositories` flag points it directly at the repo folder, so it loads `VL.GIS.vl` exactly as a real NuGet install would.
+
+**1. Build**
+
+```bash
+dotnet build VL.GIS.sln -c Release
+```
+
+**2. Launch vvvv with the repo as a package repository**
+
+```powershell
+vvvv.exe --package-repositories "C:\path\to\vvvv-gis"
+```
+
+> WSL2: use the Windows path to the WSL2 folder, e.g. `\\wsl$\Ubuntu\home\red\projects\vvvv-gis`
+
+**3. Check the Log**
+
+Open Log (`Ctrl+Shift+L`). A clean load shows "VL.GIS loaded" with no red entries in the Dependencies panel. Any `ArgumentNullException`, `XmlException`, or assembly-binding failure here would also occur with a real install.
+
+**4. Check the NodeBrowser**
+
+`Ctrl+N` → type `GIS` → verify nodes appear under:
+`GIS.Geometry`, `GIS.Projection`, `GIS.Serialization`, `GIS.Tiles`, `GIS.Stride.Coordinates`, `GIS.Stride.Tessellation`, `GIS.Stride.Elevation`
+
+This is the **primary debug loop** — fast, no internet required, exercises vvvv's loader directly.
+
+---
+
+## Pre-publish Validation
+
+The closest simulation to what end-users experience after `nuget install VL.GIS`. Run this before every push to NuGet.org.
+
+**1. Build and pack**
+
+```bash
+dotnet build VL.GIS.sln -c Release
+```
+
+```powershell
+.\nuget.exe pack VL.GIS.nuspec -OutputDirectory nupkg/
+```
+
+**2. Register a local NuGet feed (one-time)**
+
+```powershell
+dotnet nuget add source "$HOME\local-nuget" -n LocalFeed
+```
+
+**3. Push to the local feed**
+
+```powershell
+dotnet nuget push nupkg\VL.GIS.0.0.6.nupkg -s "$HOME\local-nuget"
+```
+
+**4. Install in vvvv from the local feed**
+
+1. Launch vvvv without `--package-repositories`
+2. Quad menu → **Edit** → **Manage NuGet Packages**
+3. Add feed URL: `file:///C:/Users/<you>/local-nuget`
+4. Search **VL.GIS** → **Install**
+
+**5. Verify**
+
+Check Log and NodeBrowser as above. Only after this passes should you push to NuGet.org.
+
+> **Tip:** Bump `<version>` in `VL.GIS.nuspec` for each local test iteration — NuGet caches by version and won't reload an existing version number.
 
 ---
 
