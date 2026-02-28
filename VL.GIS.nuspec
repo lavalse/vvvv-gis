@@ -8,7 +8,7 @@
     <owners>VL.GIS Contributors</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
-    <projectUrl>https://github.com/vvvv/VL.GIS</projectUrl>
+    <projectUrl>https://github.com/lavalse/vvvv-gis</projectUrl>
     <description>
       Geographic Information System (GIS) library for vvvv gamma.
 
@@ -31,11 +31,12 @@
     </releaseNotes>
     <copyright>Copyright 2026 VL.GIS Contributors</copyright>
     <tags>vvvv gamma gis geospatial geography map tiles projection geometry stride</tags>
+    <repository type="git" url="https://github.com/lavalse/vvvv-gis" />
 
     <dependencies>
       <group targetFramework="net8.0">
         <dependency id="NetTopologySuite"           version="2.6.0" />
-        <dependency id="NetTopologySuite.IO.GeoJSON" version="4.0.0" />
+        <dependency id="NetTopologySuite.IO.GeoJSON" version="3.0.0" />
         <dependency id="ProjNet"                    version="2.1.0" />
         <dependency id="BruTile"                    version="6.0.0" />
         <dependency id="BruTile.MbTiles"            version="6.0.0" />

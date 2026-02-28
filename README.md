@@ -47,66 +47,90 @@ A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). Wraps m
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed on **Windows** (vvvv runs on Windows)
 - [vvvv gamma 6.x or 7.x](https://visualprogramming.net)
 
-> **WSL2 note:** The source code can live in WSL2, but the build and vvvv import steps happen on the Windows side. Access WSL files from Windows via `\\wsl$\<distro>\home\...`.
-
 ---
 
 ## Getting started
 
-### Option A — Direct DLL import (fastest for development)
-
-No packaging needed. Best while iterating.
-
-**1. Build**
-
-```powershell
-# From the repo root on Windows (cmd / PowerShell / VS2022 terminal)
-dotnet build VL.GIS.sln
-```
-
-Or use the included script which also packs:
-
-```powershell
-.\build.ps1          # Release build (default)
-.\build.ps1 -Configuration Debug
-```
-
-The built DLLs land in:
-```
-src\VL.GIS.Core\bin\Debug\net8.0\VL.GIS.Core.dll
-src\VL.GIS.Tiles\bin\Debug\net8.0\VL.GIS.Tiles.dll
-src\VL.GIS.Stride\bin\Debug\net8.0\VL.GIS.Stride.dll
-```
-
-**2. Import into vvvv**
-
-1. Open any patch in vvvv gamma
-2. Quad menu → **Edit** → **Import .NET Assembly**
-3. Browse to `VL.GIS.Core.dll` → Import
-4. Repeat for `VL.GIS.Tiles.dll` and `VL.GIS.Stride.dll`
-5. Press `Ctrl+N` in the NodeBrowser → type `GIS` → nodes should appear
-
-All transitive dependencies (NTS, BruTile, ProjNet, etc.) are copied to the same `bin/` folder during build, so vvvv resolves them automatically.
+> **WSL2 note:** If your source lives in WSL2, run the commands below inside WSL. The built output is accessible from Windows at `\\wsl$\<distro>\home\<user>\...`. vvvv itself must run on Windows.
 
 ---
 
-### Option B — Local NuGet feed (for distribution)
+### Option A — Direct DLL reference (fastest for development)
 
-Packages the library properly. Use this when sharing with others.
+No packaging needed. Best while iterating on the library.
+
+**1. Restore and build**
+
+```bash
+dotnet restore VL.GIS.sln
+dotnet build VL.GIS.sln -c Release
+```
+
+The built DLLs land in:
+
+```
+src/VL.GIS.Core/bin/Release/net8.0/VL.GIS.Core.dll
+src/VL.GIS.Tiles/bin/Release/net8.0/VL.GIS.Tiles.dll
+src/VL.GIS.Stride/bin/Release/net8.0/VL.GIS.Stride.dll
+```
+
+All transitive dependencies (NTS, BruTile, ProjNet, etc.) are also copied into those same `net8.0/` folders by the build, so vvvv can resolve them automatically.
+
+**2. Tell vvvv where the DLLs are**
+
+1. Open vvvv gamma and open (or create) any patch
+2. Quad menu → **Edit** → **Preferences** → **Paths** tab
+3. Under **Extra Assembly Search Paths**, click **+** and add the three `net8.0/` output folders above (or their common parent if you prefer)
+4. Restart vvvv
+
+**3. Reference the assemblies in your patch**
+
+1. With your patch open, go to the **Dependencies** panel (Quad menu → **Edit** → **Dependencies**)
+2. Click **+** → **Add .NET Assembly** → browse to `VL.GIS.Core.dll` → Add
+3. Repeat for `VL.GIS.Tiles.dll` and `VL.GIS.Stride.dll`
+
+**4. Verify nodes appear**
+
+Press `Ctrl+N` to open the NodeBrowser → type `GIS` → you should see nodes grouped under `GIS.Geometry`, `GIS.Projection`, `GIS.Tiles`, etc.
+
+---
+
+### Option B — Local NuGet package (closer to how end users install)
+
+Packs the library into a `.nupkg` file and installs it through vvvv's package manager — no manual DLL browsing.
 
 **1. Build and pack**
 
-```powershell
-.\build.ps1    # produces nupkg\VL.GIS.0.1.0.nupkg
+```bash
+dotnet restore VL.GIS.sln
+dotnet build VL.GIS.sln -c Release
+dotnet pack VL.GIS.sln -c Release -o nupkg/
 ```
 
-**2. Add the local feed in vvvv**
+This produces `nupkg/VL.GIS.0.1.0.nupkg` (version comes from `VL.GIS.nuspec`).
 
-1. Quad menu → **Edit** → **Manage NuGet Packages**
-2. Click the gear icon → **Add package source**
-3. Browse to the `nupkg\` folder, name it `VL.GIS local`
-4. Search for **VL.GIS** → Install
-5. Restart vvvv (or press F5) → `Ctrl+N` → type `GIS`
+**2. Add a local NuGet source in vvvv**
+
+vvvv gamma uses NuGet internally. You can point it at a local folder:
+
+1. In the repo root, create (or edit) `nuget.config`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="VL.GIS local" value="./nupkg" />
+  </packageSources>
+</configuration>
+```
+
+2. Open vvvv gamma
+3. Quad menu → **Edit** → **Manage NuGet Packages**
+4. The **VL.GIS local** source should appear in the source dropdown
+5. Search for **VL.GIS** → **Install**
+6. Restart vvvv → `Ctrl+N` → type `GIS` → nodes appear
+
+> **Tip:** bump `<version>` in `VL.GIS.nuspec` each time you repack, otherwise vvvv's package cache may serve the old version.
 
 ---
 

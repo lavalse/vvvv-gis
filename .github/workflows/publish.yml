@@ -1,0 +1,23 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - run: dotnet restore VL.GIS.sln
+
+      - run: dotnet build VL.GIS.sln -c Release --no-restore
+
+      - run: dotnet pack src/VL.GIS.Core/VL.GIS.Core.csproj -c Release --no-build -o nupkg/
+
+      - run: dotnet nuget push "nupkg/*.nupkg" --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json
