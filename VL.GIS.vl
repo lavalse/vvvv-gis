@@ -3,7 +3,7 @@
           Id="VLGISDoc1aB3cD5eF7gH9iJ"
           LanguageVersion="2025.7.0"
           Version="0.128">
-    <NugetDependency Id="VLCoreLib1bC3dE5fG7hI9j" Location="VL.CoreLib" Version="2025.7.0" />
+    <NugetDependency Id="VLCoreLib1bC3dE5fG7hI9j" Location="VL.CoreLib" Version="2025.7.0" IsFriend="true" />
     <NugetDependency Id="NTSuite1aC3eE5gG7iI9kK" Location="NetTopologySuite" Version="2.6.0" />
     <NugetDependency Id="NTSGeoJ1bD3fF5hH7jJ9lL" Location="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />
     <NugetDependency Id="ProjNt1cE3gG5iI7kK9mM" Location="ProjNet" Version="2.1.0" />

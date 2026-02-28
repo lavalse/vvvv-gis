@@ -1,65 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    HowTo: Fetch and display an OpenStreetMap tile in a Skia renderer.
-
-    Demonstrates:
-    - TileIndexFromLonLat: convert a lon/lat + zoom to a tile index
-    - OsmTileSource: create an OSM tile provider
-    - FetchTileAsync: fetch the tile PNG bytes as an IObservable
-    - S+H (Sample & Hold) to latch the tile bytes
-    - Skia: display the PNG bytes as a texture
-
-    Setup:
-    1. Open vvvv gamma
-    2. Press Ctrl+N, search for nodes listed above
-    3. Connect as shown in the comments
-
-    Patch layout (pseudo-code):
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │  [IOBox: Longitude=13.405] ──────┐                                  │
-    │  [IOBox: Latitude=52.52]  ──────┤──► [TileIndexFromLonLat] ──┐     │
-    │  [IOBox: Zoom=15]         ──────┘                             │     │
-    │                                                               ▼     │
-    │  [OsmTileSource] ─────────────────────────────────► [FetchTileAsync]│
-    │                                                               │     │
-    │                                                               ▼     │
-    │                                               [S+H] ◄─────────┘    │
-    │                                                 │                   │
-    │                                                 ▼                   │
-    │                                       [SKBitmapFromPNG]             │
-    │                                                 │                   │
-    │                                                 ▼                   │
-    │                                          [DrawImage]                │
-    │                                                 │                   │
-    │                                                 ▼                   │
-    │                                        [SkiaRenderer]               │
-    └─────────────────────────────────────────────────────────────────────┘
--->
-<Document xmlns="l3">
-  <!-- Annotation only — actual patch wiring done in vvvv GUI -->
-  <MainPatch>
-    <Nodes>
-      <Node id="1" name="IOBox (Value)" bounds="50, 50, 160, 30">
-        <Properties>
-          <Property name="value" type="double" value="13.405" />
-          <Property name="label" value="Longitude (Berlin)" />
-        </Properties>
-      </Node>
-      <Node id="2" name="IOBox (Value)" bounds="50, 100, 160, 30">
-        <Properties>
-          <Property name="value" type="double" value="52.52" />
-          <Property name="label" value="Latitude (Berlin)" />
-        </Properties>
-      </Node>
-      <Node id="3" name="IOBox (Value)" bounds="50, 150, 160, 30">
-        <Properties>
-          <Property name="value" type="int" value="15" />
-          <Property name="label" value="Zoom Level" />
-        </Properties>
-      </Node>
-      <Node id="4" name="TileIndexFromLonLat [GIS.Tiles]" bounds="280, 80, 240, 40" />
-      <Node id="5" name="OsmTileSource [GIS.Tiles]" bounds="280, 200, 200, 40" />
-      <Node id="6" name="FetchTileAsync [GIS.Tiles]" bounds="540, 120, 200, 40" />
-    </Nodes>
-  </MainPatch>
+<Document xmlns:p="property" xmlns:r="reflection"
+          Id="GISHlp2aB3cD5eF7gH9iJ2b"
+          LanguageVersion="2025.7.0"
+          Version="0.128">
+    <NugetDependency Id="GISHlp2bC3dE5fG7hI9jK2c" Location="VL.GIS" Version="0.0.10" IsFriend="true" />
 </Document>

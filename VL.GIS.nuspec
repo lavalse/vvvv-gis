@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>VL.GIS</id>
-    <version>0.0.9</version>
+    <version>0.0.10</version>
     <title>VL.GIS — GIS Library for vvvv gamma</title>
     <authors>VL.GIS Contributors</authors>
     <owners>VL.GIS Contributors</owners>
@@ -23,6 +23,7 @@
     </description>
     <summary>GIS geometry, projection, map tiles, and 3D visualization nodes for vvvv gamma.</summary>
     <releaseNotes>
+      0.0.10 - Fix help patches (invalid xmlns="l3" XML crashed vvvv deserializer); add IsFriend="true" to VL.CoreLib dep
       0.0.9 - Fix VL.GIS.vl: add Application/ProcessDefinition node + PlatformDependency (required for __AdaptiveImplementations__ codegen)
       0.0.8 - Fix VL.GIS.vl: remove Patch element entirely (Patch itself generates unresolvable __AdaptiveImplementations__ reference)
       0.0.7 - Fix VL.GIS.vl: remove FullCategory Canvas (caused __AdaptiveImplementations__ compile crash)
