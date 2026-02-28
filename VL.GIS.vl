@@ -9,24 +9,6 @@
     <NugetDependency Id="ProjNt1cE3gG5iI7kK9mM" Location="ProjNet" Version="2.1.0" />
     <NugetDependency Id="BruTil1dF3hH5jJ7lL9nN" Location="BruTile" Version="6.0.0" />
     <NugetDependency Id="SysRxt1eG3iI5kK7mM9oO" Location="System.Reactive" Version="6.0.1" />
-    <Patch Id="GISPtch1aC3eE5gG7iI9kK">
-        <Canvas Id="GISCnvs1bD3fF5hH7jJ9lL" DefaultCategory="GIS" CanvasType="FullCategory" />
-        <Node Name="Application" Bounds="100,100" Id="GISAppl1cE3gG5iI7kK9mM">
-            <p:NodeReference>
-                <Choice Kind="ContainerDefinition" Name="Process" />
-                <CategoryReference Kind="Category" Name="Primitive" />
-            </p:NodeReference>
-            <Patch Id="GISAPch1dF3hH5jJ7lL9nN">
-                <Canvas Id="GISAGrp1eG3iI5kK7mM9oO" CanvasType="Group" />
-                <Patch Id="GISCrPt1fH3jJ5lL7nN9pP" Name="Create" />
-                <Patch Id="GISUpPt1gI3kK5mM7oO9qQ" Name="Update" />
-                <ProcessDefinition Id="GISPDef1hJ3lL5nN7pP9rR">
-                    <Fragment Id="GISFrC1iK3mM5oO7qQ9sS" Patch="GISCrPt1fH3jJ5lL7nN9pP" Enabled="true" />
-                    <Fragment Id="GISFrU1jL3nN5pP7rR9tT" Patch="GISUpPt1gI3kK5mM7oO9qQ" Enabled="true" />
-                </ProcessDefinition>
-            </Patch>
-        </Node>
-    </Patch>
     <PlatformDependency Id="GISPldC1kM3oO5qQ7sS9uU" Location="./lib/net8.0/VL.GIS.Core.dll" IsForward="true" />
     <PlatformDependency Id="GISPldT1lN3pP5rR7tT9vV" Location="./lib/net8.0/VL.GIS.Tiles.dll" IsForward="true" />
     <PlatformDependency Id="GISPldS1mO3qQ5sS7uU9wW" Location="./lib/net8.0/VL.GIS.Stride.dll" IsForward="true" />
