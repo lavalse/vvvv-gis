@@ -9,8 +9,5 @@
     <NugetDependency Id="ProjNt1cE3gG5iI7kK9mM" Location="ProjNet" Version="2.1.0" />
     <NugetDependency Id="BruTil1dF3hH5jJ7lL9nN" Location="BruTile" Version="6.0.0" />
     <NugetDependency Id="SysRxt1eG3iI5kK7mM9oO" Location="System.Reactive" Version="6.0.1" />
-    <Patch Id="GISPtch1aC3eE5gG7iI9kK">
-        <Canvas Id="GISCnvs1bD3fF5hH7jJ9lL" DefaultCategory="GIS" CanvasType="FullCategory">
-        </Canvas>
-    </Patch>
+    <Patch Id="GISPtch1aC3eE5gG7iI9kK" />
 </Document>
