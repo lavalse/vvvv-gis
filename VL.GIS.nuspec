@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>VL.GIS</id>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <title>VL.GIS — GIS Library for vvvv gamma</title>
     <authors>VL.GIS Contributors</authors>
     <owners>VL.GIS Contributors</owners>
@@ -23,6 +23,7 @@
     </description>
     <summary>GIS geometry, projection, map tiles, and 3D visualization nodes for vvvv gamma.</summary>
     <releaseNotes>
+      0.0.2 - Remove BruTile.MbTiles dependency (pre-release sqlite-net-base conflict)
       0.0.1 - Initial release (Phase 1 MVP):
       - Core geometry nodes via NetTopologySuite 2.6.0
       - Coordinate reprojection via ProjNet 2.1.0
@@ -39,7 +40,6 @@
         <dependency id="NetTopologySuite.IO.GeoJSON" version="3.0.0" />
         <dependency id="ProjNet"                    version="2.1.0" />
         <dependency id="BruTile"                    version="6.0.0" />
-        <dependency id="BruTile.MbTiles"            version="6.0.0" />
         <dependency id="System.Reactive"            version="6.0.1" />
       </group>
     </dependencies>

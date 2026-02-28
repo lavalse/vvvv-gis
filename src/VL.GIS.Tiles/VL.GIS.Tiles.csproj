@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <PackageReference Include="BruTile" Version="6.0.0" />
-    <PackageReference Include="BruTile.MbTiles" Version="6.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>
 
