@@ -15,7 +15,7 @@
       </p:NodeReference>
       <Patch Id="Kd1QQwCXUS6PBNvfF0joMX">
         <Canvas Id="DA1MGuUWomjMqRnv2yq9xF" CanvasType="Group">
-          <Node Bounds="322,241,112,19" Id="FgTrETaLpuXQEvhORXMXvJ">
+          <Node Bounds="327,190,195,19" Id="FgTrETaLpuXQEvhORXMXvJ">
             <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="TileIndexFromLonLat" />
@@ -25,22 +25,22 @@
             <Pin Id="OmATxsbUMDUPdIUkWqHxdu" Name="Zoom" Kind="InputPin" />
             <Pin Id="MrEpwfNR9q8LkPZnOoPFfM" Name="Result" Kind="OutputPin" />
           </Node>
-          <Pad Id="GNaBaXZ4hHbOFgztwXeJec" Comment="Longitude" Bounds="280,180,43,15" ShowValueBox="true" isIOBox="true" Value="139.7">
+          <Pad Id="GNaBaXZ4hHbOFgztwXeJec" Comment="Longitude" Bounds="285,129,43,15" ShowValueBox="true" isIOBox="true" Value="139.7">
             <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
               <Choice Kind="TypeFlag" Name="Float64" />
             </p:TypeAnnotation>
           </Pad>
-          <Pad Id="DQ4eoIs0jnrMNJZ9o9IWLG" Comment="Latitude" Bounds="395,180,35,15" ShowValueBox="true" isIOBox="true" Value="35.67">
+          <Pad Id="DQ4eoIs0jnrMNJZ9o9IWLG" Comment="Latitude" Bounds="400,129,35,15" ShowValueBox="true" isIOBox="true" Value="35.67">
             <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
               <Choice Kind="TypeFlag" Name="Float64" />
             </p:TypeAnnotation>
           </Pad>
-          <Pad Id="CD2dg9s31CJPrL4VED1NRr" Comment="Zoom" Bounds="514,181,35,15" ShowValueBox="true" isIOBox="true" Value="12">
+          <Pad Id="CD2dg9s31CJPrL4VED1NRr" Comment="Zoom" Bounds="519,130,35,15" ShowValueBox="true" isIOBox="true" Value="12">
             <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
               <Choice Kind="TypeFlag" Name="Integer32" />
             </p:TypeAnnotation>
           </Pad>
-          <Node Bounds="445,320,66,19" Id="JlpxQIPvbcZMexeaFQV40v">
+          <Node Bounds="445,320,254,19" Id="JlpxQIPvbcZMexeaFQV40v">
             <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="TileBounds" />
@@ -51,7 +51,7 @@
             <Pin Id="I8fmyB8ydiNP4NVug7SViD" Name="Max Lon" Kind="OutputPin" />
             <Pin Id="UNObhHbrKMENNhL2kiHOCy" Name="Max Lat" Kind="OutputPin" />
           </Node>
-          <Node Bounds="183,330,184,156" Id="AL3poouN2akPjtq8XLX1gC">
+          <Node Bounds="183,330,155,156" Id="AL3poouN2akPjtq8XLX1gC">
             <p:NodeReference LastCategoryFullName="Primitive" LastDependency="Builtin">
               <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
               <CategoryReference Kind="Category" Name="Primitive" />
@@ -80,10 +80,10 @@
                 <Pin Id="LiTILylEYFJNO4PtZkDe3H" Name="Result" Kind="OutputPin" />
               </Node>
             </Patch>
-            <ControlPoint Id="HVm7pyluuFALezoerJ5T1p" Bounds="352,336" Alignment="Top" />
+            <ControlPoint Id="HVm7pyluuFALezoerJ5T1p" Bounds="323,336" Alignment="Top" />
             <ControlPoint Id="P3wRaLDsVawOV6rAdf5Bgv" Bounds="197,480" Alignment="Bottom" />
           </Node>
-          <Node Bounds="339,541,44,19" Id="F3Ce0TSnoEtP64vv2KRC2o">
+          <Node Bounds="323,540,44,19" Id="F3Ce0TSnoEtP64vv2KRC2o">
             <p:NodeReference LastCategoryFullName="Collections.Sequence" LastDependency="VL.CoreLib.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <CategoryReference Kind="MutableInterfaceType" Name="Sequence" NeedsToBeDirectParent="true" />
@@ -92,7 +92,7 @@
             <Pin Id="OC4lWRpPzrUPt3bHZbHEVl" Name="Input" Kind="InputPin" />
             <Pin Id="JWfeHrVHBLoL0GjMEWKPKa" Name="Result" Kind="OutputPin" />
           </Node>
-          <Pad Id="AVNxlnO61WsLtHK4gbx79b" Comment="" Bounds="341,600,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="AVNxlnO61WsLtHK4gbx79b" Comment="" Bounds="325,599,126,18" ShowValueBox="true" isIOBox="true" Value="48322" />
           <Pad Id="No3UAgiBmOsO3TEtqjgXCc" Comment="Force" Bounds="185,270,35,35" ShowValueBox="true" isIOBox="true" Value="false">
             <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
               <Choice Kind="ImmutableTypeFlag" Name="Boolean" />
@@ -101,19 +101,11 @@
               <p:buttonmode p:Assembly="VL.UI.Forms" p:Type="VL.HDE.PatchEditor.Editors.ButtonModeEnum">Bang</p:buttonmode>
             </p:ValueBoxSettings>
           </Pad>
-          <Pad Id="QzNveBifSQSO37x5yv34zm" Comment="Min Lon" Bounds="391,430,35,15" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="V0zGVu7uBjMLNYb0jRzd3Y" Comment="Min Lat" Bounds="508,430,35,15" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="KoHtAV19zmFM8OevsNlAC8" Comment="Max Lon" Bounds="610,430,35,15" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="GNBCRq3ACTwMWn5qJxQM4k" Comment="Max Lat" Bounds="696,420,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="QzNveBifSQSO37x5yv34zm" Comment="Min Lon" Bounds="447,401,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="V0zGVu7uBjMLNYb0jRzd3Y" Comment="Min Lat" Bounds="564,401,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="KoHtAV19zmFM8OevsNlAC8" Comment="Max Lon" Bounds="666,401,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="GNBCRq3ACTwMWn5qJxQM4k" Comment="Max Lat" Bounds="767,400,35,15" ShowValueBox="true" isIOBox="true" />
           <Pad Id="KnbTxlEFaCuPV31Zk8ru5a" Comment="Has Changed" Bounds="124,550,35,35" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="T99sj2dBbhXL07grxxOWZ1" Comment="Force" Bounds="94,260,35,35" ShowValueBox="true" isIOBox="true" Value="False">
-            <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
-              <Choice Kind="ImmutableTypeFlag" Name="Boolean" />
-            </p:TypeAnnotation>
-            <p:ValueBoxSettings>
-              <p:buttonmode p:Assembly="VL.UI.Forms" p:Type="VL.HDE.PatchEditor.Editors.ButtonModeEnum">Toggle</p:buttonmode>
-            </p:ValueBoxSettings>
-          </Pad>
         </Canvas>
         <Patch Id="Jn1iUM8M9arLhuAe3C3kry" Name="Create" />
         <Patch Id="Oe9pjIGWSdINW935FpyYhr" Name="Update" />
@@ -135,9 +127,10 @@
         <Link Id="QGAmPovYuTAL3m2o02ZM7g" Ids="UNObhHbrKMENNhL2kiHOCy,GNBCRq3ACTwMWn5qJxQM4k" />
         <Link Id="HZROXpDE8n0PxZaaibEZW0" Ids="IfngVbxa5JTMCCgoqzZ2yp,KnbTxlEFaCuPV31Zk8ru5a" />
         <Link Id="TXA17GfDEYPPCPy8iLHC2U" Ids="No3UAgiBmOsO3TEtqjgXCc,V4WMLEqb37gLnSWVN9I1d2" />
-        <Link Id="GUtnVWye5VkPRhGHJvYrf2" Ids="MrEpwfNR9q8LkPZnOoPFfM,QTBcUoFGbwaPq42UXf7Yfy" />
+        <Link Id="QrvI6jOTJDIPDIdfJhq42T" Ids="MrEpwfNR9q8LkPZnOoPFfM,HVm7pyluuFALezoerJ5T1p" />
+        <Link Id="PvlOySLvdBdNrzAjMZ5djA" Ids="HVm7pyluuFALezoerJ5T1p,QTBcUoFGbwaPq42UXf7Yfy" />
       </Patch>
     </Node>
   </Patch>
-  <NugetDependency Id="OuYAFSQWG5TQWEvh0TuHbH" Location="VL.GIS" Version="0.1.0-alpha" />
+  <NugetDependency Id="OuYAFSQWG5TQWEvh0TuHbH" Location="VL.GIS" Version="0.0.0" />
 </Document>
