@@ -1,33 +1,43 @@
 # VL.GIS
 
-A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). Wraps mature .NET GIS libraries into vvvv nodes so you can work with maps, coordinates, geometries, and 3D terrain without leaving the visual patching environment.
+A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). It wraps mature
+.NET GIS libraries — NetTopologySuite, ProjNet, BruTile — as vvvv nodes, so you can work
+with coordinates, geometries and map tiles without leaving the patch.
 
-**Status:** Phase 1 MVP — geometry, projection, serialization, tile fetching, and Stride 3D helpers are all implemented.
+---
+
+## ⚠️ Status: early, and largely untested
+
+**Please do not use this in a real project yet.**
+
+This is a spare-time project that moves slowly. What has actually been verified so far is
+narrow:
+
+| | |
+|---|---|
+| ✅ Verified | The package builds, packs, installs, and its nodes appear in the NodeBrowser under the right categories. |
+| ⚠️ Not verified | **The GIS functionality itself.** Almost none of the nodes have been run. Geometry operations, reprojection and tile fetching have not been exercised beyond compiling. |
+| ❌ Missing | Help patches, examples, any test suite. |
+
+Expect wrong results, missing edge cases, and breaking changes to node names and
+categories between releases. If you try it, treat it as a starting point to read and fix
+rather than something to build on. Bug reports and PRs are very welcome — that is the
+fastest way for this to become trustworthy.
+
+The 0.0.x releases on nuget.org (0.0.1 – 0.0.4) never worked at all: the package installed
+and contributed no nodes. They are unlisted. Do not use them.
 
 ---
 
 ## Contents
 
 - [What's included](#whats-included)
-- [Prerequisites](#prerequisites)
-- [Getting started](#getting-started)
-  - [Option A — Direct DLL reference (fastest for development)](#option-a--direct-dll-reference-fastest-for-development)
-  - [Option B — Local NuGet package (test packaging locally)](#option-b--local-nuget-package-test-packaging-locally)
-  - [Option C — Publish to nuget.org (distribute to everyone)](#option-c--publish-to-nugetorg-distribute-to-everyone)
-- [Local Testing](#local-testing)
-- [Pre-publish Validation](#pre-publish-validation)
-- [Releasing a new version](#releasing-a-new-version)
+- [Requirements](#requirements)
+- [Install](#install)
+- [Working on the library](#working-on-the-library)
 - [Node reference](#node-reference)
-  - [GIS.Geometry](#gisgeometry)
-  - [GIS.Projection](#gisprojection)
-  - [GIS.Serialization](#gisserialization)
-  - [GIS.Tiles](#gistiles)
-  - [GIS.Stride.Coordinates](#gisstride-coordinates)
-  - [GIS.Stride.Tessellation](#gisstride-tessellation)
-  - [GIS.Stride.Elevation](#gisstride-elevation)
 - [Key concepts](#key-concepts)
-- [Example patches](#example-patches)
-- [Dependencies](#dependencies)
+- [Dependencies and licences](#dependencies-and-licences)
 - [Roadmap](#roadmap)
 
 ---
@@ -36,550 +46,290 @@ A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). Wraps m
 
 | Assembly | Node category | Purpose |
 |---|---|---|
-| `VL.GIS.Core` | `GIS.Geometry` | Create and operate on NTS geometries (points, lines, polygons) |
-| `VL.GIS.Core` | `GIS.Projection` | Reproject between coordinate reference systems (WGS84, Web Mercator, UTM, …) |
-| `VL.GIS.Core` | `GIS.Serialization` | Parse/write WKT, WKB, GeoJSON |
-| `VL.GIS.Tiles` | `GIS.Tiles` | Fetch map tiles from OSM, XYZ, and WMTS sources |
-| `VL.GIS.Stride` | `GIS.Stride.Coordinates` | Convert GIS coordinates to float scene positions without precision loss |
-| `VL.GIS.Stride` | `GIS.Stride.Tessellation` | Tessellate polygons and lines into Stride-ready triangle meshes |
-| `VL.GIS.Stride` | `GIS.Stride.Elevation` | Heightmap creation, normalization, sampling, normal generation, terrain mesh |
+| `VL.GIS.Core` | `GIS.Geometry` | Create and operate on geometries (points, lines, polygons) |
+| `VL.GIS.Core` | `GIS.Projection` | Reproject between coordinate reference systems |
+| `VL.GIS.Core` | `GIS.Serialization` | Parse and write WKT, WKB, GeoJSON |
+| `VL.GIS.Tiles` | `GIS.Tiles` | Fetch map tiles from OSM, XYZ and WMTS sources |
+| `VL.GIS.Mesh` | `GIS.Mesh.Coordinates` | Convert geographic coordinates to float scene positions without precision loss |
+| `VL.GIS.Mesh` | `GIS.Mesh.Tessellation` | Tessellate polygons and lines into triangle meshes |
+| `VL.GIS.Mesh` | `GIS.Mesh.Elevation` | Heightmap creation, sampling, normals, terrain mesh |
+
+`VL.GIS.Mesh` produces plain `Vector3` positions and `int` indices. Despite an earlier
+name it does **not** depend on Stride — any renderer can consume its output.
 
 ---
 
-## Prerequisites
+## Requirements
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) installed on **Windows** (vvvv runs on Windows)
-- [vvvv gamma 6.x or 7.x](https://visualprogramming.net)
+- **vvvv gamma 7.2 or newer.** The library uses `[Name]` and `[SkipCategory]` from
+  `VL.Core`, which arrived in 7.2. Older versions will not place the nodes correctly.
+- .NET 8 SDK, only if you want to build from source.
 
 ---
 
-## Getting started
+## Install
 
-> **WSL2 note:** If your source lives in WSL2, run the `dotnet` commands below inside WSL. The built output is accessible from Windows at `\\wsl$\<distro>\home\<user>\...`. vvvv itself must run on Windows.
+In vvvv: **Manage NuGets** → `nuget install VL.GIS` → restart vvvv.
 
-**Which option should I use?**
+Then, in a patch, add `VL.GIS` under **Dependencies** (`Ctrl+J` → Solution Explorer).
+A package being installed is not the same as your document referencing it — until you add
+the dependency, the nodes will not show up in the NodeBrowser.
 
-| Situation | Use |
+Double left-click an empty area of the patch to open the NodeBrowser and search for
+`CreatePoint`.
+
+---
+
+## Working on the library
+
+```powershell
+git clone https://github.com/lavalse/vvvv-gis
+cd vvvv-gis
+```
+
+Everything below uses the `NuGet.exe` and `vvvvc.exe` that ship with vvvv, so nothing
+extra needs installing.
+
+### The loop
+
+```powershell
+.\build.ps1                     # build + stage dist\VL.GIS
+.\test\verify.ps1               # headless check (seconds)
+.\test\test.ps1                 # launch vvvv against dist\
+```
+
+`build.ps1` stages the package into `dist\VL.GIS\` with exactly the layout it has once
+installed, and `dist\` is what you point vvvv at:
+
+```powershell
+vvvv.exe --package-repositories <repo>\dist
+```
+
+Note the nesting — the argument is the *repository* (`dist\`), which contains one folder
+per package (`dist\VL.GIS\`). Passing the package folder itself does not work.
+
+A running vvvv holds the staged assemblies open, so `build.ps1` refuses to run while it is
+open. Rebuilding would not update the loaded nodes anyway.
+
+### Writing C# nodes
+
+```powershell
+.\test\dev.ps1
+```
+
+Opens a scratch document that references the `.csproj` directly rather than the built
+`.dll`, so saving a `.cs` file recompiles and hotswaps the running code — no rebuild, no
+restart. Static methods hotswap cleanly; stateful instances lose their state on every
+save.
+
+For breakpoints, attach Visual Studio to `vvvv.exe` and turn off
+*Require source files to exactly match the original version* — hotswapped assemblies no
+longer match what is on disk.
+
+Two rules for anything that ships:
+
+- A shipped `.vl` must never contain a `<ProjectDependency>`. It forces the package and
+  everything depending on it to stay editable, costing startup time and memory. That is
+  why the hot-reload document is separate.
+- Every forwarded assembly needs `[assembly: ImportAsIs(Namespace = "VL")]` from
+  `VL.Core`. Without it the package loads, compiles, packs and exports with zero warnings
+  — and contributes no nodes. `verify.ps1` checks this first for exactly that reason.
+
+### Verification
+
+```powershell
+.\test\verify.ps1 -EndToEnd
+```
+
+| Stage | What it proves |
 |---|---|
-| Working on the library itself, want fast rebuild → test cycle | Option A |
-| Want to test the full package experience without going public | Option B |
-| Ready to share with the vvvv community | Option C |
-
----
-
-### Option A — Direct DLL reference (fastest for development)
-
-No packaging needed. Best while iterating on the library itself.
-
-**1. Build**
-
-```bash
-dotnet restore VL.GIS.sln
-dotnet build VL.GIS.sln -c Release
-```
-
-The built DLLs land in:
-
-```
-src/VL.GIS.Core/bin/Release/net8.0/VL.GIS.Core.dll
-src/VL.GIS.Tiles/bin/Release/net8.0/VL.GIS.Tiles.dll
-src/VL.GIS.Stride/bin/Release/net8.0/VL.GIS.Stride.dll
-```
-
-All transitive dependencies (NTS, BruTile, ProjNet, etc.) are copied into the same `net8.0/` folder by the build, so vvvv can resolve them automatically.
-
-**2. Tell vvvv where the DLLs are**
-
-1. Open vvvv gamma → Quad menu → **Edit** → **Preferences** → **Paths** tab
-2. Under **Extra Assembly Search Paths**, click **+** and add the three `net8.0/` output folders (or their common parent)
-3. Restart vvvv
-
-**3. Reference the assemblies in your patch**
-
-1. With your patch open: Quad menu → **Edit** → **Dependencies**
-2. Click **+** → **Add .NET Assembly** → browse to `VL.GIS.Core.dll` → Add
-3. Repeat for `VL.GIS.Tiles.dll` and `VL.GIS.Stride.dll`
-
-**4. Verify**
-
-`Ctrl+N` → type `GIS` → nodes appear under `GIS.Geometry`, `GIS.Projection`, `GIS.Tiles`, etc.
-
----
-
-### Option B — Local NuGet package (test packaging locally)
-
-Packs everything into one `VL.GIS.nupkg` and installs it via vvvv's package manager, exactly like a real release — but stays on your machine.
-
-**Why one package?** `VL.GIS.nuspec` bundles all three DLLs (`VL.GIS.Core`, `VL.GIS.Tiles`, `VL.GIS.Stride`) plus the `VL.GIS.vl` entry point into a single `VL.GIS` package. Users install one thing and get everything. This is the standard pattern for vvvv libraries.
-
-**1. Install nuget.exe** (one-time — `dotnet pack` cannot read `.nuspec` files directly)
+| 0 | Every forwarded assembly carries a `VL.Core.Import` attribute |
+| 1 | The package document deserializes, resolves its dependencies and compiles |
+| 2 | A separate document can consume the packed `.nupkg` (needs gamma ≥ 7.1) |
 
 ```powershell
-# Windows PowerShell — downloads nuget.exe to the repo root
-Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile nuget.exe
+.\tools\Test-VLPackage.ps1      # static checks only, no vvvv needed; this is what CI runs
 ```
 
-Or install via Chocolatey: `choco install nuget.commandline`
+Neither proves a node appears in the NodeBrowser under the expected category — check that
+once in the GUI.
 
-**2. Build and pack**
+### Editing VL.GIS.vl
 
-```bash
-# In WSL or a terminal at the repo root
-dotnet restore VL.GIS.sln
-dotnet build VL.GIS.sln -c Release
-```
+Don't, by hand. It is generated by `tools\New-VLDocument.ps1`, and three things about it
+fail silently if you get them wrong:
 
-```powershell
-# In Windows PowerShell at the repo root
-.\nuget.exe pack VL.GIS.nuspec -OutputDirectory nupkg/
-```
+- IDs are exactly 22 characters, first in `[A-V]`, rest `[0-9A-Za-z]`, all unique
+- the file is UTF-8 **with** BOM
+- the `<Patch>` block containing the Application node must be present
 
-This produces `nupkg/VL.GIS.0.0.1.nupkg` (version comes from `<version>` in `VL.GIS.nuspec`).
+To add a dependency, append one line with a fresh ID from `tools\New-VLId.ps1`. Do not
+regenerate the file: existing IDs are identities and must stay stable across releases.
 
-**3. Add a local NuGet source**
+### Releasing
 
-Create `nuget.config` in the repo root (already in `.gitignore`-able, or commit it for team use):
+1. Bump `<version>` in `VL.GIS.nuspec`, update `<releaseNotes>`
+2. `.\build.ps1 ; .\test\verify.ps1 -EndToEnd`, and check the categories in the GUI
+3. Commit, then `git tag v0.1.0 && git push origin v0.1.0`
 
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <add key="VL.GIS local" value="./nupkg" />
-  </packageSources>
-</configuration>
-```
-
-**4. Install in vvvv**
-
-1. Open vvvv gamma → Quad menu → **Edit** → **Manage NuGet Packages**
-2. Select source **VL.GIS local** from the dropdown
-3. Search **VL.GIS** → **Install**
-4. Restart vvvv → `Ctrl+N` → type `GIS`
-
-> **Tip:** Every time you rebuild and repack, bump `<version>` in `VL.GIS.nuspec` (e.g. `0.0.1` → `0.0.2`). vvvv's NuGet cache won't pick up a new `.nupkg` for the same version number.
-
----
-
-### Option C — Publish to nuget.org (distribute to everyone)
-
-Once published, any vvvv user can install `VL.GIS` from the built-in package manager with no manual steps.
-
-**One-time setup (do this once in your browser + GitHub)**
-
-1. Create an account at [nuget.org](https://www.nuget.org)
-2. nuget.org → your avatar → **API Keys** → **+ Create**
-   - Key name: `vvvv-gis-publish`
-   - Glob pattern: `VL.GIS*`
-   - Permission: **Push new packages and package versions**
-   - Copy the key immediately (it's only shown once)
-3. GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
-   - Name: `NUGET_KEY`
-   - Value: paste the key
-
-**That's it for setup.** Publishing is now automated — see [Releasing a new version](#releasing-a-new-version) below.
-
----
-
-## Local Testing
-
-The fastest way to exercise the **vvvv document-loading code path** without publishing to NuGet.org. vvvv's `--package-repositories` flag points it directly at the repo folder, so it loads `VL.GIS.vl` exactly as a real NuGet install would.
-
-**1. Build**
-
-```bash
-dotnet build VL.GIS.sln -c Release
-```
-
-**2. Launch vvvv with the repo as a package repository**
-
-```powershell
-vvvv.exe --package-repositories "C:\path\to\vvvv-gis"
-```
-
-> WSL2: use the Windows path to the WSL2 folder, e.g. `\\wsl$\Ubuntu\home\red\projects\vvvv-gis`
-
-**3. Check the Log**
-
-Open Log (`Ctrl+Shift+L`). A clean load shows "VL.GIS loaded" with no red entries in the Dependencies panel. Any `ArgumentNullException`, `XmlException`, or assembly-binding failure here would also occur with a real install.
-
-**4. Check the NodeBrowser**
-
-`Ctrl+N` → type `GIS` → verify nodes appear under:
-`GIS.Geometry`, `GIS.Projection`, `GIS.Serialization`, `GIS.Tiles`, `GIS.Stride.Coordinates`, `GIS.Stride.Tessellation`, `GIS.Stride.Elevation`
-
-This is the **primary debug loop** — fast, no internet required, exercises vvvv's loader directly.
-
----
-
-## Pre-publish Validation
-
-The closest simulation to what end-users experience after `nuget install VL.GIS`. Run this before every push to NuGet.org.
-
-**1. Build and pack**
-
-```bash
-dotnet build VL.GIS.sln -c Release
-```
-
-```powershell
-.\nuget.exe pack VL.GIS.nuspec -OutputDirectory nupkg/
-```
-
-**2. Register a local NuGet feed (one-time)**
-
-```powershell
-dotnet nuget add source "$HOME\local-nuget" -n LocalFeed
-```
-
-**3. Push to the local feed**
-
-```powershell
-dotnet nuget push nupkg\VL.GIS.0.0.6.nupkg -s "$HOME\local-nuget"
-```
-
-**4. Install in vvvv from the local feed**
-
-1. Launch vvvv without `--package-repositories`
-2. Quad menu → **Edit** → **Manage NuGet Packages**
-3. Add feed URL: `file:///C:/Users/<you>/local-nuget`
-4. Search **VL.GIS** → **Install**
-
-**5. Verify**
-
-Check Log and NodeBrowser as above. Only after this passes should you push to NuGet.org.
-
-> **Tip:** Bump `<version>` in `VL.GIS.nuspec` for each local test iteration — NuGet caches by version and won't reload an existing version number.
-
----
-
-## Releasing a new version
-
-This is the full workflow for every release after setup is complete.
-
-**1. Update the version in `VL.GIS.nuspec`**
-
-```xml
-<version>0.0.1</version>   <!-- change this -->
-```
-
-Also update `<releaseNotes>` with what changed.
-
-**2. Commit and tag**
-
-```bash
-git add VL.GIS.nuspec
-git commit -m "chore: bump version to 0.0.1"
-git tag v0.0.1
-git push && git push --tags
-```
-
-**3. GitHub Actions does the rest**
-
-Pushing the `v0.0.1` tag triggers `.github/workflows/publish.yml`, which:
-- Builds all three projects in Release mode
-- Runs `nuget pack VL.GIS.nuspec -Version 0.0.1` (version taken from the tag)
-- Runs `dotnet nuget push` with your `NUGET_KEY` secret
-
-Watch it at: `https://github.com/<you>/vvvv-gis/actions`
-
-**4. Verify on nuget.org**
-
-The package appears at `https://www.nuget.org/packages/VL.GIS` within a few minutes (indexing can take up to 15 minutes for it to appear in search).
-
-**5. Install in vvvv**
-
-Quad menu → **Edit** → **Manage NuGet Packages** → search **VL.GIS** → **Install** → restart vvvv → `Ctrl+N` → type `GIS`.
+The tag triggers `.github/workflows/publish.yml`, which builds, validates, packs and
+pushes to nuget.org using the `NUGET_KEY` repository secret. A published version can never
+be replaced, which is why validation runs before the push.
 
 ---
 
 ## Node reference
 
-Every `public static method` on a `public class` in the C# source becomes a node in vvvv's NodeBrowser. Parameter names become pin labels (camelCase → "Camel Case"). XML doc comments become tooltips.
-
----
+Every `public static` method on a public class becomes a node. Parameter names become pin
+labels (camelCase → "Camel Case"), `out` parameters become extra output pins, and XML doc
+comments become tooltips.
 
 ### GIS.Geometry
 
-Source: `src/VL.GIS.Core/GeometryNodes.cs`
+`src/VL.GIS.Core/GeometryNodes.cs` — geometries default to WGS84 (EPSG:4326).
+Coordinates are `(longitude, latitude)` — **longitude first**.
 
-All geometries use WGS84 (EPSG:4326) by default. Coordinates are `(longitude, latitude)` — **longitude first**.
+**Creation** — `CreatePoint`, `CreatePoint3D`, `CreateLineString`, `CreatePolygon`,
+`CreatePolygonWithHoles`, `CreateBoundingBox`
 
-#### Creation
+**Operations** — `Buffer`, `BufferWithStyle`, `Intersection`, `Union`, `Difference`,
+`SymmetricDifference`, `ConvexHull`, `Centroid`, `Envelope`, `Simplify`
 
-| Node | Inputs | Output | Description |
-|---|---|---|---|
-| `CreatePoint` | `longitude`, `latitude` | `Point` | Point from WGS84 lon/lat |
-| `CreatePoint3D` | `longitude`, `latitude`, `elevation` | `Point` | Point with Z (metres) |
-| `CreateLineString` | `points` (sequence of lon/lat tuples) | `LineString` | Ordered line |
-| `CreatePolygon` | `exteriorRing` | `Polygon` | Polygon from ring; auto-closed |
-| `CreatePolygonWithHoles` | `exteriorRing`, `holes` | `Polygon` | Polygon with interior holes |
-| `CreateBoundingBox` | `minLongitude`, `minLatitude`, `maxLongitude`, `maxLatitude` | `Polygon` | Axis-aligned bbox polygon |
+**Predicates** — `Intersects`, `Contains`, `Within`, `Touches`, `Disjoint`, `Covers`
 
-#### Spatial operations
-
-| Node | Inputs | Output | Description |
-|---|---|---|---|
-| `Buffer` | `geometry`, `distance`, `segments` | `Geometry` | Expand/contract by distance (in CRS units) |
-| `BufferWithStyle` | `geometry`, `distance`, `endCapStyle`, `segments` | `Geometry` | Buffer with flat/round/square caps |
-| `Intersection` | `a`, `b` | `Geometry` | A ∩ B |
-| `Union` | `a`, `b` | `Geometry` | A ∪ B |
-| `Difference` | `a`, `b` | `Geometry` | A − B |
-| `SymmetricDifference` | `a`, `b` | `Geometry` | A XOR B |
-| `ConvexHull` | `geometry` | `Geometry` | Convex hull |
-| `Centroid` | `geometry` | `Point` | Centroid point |
-| `Envelope` | `geometry` | `Geometry` | Bounding box geometry |
-| `Simplify` | `geometry`, `distanceTolerance` | `Geometry` | Douglas-Peucker simplification |
-
-#### Predicates
-
-| Node | Output | Description |
-|---|---|---|
-| `Intersects` | `bool` | A and B share any point |
-| `Contains` | `bool` | A fully contains B |
-| `Within` | `bool` | A is fully within B |
-| `Touches` | `bool` | A and B share boundary point only |
-| `Disjoint` | `bool` | A and B share no points |
-| `Covers` | `bool` | A covers B (no point of B is outside A) |
-
-#### Measurements
-
-| Node | Output | Description |
-|---|---|---|
-| `Area` | `double` | Area in CRS units² |
-| `Length` | `double` | Length/perimeter in CRS units |
-| `Distance` | `double` | Min distance between two geometries |
-| `GetGeometries` | `IReadOnlyList<Geometry>` | Decompose to component geometries |
-| `GetCoordinates` | `IReadOnlyList<(lon, lat)>` | All coordinates as tuples |
-
----
+**Measurement** — `Area`, `Length`, `Distance`, `GetGeometries`, `GetCoordinates`
 
 ### GIS.Projection
 
-Source: `src/VL.GIS.Core/ProjectionNodes.cs`
-
-#### Well-known CRS
-
-| Node | Output | Description |
-|---|---|---|
-| `Wgs84` | `ICoordinateSystem` | EPSG:4326 — geographic lon/lat |
-| `WebMercator` | `ICoordinateSystem` | EPSG:3857 — used by OSM/Google tiles |
-| `CreateUtm` | `ICoordinateSystem` | UTM zone for metric calculations |
-| `ParseWkt` | `ICoordinateSystem` | Parse any CRS from WKT string |
-
-#### Reprojection
-
-| Node | Inputs | Output | Description |
-|---|---|---|---|
-| `CreateTransformation` | `source`, `target` | `ICoordinateTransformation` | Build a reusable transform (cache this) |
-| `ReprojectPoint` | `transformation`, `x`, `y` | `(x, y)` | Reproject a single coordinate pair |
-| `ReprojectPoints` | `transformation`, `points` | `IReadOnlyList<(x, y)>` | Bulk reproject — more efficient than looping |
-| `ReprojectPointGeometry` | `point`, `source`, `target` | `Point` | Reproject an NTS Point |
-| `ReprojectGeometry` | `geometry`, `source`, `target` | `Geometry` | Reproject any NTS Geometry |
-
-#### Utilities
+`src/VL.GIS.Core/ProjectionNodes.cs`
 
 | Node | Description |
 |---|---|
-| `UtmZoneFromLongitude` | Returns UTM zone 1–60 for a given longitude |
-| `LonLatToWebMercator` | Fast WGS84 → EPSG:3857 (no ProjNet overhead) |
-| `WebMercatorToLonLat` | Fast EPSG:3857 → WGS84 |
-
----
+| `Wgs84` / `WebMercator` | EPSG:4326 and EPSG:3857 coordinate systems |
+| `CreateUtm` / `UtmZoneFromLongitude` | UTM zone for metric calculations |
+| `ParseWkt` | Parse any CRS from a WKT string |
+| `CreateTransformation` | Build a reusable transform — cache it, do not rebuild per frame |
+| `ReprojectPoint` / `ReprojectPoints` | Reproject raw coordinate pairs; the plural form is much cheaper in bulk |
+| `ReprojectPointGeometry` / `ReprojectGeometry` | Reproject geometries |
+| `LonLatToWebMercator` / `WebMercatorToLonLat` | Direct formulas, no ProjNet involved |
 
 ### GIS.Serialization
 
-Source: `src/VL.GIS.Core/SerializationNodes.cs`
+`src/VL.GIS.Core/SerializationNodes.cs`
 
-#### WKT (Well-Known Text)
-
-| Node | Description |
+| Format | Nodes |
 |---|---|
-| `ParseWkt` | Parse geometry from WKT string, e.g. `"POINT(13.4 52.5)"` |
-| `TryParseWkt` | Parse without throwing; outputs `bool` success flag |
-| `ToWkt` | Serialize geometry to WKT |
-
-#### WKB (Well-Known Binary)
-
-| Node | Description |
-|---|---|
-| `ParseWkb` | Parse from `byte[]` |
-| `ToWkb` | Serialize to `byte[]` |
-| `ParseHexWkb` | Parse from hex string (PostGIS format) |
-| `ToHexWkb` | Serialize to hex string |
-
-#### GeoJSON
-
-| Node | Description |
-|---|---|
-| `ParseGeoJsonGeometry` | Parse GeoJSON geometry object string |
-| `TryParseGeoJsonGeometry` | Parse without throwing |
-| `ToGeoJsonGeometry` | Serialize to GeoJSON geometry string |
-
-#### Bounding box
-
-| Node | Outputs | Description |
-|---|---|---|
-| `GetBoundingBox` | `minLon`, `minLat`, `maxLon`, `maxLat` | Extract bbox of any geometry |
-| `BoundingBoxCenter` | `(longitude, latitude)` | Center of the bbox |
-
----
+| WKT | `ParseWkt`, `TryParseWkt`, `ToWkt` |
+| WKB | `ParseWkb`, `ToWkb`, `ParseHexWkb`, `ToHexWkb` (hex is the PostGIS form) |
+| GeoJSON | `ParseGeoJsonGeometry`, `TryParseGeoJsonGeometry`, `ToGeoJsonGeometry` |
+| Bounds | `GetBoundingBox`, `BoundingBoxCenter` |
 
 ### GIS.Tiles
 
-Sources: `src/VL.GIS.Tiles/TileProviderNodes.cs`, `TileFetchNodes.cs`
+`src/VL.GIS.Tiles/` — XYZ / slippy-map convention. Zoom 0 is the whole world, 19 is
+street level.
 
-Tiles use Web Mercator (EPSG:3857) / XYZ (slippy map) convention. Zoom level 0 = whole world; zoom 19 = street level.
+**Sources** — `OsmTileSource`, `OpenTopoMapTileSource`, `XyzTileSource`, `WmtsTileSource`,
+`TileSchemaName`, `TileSchemaZoomRange`, `TileAttribution`
 
-#### Tile sources
+**Indexing** — `CreateTileIndex`, `TileIndexFromLonLat`, `TileIndicesForBounds`,
+`TileBounds`
 
-| Node | Description |
-|---|---|
-| `OsmTileSource` | OpenStreetMap standard tiles (zoom 0–19) |
-| `OpenTopoMapTileSource` | Topographic map (zoom 0–17) |
-| `XyzTileSource` | Custom XYZ source from URL template `{z}/{x}/{y}` |
-| `WmtsTileSource` | WMTS source from a GetCapabilities URL + layer ID |
-| `TileSchemaName` | Get schema name from a tile source |
-| `TileSchemaZoomRange` | Get min/max zoom levels |
-| `TileAttribution` | Get attribution text (display to users as required) |
+**Fetching** — `FetchTileBytes`, `FetchTileToFile`, `FetchTileAsync`, `FetchTilesAsync`,
+`CreateFileCache`, `IsTileCached`
 
-#### Tile indexing
+### GIS.Mesh.Coordinates
 
-| Node | Description |
-|---|---|
-| `CreateTileIndex` | Create index from explicit col/row/level |
-| `TileIndexFromLonLat` | Convert lon/lat + zoom to tile index |
-| `TileIndicesForBounds` | List all tile indices covering a bbox at a zoom level |
-| `TileBounds` | Convert a tile index back to WGS84 bbox |
+`src/VL.GIS.Mesh/CoordinateConverter.cs`
 
-#### Fetching
+`CreateSceneOrigin`, `LonLatToLocal`, `LocalToLonLat`, `CreateWebMercatorOrigin`,
+`WebMercatorToLocal`, `MetresPerDegreeLongitude`, `MetresPerDegreeLatitude`
 
-| Node | Output | Description |
-|---|---|---|
-| `FetchTileBytes` | `byte[]?` | Fetch a tile synchronously (null on failure) |
-| `FetchTileToFile` | `string?` | Fetch and write to disk; returns file path |
-| `FetchTileAsync` | `IObservable<byte[]?>` | Fetch asynchronously — connect to **S+H** in vvvv |
-| `FetchTilesAsync` | `IObservable<(TileIndex, byte[]?)>` | Fetch multiple tiles in parallel |
-| `CreateFileCache` | `FileCache` | Persistent on-disk tile cache |
-| `IsTileCached` | `bool` | Check presence in cache without fetching |
+### GIS.Mesh.Tessellation
 
----
+`src/VL.GIS.Mesh/GeometryTessellator.cs` — convert coordinates with
+`GIS.Mesh.Coordinates` *before* tessellating.
 
-### GIS.Stride.Coordinates
+`TessellatePolygon`, `TessellateMultiPolygon`, `LineStringToPositions`,
+`LineStringToRibbonMesh`, `CreateTileQuad`
 
-Source: `src/VL.GIS.Stride/CoordinateConverter.cs`
+### GIS.Mesh.Elevation
 
-Solves the **float precision problem**: WGS84 coordinates at global scale exceed float32 precision, causing visible jitter. Solution: define a scene origin in double precision, then store all positions as float offsets relative to that origin.
+`src/VL.GIS.Mesh/ElevationNodes.cs` — heightmaps are flat `float[]` in row-major order.
 
-| Node | Description |
-|---|---|
-| `CreateSceneOrigin` | Define a lon/lat reference point for the scene (store as persistent node) |
-| `LonLatToLocal` | WGS84 → `Vector3` local position. 1 unit = 1 metre. +Y = up, +Z = south. Accurate within ~50 km of origin. |
-| `LocalToLonLat` | Inverse of `LonLatToLocal` |
-| `CreateWebMercatorOrigin` | Like `CreateSceneOrigin` but in EPSG:3857 metres |
-| `WebMercatorToLocal` | EPSG:3857 → `Vector3` local position |
-| `MetresPerDegreeLongitude` | Approx. metres/degree at a given latitude (lon direction) |
-| `MetresPerDegreeLatitude` | Approx. metres/degree in latitude direction (~111 319 m) |
-
----
-
-### GIS.Stride.Tessellation
-
-Source: `src/VL.GIS.Stride/GeometryTessellator.cs`
-
-Converts NTS geometries into triangle mesh data (flat `Vector3[]` + `int[]`) ready for Stride's mesh API. **Convert coordinates with `CoordinateConverter` before tessellating.**
-
-| Node | Outputs | Description |
-|---|---|---|
-| `TessellatePolygon` | `positions`, `indices` | Polygon → Delaunay triangle mesh. Holes are respected. |
-| `TessellateMultiPolygon` | `positions`, `indices` | MultiPolygon → merged triangle mesh |
-| `LineStringToPositions` | `IReadOnlyList<Vector3>` | LineString → ordered position list for line rendering |
-| `LineStringToRibbonMesh` | `positions`, `indices` | LineString → flat ribbon mesh with given width (metres) |
-| `CreateTileQuad` | `positions`, `uvs`, `indices` | Axis-aligned textured quad for a map tile |
-
----
-
-### GIS.Stride.Elevation
-
-Source: `src/VL.GIS.Stride/ElevationNodes.cs`
-
-Works with DEM (Digital Elevation Model) data as flat `float[]` arrays in row-major order.
-
-| Node | Description |
-|---|---|
-| `CreateFlatHeightmap` | Allocate a flat (all-zero) heightmap of given dimensions |
-| `HeightmapFromArray` | Convert `float[][]` 2D grid to flat row-major array |
-| `NormalizeHeightmap` | Rescale to 0–1 range; outputs `minElevation` and `maxElevation` |
-| `SampleHeightmap` | Bilinear sample at fractional UV coordinates (0–1) |
-| `GenerateNormals` | Central-differences normal map from heightmap → `Vector3[]` |
-| `HeightmapToMesh` | Full terrain mesh: positions + UVs + indices from heightmap |
+`CreateFlatHeightmap`, `HeightmapFromArray`, `NormalizeHeightmap`, `SampleHeightmap`,
+`GenerateNormals`, `HeightmapToMesh`
 
 ---
 
 ## Key concepts
 
-### Coordinate order
+**Coordinate order.** Longitude first, then latitude — the same as `(x, y)`. This is the
+opposite of how coordinates are usually spoken ("lat, lon"), and it is the single most
+common source of confusion.
 
-NTS / WGS84 convention: **longitude first, then latitude** — the same as `(x, y)` / `(east, north)`. This is the opposite of how coordinates are often spoken ("lat, lon"), so watch out.
+**Buffer units follow the CRS.** On WGS84 `Buffer(geom, 0.001)` is a thousandth of a
+*degree*, roughly 111 m at the equator and less as you move poleward. For anything
+metric, reproject to Web Mercator or a UTM zone first, buffer there, and project back.
 
-### CRS units
+**Float precision.** WGS84 coordinates carry more meaningful digits than a float32 holds,
+so rendering world positions directly produces visible jitter. Pick a scene origin with
+`CreateSceneOrigin`, keep it as double, and convert everything to local float offsets.
+The equirectangular approximation used is good to about a metre within 50 km of the
+origin; beyond that, use several origins.
 
-- WGS84 (EPSG:4326): degrees. `Buffer(geom, 0.001)` ≈ 111 m at the equator.
-- Web Mercator (EPSG:3857): metres.
-- UTM: metres. Best for accurate distance/area calculations within a zone.
+**Async tiles.** `FetchTileAsync` returns `IObservable<byte[]?>`. Wire it through an
+**S+H** node to latch the bytes when they arrive.
 
-### Tile attribution
-
-When showing OSM tiles publicly, you **must** display attribution:
-> © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors
-
-Use `TileAttribution` to retrieve the string from the tile source.
-
-### Async tiles in vvvv
-
-`FetchTileAsync` returns an `IObservable<byte[]?>`. In a vvvv patch, wire it through a **S+H (Sample & Hold)** node to latch the bytes once they arrive. Retrieve tile bytes on-demand per frame by toggling the S+H.
-
-### Float precision
-
-Always use `CoordinateConverter.LonLatToLocal` with a stable scene origin when placing geometry in a Stride scene. The equirectangular approximation it uses is accurate to within ~1 m at 50 km from the origin. For larger areas, place multiple scene origins.
-
----
-
-## Example patches
-
-The `help/` folder contains three starter patches:
-
-| Patch | What it shows |
-|---|---|
-| `HowTo OSM Tile Viewer.vl` | Fetch OSM tiles and display them as textured quads |
-| `HowTo GeoJSON Polygon Buffer.vl` | Parse GeoJSON, run a buffer operation, display the result |
-| `HowTo Stride Terrain.vl` | Build a terrain mesh from a heightmap with normals |
+**Tile attribution is not optional.** OSM requires
+"© [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors" to be displayed.
+`TileAttribution` returns whatever the source declares. The
+[OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/) also forbids
+bulk downloading; VL.GIS sets an identifying User-Agent, but heavy use needs your own
+tile server.
 
 ---
 
-## Dependencies
+## Dependencies and licences
 
-| Library | Version | License | Purpose |
+VL.GIS is MIT. It does not redistribute the libraries below — NuGet resolves each as its
+own package — but you run their code, so their terms apply to you too.
+
+| Library | Version | Licence | Purpose |
 |---|---|---|---|
-| [NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite) | 2.6.0 | BSD | Geometry model and spatial operations |
-| [ProjNet](https://github.com/NetTopologySuite/ProjNet4GeoAPI) | 2.1.0 | Apache 2.0 | Coordinate reference system transformations |
-| [BruTile](https://github.com/BruTile/BruTile) | 6.0.0 | Apache 2.0 | Tile source abstraction and fetching |
-| [System.Reactive](https://github.com/dotnet/reactive) | 6.0.1 | MIT | `IObservable` for async tile results |
+| [NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite) | 2.6.0 | BSD-3-Clause | geometry model and spatial operations |
+| [NetTopologySuite.IO.GeoJSON](https://github.com/NetTopologySuite/NetTopologySuite.IO.GeoJSON) | 3.0.0 | BSD-3-Clause | GeoJSON read/write |
+| [ProjNet](https://github.com/NetTopologySuite/ProjNet4GeoAPI) | 2.1.0 | **LGPL-2.1-or-later** | coordinate reprojection |
+| [BruTile](https://github.com/BruTile/BruTile) | 6.0.0 | Apache-2.0 | tile schemas and sources |
+
+ProjNet is the one non-permissive dependency. MIT code with an LGPL dependency is a normal
+arrangement, and a normal vvvv export (a folder of loose assemblies) satisfies LGPL-2.1
+§6. The obligation only becomes live if you export in a way that statically fuses ProjNet
+in — AOT, single-file, ILMerge or aggressive trimming. See
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). `GIS.Projection` is the only category
+that touches ProjNet.
+
+`VL.Core` is a compile-time reference only; it ships with vvvv.
 
 ---
 
 ## Roadmap
 
-| Phase | Status | Description |
-|---|---|---|
-| 1 — Core | ✅ Done | Geometry, projection, serialization, tiles, Stride 3D helpers |
-| 2 — 2D rendering | Planned | VL.Skia integration: tiles as `SKBitmap`, vectors as `SKPath` |
-| 3 — Full 3D | Planned | Tile quad scenes, triangulated meshes, DEM heightmaps in Stride |
-| 4 — File I/O | Planned | GeoTIFF, Shapefile, KML via MaxRev.Gdal.Core |
+Ordered by what would make the library trustworthy soonest, not by ambition.
+
+| | |
+|---|---|
+| Next | Help patches — building them is also the first real functional test of the nodes |
+| Next | Move GeoJSON to `GeoJSON4STJ`, dropping the Newtonsoft.Json version clash with vvvv's own |
+| Later | 2D rendering via VL.Skia: tiles as `SKBitmap`, vectors as `SKPath` |
+| Later | Real Stride integration: tile quads and meshes as Stride resources |
+| Maybe | File I/O — GeoTIFF, Shapefile, KML — via MaxRev.Gdal.Core |
 
 ---
 
 ## License
 
-MIT. See [LICENSE](LICENSE) if present, or assume MIT until a license file is added.
+MIT — see [LICENSE](LICENSE).
 
-Tile data © respective providers. OSM data © OpenStreetMap contributors (ODbL).
+Tile data belongs to its providers. OpenStreetMap data is © OpenStreetMap contributors,
+licensed ODbL.
