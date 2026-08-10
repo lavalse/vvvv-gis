@@ -12,15 +12,15 @@ It is a thin wrapper. Almost all the substance is upstream; what this repository
 solves is **how those libraries show up as nodes in a patch** — which turned out to be the
 hard part. See [docs/VL-PACKAGING.md](docs/VL-PACKAGING.md).
 
-**Current state:** `0.1.0-alpha` is the version on nuget.org; `0.2.0-alpha` is prepared in
-the nuspec and waiting for the user to push its tag. Verified: the package builds, packs and
+**Current state:** `0.2.0-alpha` is on nuget.org. Verified: the package builds, packs and
 installs, its nodes appear under the right categories, and 95 tests cover the geometry,
 projection, serialization, tile-indexing and mesh arithmetic. Thin: tile fetching over the
 network has been done exactly once, by hand. Plenty of nodes have still never run — check
 before claiming any particular one works.
 
-Do not tell anyone to install `0.1.0-alpha`. Fetching a tile with it deadlocks vvvv so
-thoroughly that the window closes without the process exiting.
+`0.1.0-alpha` and `0.0.1`–`0.0.4` are on nuget.org and must never be recommended. The 0.0.x
+line contributed no nodes at all; `0.1.0-alpha` deadlocks vvvv when it fetches a tile,
+thoroughly enough that the window closes without the process exiting.
 
 ## Repository Structure
 
