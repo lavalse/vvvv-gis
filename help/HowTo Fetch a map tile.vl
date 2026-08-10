@@ -30,7 +30,7 @@
               <Choice Kind="TypeFlag" Name="Float64" />
             </p:TypeAnnotation>
           </Pad>
-          <Pad Id="DQ4eoIs0jnrMNJZ9o9IWLG" Comment="Latitude" Bounds="400,129,35,15" ShowValueBox="true" isIOBox="true" Value="35.67">
+          <Pad Id="DQ4eoIs0jnrMNJZ9o9IWLG" Comment="Latitude" Bounds="400,129,35,15" ShowValueBox="true" isIOBox="true" Value="35.68">
             <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
               <Choice Kind="TypeFlag" Name="Float64" />
             </p:TypeAnnotation>
@@ -40,7 +40,7 @@
               <Choice Kind="TypeFlag" Name="Integer32" />
             </p:TypeAnnotation>
           </Pad>
-          <Node Bounds="445,320,254,19" Id="JlpxQIPvbcZMexeaFQV40v">
+          <Node Bounds="476,350,254,19" Id="JlpxQIPvbcZMexeaFQV40v">
             <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="TileBounds" />
@@ -51,7 +51,7 @@
             <Pin Id="I8fmyB8ydiNP4NVug7SViD" Name="Max Lon" Kind="OutputPin" />
             <Pin Id="UNObhHbrKMENNhL2kiHOCy" Name="Max Lat" Kind="OutputPin" />
           </Node>
-          <Node Bounds="183,330,155,156" Id="AL3poouN2akPjtq8XLX1gC">
+          <Node Bounds="183,330,224,166" Id="AL3poouN2akPjtq8XLX1gC">
             <p:NodeReference LastCategoryFullName="Primitive" LastDependency="Builtin">
               <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
               <CategoryReference Kind="Category" Name="Primitive" />
@@ -70,7 +70,7 @@
                 </p:NodeReference>
                 <Pin Id="RXkbYdAUniqPQ5DZ9NKyuM" Name="Result" Kind="OutputPin" />
               </Node>
-              <Node Bounds="195,413,81,19" Id="V6FwxvPtcpHOKsi6x2UUrI">
+              <Node Bounds="314,410,81,19" Id="V6FwxvPtcpHOKsi6x2UUrI">
                 <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
                   <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
                   <Choice Kind="OperationCallFlag" Name="FetchTileBytes" />
@@ -81,7 +81,8 @@
               </Node>
             </Patch>
             <ControlPoint Id="HVm7pyluuFALezoerJ5T1p" Bounds="323,336" Alignment="Top" />
-            <ControlPoint Id="P3wRaLDsVawOV6rAdf5Bgv" Bounds="197,480" Alignment="Bottom" />
+            <ControlPoint Id="P3wRaLDsVawOV6rAdf5Bgv" Bounds="316,490" Alignment="Bottom" />
+            <ControlPoint Id="Unt5m3F8wg7PuJrDw8q8VV" Bounds="197,490" Alignment="Bottom" />
           </Node>
           <Node Bounds="323,540,44,19" Id="F3Ce0TSnoEtP64vv2KRC2o">
             <p:NodeReference LastCategoryFullName="Collections.Sequence" LastDependency="VL.CoreLib.vl">
@@ -101,11 +102,32 @@
               <p:buttonmode p:Assembly="VL.UI.Forms" p:Type="VL.HDE.PatchEditor.Editors.ButtonModeEnum">Bang</p:buttonmode>
             </p:ValueBoxSettings>
           </Pad>
-          <Pad Id="QzNveBifSQSO37x5yv34zm" Comment="Min Lon" Bounds="447,401,35,15" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="V0zGVu7uBjMLNYb0jRzd3Y" Comment="Min Lat" Bounds="564,401,35,15" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="KoHtAV19zmFM8OevsNlAC8" Comment="Max Lon" Bounds="666,401,35,15" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="GNBCRq3ACTwMWn5qJxQM4k" Comment="Max Lat" Bounds="767,400,35,15" ShowValueBox="true" isIOBox="true" />
-          <Pad Id="KnbTxlEFaCuPV31Zk8ru5a" Comment="Has Changed" Bounds="124,550,35,35" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="QzNveBifSQSO37x5yv34zm" Comment="Min Lon" Bounds="478,431,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="V0zGVu7uBjMLNYb0jRzd3Y" Comment="Min Lat" Bounds="595,431,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="KoHtAV19zmFM8OevsNlAC8" Comment="Max Lon" Bounds="697,431,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="GNBCRq3ACTwMWn5qJxQM4k" Comment="Max Lat" Bounds="798,430,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="Bu8r9gkMY25MdMnZJKRl2P" Comment="" Bounds="185,631,156,15" ShowValueBox="true" isIOBox="true" />
+          <Node Bounds="978,350,81,19" Id="OLAqD5BeRRrPErBQ3Qxx1e">
+            <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="TileIndexParts" />
+            </p:NodeReference>
+            <Pin Id="T2gY9vBj02MN5AFGDRLLpU" Name="Tile Index" Kind="InputPin" />
+            <Pin Id="J3xs26d78pwMPpLKmtjbJa" Name="Col" Kind="OutputPin" />
+            <Pin Id="MC2YzIa6UFsM9oX3hWyoaY" Name="Row" Kind="OutputPin" />
+            <Pin Id="VhydG8z3eLtNM9MrbDIpIW" Name="Level" Kind="OutputPin" />
+          </Node>
+          <Pad Id="Py5RstF636GObKc7fLqyW5" Comment="Level" Bounds="1103,429,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="QkHlwXkQajELrPPQCljcgP" Comment="Col" Bounds="928,429,35,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="LuE6VQP65AEQLw9CQu2160" Comment="Row" Bounds="1018,429,35,15" ShowValueBox="true" isIOBox="true" />
+          <Node Bounds="183,540,82,19" Id="LnGDzF7yBjMLpsNAO7eg8Q">
+            <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="TileAttribution" />
+            </p:NodeReference>
+            <Pin Id="QK8vcahns3uMSvWjOtmZw2" Name="Tile Source" Kind="InputPin" />
+            <Pin Id="KFsYeUtc5B4LRnXVbqyX5M" Name="Result" Kind="OutputPin" />
+          </Node>
         </Canvas>
         <Patch Id="Jn1iUM8M9arLhuAe3C3kry" Name="Create" />
         <Patch Id="Oe9pjIGWSdINW935FpyYhr" Name="Update" />
@@ -125,10 +147,16 @@
         <Link Id="MgltRNVnYHDOFVbPP3ieBk" Ids="LAKOu9xO2QLQMhjIZz4PpY,V0zGVu7uBjMLNYb0jRzd3Y" />
         <Link Id="BOo4FOPNFhnPDPxzpG3nqy" Ids="I8fmyB8ydiNP4NVug7SViD,KoHtAV19zmFM8OevsNlAC8" />
         <Link Id="QGAmPovYuTAL3m2o02ZM7g" Ids="UNObhHbrKMENNhL2kiHOCy,GNBCRq3ACTwMWn5qJxQM4k" />
-        <Link Id="HZROXpDE8n0PxZaaibEZW0" Ids="IfngVbxa5JTMCCgoqzZ2yp,KnbTxlEFaCuPV31Zk8ru5a" />
         <Link Id="TXA17GfDEYPPCPy8iLHC2U" Ids="No3UAgiBmOsO3TEtqjgXCc,V4WMLEqb37gLnSWVN9I1d2" />
         <Link Id="QrvI6jOTJDIPDIdfJhq42T" Ids="MrEpwfNR9q8LkPZnOoPFfM,HVm7pyluuFALezoerJ5T1p" />
         <Link Id="PvlOySLvdBdNrzAjMZ5djA" Ids="HVm7pyluuFALezoerJ5T1p,QTBcUoFGbwaPq42UXf7Yfy" />
+        <Link Id="J31IDCnGlIJOaQN5Kw3pyW" Ids="MrEpwfNR9q8LkPZnOoPFfM,T2gY9vBj02MN5AFGDRLLpU" />
+        <Link Id="HAiQ2YeX5sMNXBysEZ2giz" Ids="VhydG8z3eLtNM9MrbDIpIW,Py5RstF636GObKc7fLqyW5" />
+        <Link Id="AKtcscTo7D1PNGyoMpLVRx" Ids="J3xs26d78pwMPpLKmtjbJa,QkHlwXkQajELrPPQCljcgP" />
+        <Link Id="TXCX3csnWbbLwk7eP7stfl" Ids="MC2YzIa6UFsM9oX3hWyoaY,LuE6VQP65AEQLw9CQu2160" />
+        <Link Id="G22z6HVcx1bLBdWInYMDoC" Ids="RXkbYdAUniqPQ5DZ9NKyuM,Unt5m3F8wg7PuJrDw8q8VV" />
+        <Link Id="Ek6noRl3SEOPwvLXYDhA6r" Ids="Unt5m3F8wg7PuJrDw8q8VV,QK8vcahns3uMSvWjOtmZw2" />
+        <Link Id="NU9fwGJr5F6Nva1nxA8MnF" Ids="KFsYeUtc5B4LRnXVbqyX5M,Bu8r9gkMY25MdMnZJKRl2P" />
       </Patch>
     </Node>
   </Patch>
