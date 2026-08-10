@@ -74,6 +74,18 @@ if ($missing) {
     throw "Package is missing required entries: $($missing -join ', ')"
 }
 
+# NuGet treats a version as immutable and will happily reuse an already-extracted copy
+# from the global cache, so repacking 0.1.0 with different contents is invisible to any
+# consumer that resolved it earlier. Evict our own entry; without this, verify.ps1's
+# consumer test silently validates a stale package.
+$id      = ([xml](Get-Content $Nuspec -Raw)).package.metadata.id
+$version = ([xml](Get-Content $Nuspec -Raw)).package.metadata.version
+$cached  = Join-Path $env:USERPROFILE ".nuget\packages\$($id.ToLowerInvariant())\$version"
+if (Test-Path $cached) {
+    Remove-Item $cached -Recurse -Force
+    Write-Host "   evicted stale $id $version from the global NuGet cache"
+}
+
 Write-Host "`n== done ==" -ForegroundColor Green
 Write-Host "   $($pkg.Name)  [$($pkg.Length) B]"
 $entries | Where-Object { $_ -notmatch '^_rels|^package/|Content_Types' } | ForEach-Object { "   $_" }

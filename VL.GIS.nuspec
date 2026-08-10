@@ -13,13 +13,15 @@
       Geographic Information System (GIS) library for vvvv gamma.
 
       Provides nodes for:
-      - Geometry: create and manipulate Points, Lines, Polygons (NetTopologySuite)
-      - Projection: reproject coordinates between CRS (ProjNet, EPSG:4326, EPSG:3857, UTM)
-      - Serialization: parse/write WKT, WKB, GeoJSON
+      - GIS.Geometry: create and manipulate Points, Lines, Polygons (NetTopologySuite)
+      - GIS.Projection: reproject between CRS (ProjNet; EPSG:4326, EPSG:3857, UTM)
+      - GIS.Serialization: parse/write WKT, WKB, GeoJSON
+      - GIS.Tiles: fetch map tiles from OSM, WMTS and XYZ sources (BruTile)
+      - GIS.Mesh: local coordinates, polygon tessellation, heightmaps
 
       Requires vvvv gamma 7.2 or newer (.NET 8).
     </description>
-    <summary>GIS geometry, projection and serialization nodes for vvvv gamma.</summary>
+    <summary>GIS geometry, projection, serialization, map tiles and mesh nodes for vvvv gamma.</summary>
     <releaseNotes>
       0.1.0 - First working release.
       The 0.0.x line never loaded in vvvv: VL.GIS.vl was hand-written with malformed
@@ -38,11 +40,14 @@
       It is declared in VL.GIS.vl as a <NugetDependency> instead, which is what makes its
       nodes visible.
     -->
+    <!-- System.Reactive is deliberately absent too: vvvv ships 6.0.0 and logs
+         "wasn't picked up because it's provided by vvvv itself" for anything we pin. -->
     <dependencies>
       <group targetFramework="net8.0">
         <dependency id="NetTopologySuite"            version="2.6.0" />
         <dependency id="NetTopologySuite.IO.GeoJSON" version="3.0.0" />
         <dependency id="ProjNet"                     version="2.1.0" />
+        <dependency id="BruTile"                     version="6.0.0" />
       </group>
     </dependencies>
   </metadata>
@@ -51,8 +56,12 @@
     <!-- Entry point. Must sit at the package root, no subfolder. -->
     <file src="VL.GIS.vl" target="" />
 
-    <file src="src\VL.GIS.Core\bin\Release\net8.0\VL.GIS.Core.dll" target="lib\net8.0\" />
-    <file src="src\VL.GIS.Core\bin\Release\net8.0\VL.GIS.Core.xml" target="lib\net8.0\" />
+    <file src="src\VL.GIS.Core\bin\Release\net8.0\VL.GIS.Core.dll"  target="lib\net8.0\" />
+    <file src="src\VL.GIS.Core\bin\Release\net8.0\VL.GIS.Core.xml"  target="lib\net8.0\" />
+    <file src="src\VL.GIS.Tiles\bin\Release\net8.0\VL.GIS.Tiles.dll" target="lib\net8.0\" />
+    <file src="src\VL.GIS.Tiles\bin\Release\net8.0\VL.GIS.Tiles.xml" target="lib\net8.0\" />
+    <file src="src\VL.GIS.Mesh\bin\Release\net8.0\VL.GIS.Mesh.dll"   target="lib\net8.0\" />
+    <file src="src\VL.GIS.Mesh\bin\Release\net8.0\VL.GIS.Mesh.xml"   target="lib\net8.0\" />
 
     <file src="help\**\*.vl" target="help\" />
   </files>

@@ -13,6 +13,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- See src\VL.GIS.Core\VL.GIS.Core.csproj for why this is here and not in the nuspec. -->
+    <PackageReference Include="VL.Core" Version="2025.7.2" />
+
     <PackageReference Include="BruTile" Version="6.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>

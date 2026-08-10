@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <AssemblyName>VL.GIS.Mesh</AssemblyName>
+    <RootNamespace>VL.GIS.Mesh</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>VL.GIS Contributors</Authors>
+    <!--
+      Was VL.GIS.Stride, which was misleading: nothing here references Stride. These are
+      plain geometry helpers over System.Numerics.Vector3 that produce vertex/index data
+      any renderer can consume. Real Stride integration (Mesh, Buffer, entities) is a
+      separate concern and would depend on vvvv's own Stride packages.
+    -->
+    <Description>Mesh generation helpers for GIS data: local coordinates, tessellation, heightmaps</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- See src\VL.GIS.Core\VL.GIS.Core.csproj for why this is here and not in the nuspec. -->
+    <PackageReference Include="VL.Core" Version="2025.7.2" />
+
+    <PackageReference Include="NetTopologySuite" Version="2.6.0" />
+    <!--
+      System.Numerics.Vectors 4.5.0 was referenced here and is dropped: on net8.0 it is an
+      empty facade, the real types live in the runtime. It was also never declared in the
+      nuspec, so it would have gone missing on install anyway.
+      NetTopologySuite.IO.GeoJSON is dropped too; nothing in this project deserializes.
+    -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VL.GIS.Core\VL.GIS.Core.csproj" />
+  </ItemGroup>
+
+</Project>

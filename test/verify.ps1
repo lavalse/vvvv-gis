@@ -134,6 +134,10 @@ $smoke = (Resolve-Path (Join-Path $PSScriptRoot 'SmokeTest.vl')).Path
 $feed  = (Resolve-Path (Join-Path $Dist 'feed')).Path
 $out2  = Join-Path $Dist '_e2e'
 
+# Start from nothing, so a leftover assembly from a previous run cannot pass the check
+# below on behalf of one the current package failed to deliver.
+if (Test-Path $out2) { Remove-Item $out2 -Recurse -Force }
+
 Write-Host "`ndocument : $smoke"
 Write-Host "feed     : $feed`n"
 

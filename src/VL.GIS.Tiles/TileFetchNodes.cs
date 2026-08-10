@@ -8,13 +8,14 @@ using System.Net.Http;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using VL.Core.Import;
 
 namespace VL.GIS.Tiles;
 
 /// <summary>
-/// Tile fetching, indexing, and coordinate conversion nodes for vvvv.
-/// Category: GIS.Tiles
+/// Tile fetching and indexing nodes.
 /// </summary>
+[SkipCategory]
 public static class TileFetchNodes
 {
     // Shared HttpClient — reuse across all fetch calls (BruTile 6.0 requires caller to supply it)

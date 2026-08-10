@@ -5,14 +5,14 @@ using BruTile.Web;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using VL.Core.Import;
 
 namespace VL.GIS.Tiles;
 
 /// <summary>
-/// Map tile provider factory nodes for vvvv.
-/// Creates ITileSource instances for various tile services.
-/// Category: GIS.Tiles
+/// Map tile provider factory nodes. Creates ITileSource instances for tile services.
 /// </summary>
+[SkipCategory]
 public static class TileProviderNodes
 {
     // Shared HttpClient for all web tile sources

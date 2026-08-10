@@ -1,20 +1,22 @@
 using System;
 using System.Numerics;
+using VL.Core.Import;
 
-namespace VL.GIS.Stride;
+namespace VL.GIS.Mesh;
 
 /// <summary>
-/// Coordinate conversion utilities for placing GIS data in a 3D Stride scene.
-///
-/// The key challenge is float precision: WGS84 coordinates have ~7 decimal places
-/// of meaningful data, but a float32 only has ~7 significant digits total.
-/// At global scale this causes visible "jitter" when objects move.
-///
-/// Solution: store a reference origin as double, then convert all points to
-/// local float offsets relative to that origin. The scene origin sits at (0,0,0).
-///
-/// Category: GIS.Stride.Coordinates
+/// Converts geographic coordinates into local scene coordinates.
 /// </summary>
+/// <remarks>
+/// The problem these solve is float precision. WGS84 coordinates carry ~7 meaningful
+/// decimal places, while a float32 has ~7 significant digits in total, so rendering
+/// world-scale positions directly produces visible jitter.
+///
+/// Pick a reference origin, keep it as double, and convert every point to a local float
+/// offset from it. The scene origin then sits at (0,0,0) and precision is spent on the
+/// area you actually care about.
+/// </remarks>
+[Name("Coordinates")]
 public static class CoordinateConverter
 {
     // ── Reference Origin ──────────────────────────────────────────────────────

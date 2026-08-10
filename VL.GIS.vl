@@ -4,6 +4,7 @@
   <NugetDependency Id="GR2BZIR7FDuJtIsXko6N7p" Location="NetTopologySuite" Version="2.6.0" />
   <NugetDependency Id="FTM4S6hcf96g6roWLiXt1M" Location="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />
   <NugetDependency Id="LamOVJE1DRs2jMHdH2ZYPz" Location="ProjNet" Version="2.1.0" />
+  <NugetDependency Id="M94KcFMx6tqyn3SCWD4aJN" Location="BruTile" Version="6.0.0" />
   <Patch Id="BHeGLVnDJMW8978PekxtWJ">
     <Canvas Id="AfttJ2yDuN0Wx1dEvvypns" DefaultCategory="GIS" CanvasType="FullCategory" />
     <!--
@@ -28,4 +29,6 @@
     </Node>
   </Patch>
   <PlatformDependency Id="D7x4HFS7SLaqqzddflk6Ob" Location="./lib/net8.0/VL.GIS.Core.dll" IsForward="true" />
+  <PlatformDependency Id="Pw0J9wtoKjmh7F4QYtDEpE" Location="./lib/net8.0/VL.GIS.Tiles.dll" IsForward="true" />
+  <PlatformDependency Id="CGy5Gxfp2cz5EPe55v5kTz" Location="./lib/net8.0/VL.GIS.Mesh.dll" IsForward="true" />
 </Document>

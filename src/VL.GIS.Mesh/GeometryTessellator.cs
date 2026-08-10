@@ -3,17 +3,18 @@ using NetTopologySuite.Triangulate;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using VL.Core.Import;
 
-namespace VL.GIS.Stride;
+namespace VL.GIS.Mesh;
 
 /// <summary>
-/// Tessellates NTS geometry (polygons, lines) into mesh data for Stride3D.
-///
-/// Output: flat arrays of Vector3 positions and int indices, ready to pass
-/// to Stride's GeometricPrimitive or a custom MeshDraw builder.
-///
-/// Category: GIS.Stride.Tessellation
+/// Tessellates polygons and lines into renderable mesh data.
 /// </summary>
+/// <remarks>
+/// Output is flat arrays of Vector3 positions plus int indices, which is the common
+/// denominator every mesh builder accepts.
+/// </remarks>
+[Name("Tessellation")]
 public static class GeometryTessellator
 {
     // ── Polygon → Triangle Mesh ───────────────────────────────────────────────

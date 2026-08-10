@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using VL.Core.Import;
 
-namespace VL.GIS.Stride;
+namespace VL.GIS.Mesh;
 
 /// <summary>
-/// Elevation / heightmap utilities for 3D terrain rendering in Stride.
-///
-/// Stride's Heightmap component accepts float[] arrays directly.
-/// These helpers convert DEM (Digital Elevation Model) data into the
-/// format expected by Stride.
-///
-/// Category: GIS.Stride.Elevation
+/// Heightmap utilities for terrain: sampling, normalising, and turning a DEM into a mesh.
 /// </summary>
+/// <remarks>
+/// Heights are plain float arrays, which is what terrain components generally expect,
+/// so the output can be fed to Stride, Skia, or written out as-is.
+/// </remarks>
+[Name("Elevation")]
 public static class ElevationNodes
 {
     // ── Heightmap Creation ────────────────────────────────────────────────────
