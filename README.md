@@ -4,6 +4,15 @@ A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). It wrap
 .NET GIS libraries — NetTopologySuite, ProjNet, BruTile — as vvvv nodes, so you can work
 with coordinates, geometries and map tiles without leaving the patch.
 
+Credit where it is due: this is a thin wrapper. The geometry engine, the projection maths
+and the tile handling are all upstream work by the
+[NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite),
+[ProjNet](https://github.com/NetTopologySuite/ProjNet4GeoAPI) and
+[BruTile](https://github.com/BruTile/BruTile) teams. VL.GIS mostly decides how they show
+up in a patch. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for their licences —
+and note that **exporting a vvvv app redistributes their binaries**, which carries
+attribution obligations that installing VL.GIS alone does not.
+
 ---
 
 ## ⚠️ Status: early, and largely untested
