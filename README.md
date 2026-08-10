@@ -99,6 +99,11 @@ cd vvvv-gis
 Everything below uses the `NuGet.exe` and `vvvvc.exe` that ship with vvvv, so nothing
 extra needs installing.
 
+If you are packaging a VL library of your own — or wondering why this one is arranged the
+way it is — [docs/VL-PACKAGING.md](docs/VL-PACKAGING.md) is the field guide. Nine releases
+of VL.GIS installed and contributed zero nodes before it existed, and none of them produced
+an error message; that document is the write-up of why.
+
 ### The loop
 
 ```powershell
@@ -174,6 +179,10 @@ fail silently if you get them wrong:
 
 To add a dependency, append one line with a fresh ID from `tools\New-VLId.ps1`. Do not
 regenerate the file: existing IDs are identities and must stay stable across releases.
+
+Each of those three, plus the `[ImportAsIs]` requirement above, is documented with its
+symptom and its forensics in [docs/VL-PACKAGING.md](docs/VL-PACKAGING.md), along with a
+checklist to work through when nodes do not show up.
 
 ### Releasing
 
