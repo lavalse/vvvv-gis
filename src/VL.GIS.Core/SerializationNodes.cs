@@ -1,14 +1,14 @@
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 using System;
+using VL.Core.Import;
 
-namespace VL.GIS.Core;
+namespace VL.GIS;
 
 /// <summary>
-/// Geometry serialization/deserialization nodes for vvvv.
-/// Supports WKT, WKB, and GeoJSON formats.
-/// Category: GIS.Serialization
+/// Geometry serialization nodes. Supports WKT, WKB and GeoJSON.
 /// </summary>
+[Name("Serialization")]
 public static class SerializationNodes
 {
     private static readonly WKTReader WktReader = new WKTReader();

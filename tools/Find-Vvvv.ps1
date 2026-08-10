@@ -35,8 +35,10 @@ param(
     [Parameter(ParameterSetName = 'NuGet')]
     [switch]$NuGet,
 
-    # Lowest acceptable gamma version. 6.0 is the first net8.0 release.
-    [version]$MinimumVersion = '6.0',
+    # Lowest acceptable gamma version. 7.2 is when [Name] / [SkipCategory] arrived, which
+    # VL.GIS.Core uses to place its nodes; 6.0 was the first net8.0 release, so anything
+    # between the two builds but produces wrong node categories.
+    [version]$MinimumVersion = '7.2',
 
     [string]$SearchRoot = 'C:\Program Files\vvvv'
 )

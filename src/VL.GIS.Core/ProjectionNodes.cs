@@ -3,13 +3,14 @@ using ProjNet.CoordinateSystems;
 using ProjNet.CoordinateSystems.Transformations;
 using System;
 using System.Collections.Generic;
+using VL.Core.Import;
 
-namespace VL.GIS.Core;
+namespace VL.GIS;
 
 /// <summary>
-/// Coordinate reference system (CRS) and reprojection nodes for vvvv.
-/// Category: GIS.Projection
+/// Coordinate reference system (CRS) and reprojection nodes.
 /// </summary>
+[Name("Projection")]
 public static class ProjectionNodes
 {
     private static readonly CoordinateSystemFactory CsFactory = new CoordinateSystemFactory();

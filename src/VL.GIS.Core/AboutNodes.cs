@@ -1,9 +1,11 @@
-namespace VL.GIS.Core;
+using VL.Core.Import;
+
+namespace VL.GIS;
 
 /// <summary>
 /// Package metadata nodes.
-/// Category: GIS
 /// </summary>
+[Name("About")]
 public static class AboutNodes
 {
     /// <summary>The version of the VL.GIS package that is currently loaded.</summary>

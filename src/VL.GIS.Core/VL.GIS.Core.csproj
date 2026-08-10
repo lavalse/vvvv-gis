@@ -5,7 +5,12 @@
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
     <AssemblyName>VL.GIS.Core</AssemblyName>
-    <RootNamespace>VL.GIS.Core</RootNamespace>
+    <!--
+      Deliberately not VL.GIS.Core. The VL node category is derived from the namespace
+      (minus the "VL" prefix, see AssemblyInfo.cs), so VL.GIS keeps categories at
+      GIS.Geometry rather than GIS.Core.Geometry. The assembly name is unrelated to it.
+    -->
+    <RootNamespace>VL.GIS</RootNamespace>
     <Version>0.1.0</Version>
     <Authors>VL.GIS Contributors</Authors>
     <Description>Core GIS geometry and projection nodes for vvvv gamma</Description>
@@ -22,10 +27,14 @@
 
       Not declared in VL.GIS.nuspec on purpose: VL.Core ships with vvvv, so it is always
       present at runtime. Same as VL.Devices.RealSense / VL.OpenCV.
-      Pinned one patch below the current 2025.7.4 so gamma 7.0 stays usable; vvvv 7.1+
-      rewrites this version to whatever the running system uses anyway.
+
+      2025.7.2 is the floor, not a preference: [Name] and [SkipCategory] were added in
+      gamma 7.2, which makes 7.2 the minimum vvvv version for VL.GIS. The alternative
+      (renaming the C# classes instead of just their VL-facing names) would keep 7.0
+      working but force an alias on NetTopologySuite's Geometry through every signature
+      that returns one.
     -->
-    <PackageReference Include="VL.Core" Version="2025.7.0" />
+    <PackageReference Include="VL.Core" Version="2025.7.2" />
 
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
     <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />

@@ -8,7 +8,10 @@ using VL.Core.Import;
 // nothing, which looks exactly like the package failing to load.
 //
 // Namespace = "VL" is the prefix stripped when deriving the VL category from the .NET
-// namespace, so VL.GIS.Core.GeometryNodes lands under GIS.Core.GeometryNodes.
+// namespace, and the type name is appended:
+//
+//     VL.GIS + GeometryNodes  ->  GIS.Geometry     (type renamed via [Name])
+//
 // This mirrors VL.Serialization.MessagePack, which ships with vvvv and uses the same
 // single line.
 [assembly: ImportAsIs(Namespace = "VL")]

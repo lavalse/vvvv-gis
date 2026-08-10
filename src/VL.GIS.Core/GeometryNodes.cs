@@ -2,14 +2,20 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Operation.Buffer;
 using System.Collections.Generic;
 using System.Linq;
+using VL.Core.Import;
 
-namespace VL.GIS.Core;
+namespace VL.GIS;
 
 /// <summary>
-/// Geometry creation and spatial operation nodes for vvvv.
-/// Every public static method becomes a node in the vvvv NodeBrowser.
-/// Category: GIS.Geometry
+/// Geometry creation and spatial operation nodes.
 /// </summary>
+/// <remarks>
+/// The VL category is (namespace minus the "VL" prefix) + type name, so this lands under
+/// GIS.Geometry. [Name] renames the type for VL only -- the C# class stays GeometryNodes
+/// because a class literally named Geometry would shadow NetTopologySuite's Geometry
+/// inside this namespace.
+/// </remarks>
+[Name("Geometry")]
 public static class GeometryNodes
 {
     private static readonly GeometryFactory Factory = new GeometryFactory(new PrecisionModel(), 4326);

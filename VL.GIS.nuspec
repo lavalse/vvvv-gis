@@ -17,7 +17,7 @@
       - Projection: reproject coordinates between CRS (ProjNet, EPSG:4326, EPSG:3857, UTM)
       - Serialization: parse/write WKT, WKB, GeoJSON
 
-      Built for vvvv gamma 7.x / .NET 8.
+      Requires vvvv gamma 7.2 or newer (.NET 8).
     </description>
     <summary>GIS geometry, projection and serialization nodes for vvvv gamma.</summary>
     <releaseNotes>
