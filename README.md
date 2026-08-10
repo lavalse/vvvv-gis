@@ -58,7 +58,7 @@ and contributed no nodes. They are unlisted. Do not use them.
 | `VL.GIS.Core` | `GIS.Geometry` | Create and operate on geometries (points, lines, polygons) |
 | `VL.GIS.Core` | `GIS.Projection` | Reproject between coordinate reference systems |
 | `VL.GIS.Core` | `GIS.Serialization` | Parse and write WKT, WKB, GeoJSON |
-| `VL.GIS.Tiles` | `GIS.Tiles` | Fetch map tiles from OSM, XYZ and WMTS sources |
+| `VL.GIS.Tiles` | `GIS.Tiles` | Fetch map tiles from OSM and XYZ sources |
 | `VL.GIS.Mesh` | `GIS.Mesh.Coordinates` | Convert geographic coordinates to float scene positions without precision loss |
 | `VL.GIS.Mesh` | `GIS.Mesh.Tessellation` | Tessellate polygons and lines into triangle meshes |
 | `VL.GIS.Mesh` | `GIS.Mesh.Elevation` | Heightmap creation, sampling, normals, terrain mesh |
@@ -248,8 +248,10 @@ Coordinates are `(longitude, latitude)` — **longitude first**.
 `src/VL.GIS.Tiles/` — XYZ / slippy-map convention. Zoom 0 is the whole world, 19 is
 street level.
 
-**Sources** — `OsmTileSource`, `OpenTopoMapTileSource`, `XyzTileSource`, `WmtsTileSource`,
+**Sources** — `OsmTileSource`, `OpenTopoMapTileSource`, `XyzTileSource`,
 `TileSchemaName`, `TileSchemaZoomRange`, `TileAttribution`
+
+There is no WMTS source. Point `XyzTileSource` at a WMTS GetTile URL template instead.
 
 **Indexing** — `CreateTileIndex`, `TileIndexFromLonLat`, `TileIndicesForBounds`,
 `TileBounds`

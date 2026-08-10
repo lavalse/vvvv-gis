@@ -8,7 +8,7 @@
     <RootNamespace>VL.GIS.Tiles</RootNamespace>
     <Version>0.1.0</Version>
     <Authors>VL.GIS Contributors</Authors>
-    <Description>Map tile fetching nodes for vvvv gamma (OSM, WMTS, XYZ)</Description>
+    <Description>Map tile fetching nodes for vvvv gamma (OSM, XYZ)</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

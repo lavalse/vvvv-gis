@@ -26,11 +26,27 @@ public static class TileProviderNodes
 
     // ── OSM / OpenStreetMap ───────────────────────────────────────────────────
 
+    // These return IHttpTileSource, not ITileSource, and the difference decides whether
+    // the category works at all. BruTile's hierarchy is
+    //
+    //     ITileSource
+    //       +-- IHttpTileSource     <- HttpTileSource, what these factories construct
+    //       +-- ILocalTileSource
+    //
+    // and every fetch node takes an IHttpTileSource, because fetching needs the HttpClient
+    // overload of GetTileAsync. Declaring ITileSource here made the output pin the base
+    // interface, so wiring a source into FetchTileBytes would have been a downcast, which
+    // VL does not insert for you. Nothing about that shows up at compile time -- the nodes
+    // appear in the NodeBrowser and simply refuse to connect.
+    //
+    // The schema and attribution nodes below still take ITileSource; upcasting to it stays
+    // implicit, so they keep accepting these.
+
     /// <summary>
     /// Create an OpenStreetMap tile source (standard tile.openstreetmap.org).
     /// Returns tiles at zoom levels 0–19, 256×256 px, Web Mercator (EPSG:3857).
     /// </summary>
-    public static ITileSource OsmTileSource()
+    public static IHttpTileSource OsmTileSource()
         => new HttpTileSource(
             new GlobalSphericalMercator(0, 19),
             "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -41,7 +57,7 @@ public static class TileProviderNodes
     /// <summary>
     /// Create an OpenTopoMap tile source — topographic rendering of OSM data.
     /// </summary>
-    public static ITileSource OpenTopoMapTileSource()
+    public static IHttpTileSource OpenTopoMapTileSource()
         => new HttpTileSource(
             new GlobalSphericalMercator(0, 17),
             "https://tile.opentopomap.org/{z}/{x}/{y}.png",
@@ -56,7 +72,7 @@ public static class TileProviderNodes
     /// Template variables: {z} = zoom, {x} = tile X, {y} = tile Y.
     /// Example: "https://example.com/tiles/{z}/{x}/{y}.png"
     /// </summary>
-    public static ITileSource XyzTileSource(
+    public static IHttpTileSource XyzTileSource(
         string urlTemplate,
         string name = "XYZ",
         int minZoom = 0,
@@ -68,22 +84,15 @@ public static class TileProviderNodes
             configureHttpRequestMessage: msg =>
                 msg.Headers.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)"));
 
-    // ── WMTS ─────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Create a WMTS tile source from a capabilities URL.
-    /// Automatically parses the WMTS GetCapabilities response.
-    /// </summary>
-    public static ITileSource WmtsTileSource(
-        string capabilitiesUrl,
-        string layerIdentifier)
-    {
-        // BruTile 6.0 removed WmtsParser. Use BruTile.Wmts.WmtsCapabilities or
-        // construct an HttpTileSource manually from the WMTS GetTile URL template.
-        throw new NotSupportedException(
-            "WmtsTileSource requires BruTile.Wmts API that was removed in BruTile 6.0. " +
-            "Use XyzTileSource with a manual WMTS tile URL template instead.");
-    }
+    // No WMTS source. There was a WmtsTileSource here whose entire body threw
+    // NotSupportedException -- BruTile 6.0 removed the WmtsParser it was written against --
+    // while the README and the package description both advertised WMTS support. A node
+    // that is guaranteed to throw is worse than an absent one: it is discoverable, it
+    // wires up, and it fails only once someone runs the patch.
+    //
+    // Serving WMTS properly means reading GetCapabilities and turning the GetTile template
+    // into a tile source, which is its own piece of work. Until then, XyzTileSource with a
+    // hand-written WMTS URL template covers most of the ground.
 
     // ── Tile Schema Info ──────────────────────────────────────────────────────
 

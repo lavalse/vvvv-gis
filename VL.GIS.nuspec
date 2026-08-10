@@ -30,7 +30,7 @@
       - GIS.Geometry: create and manipulate Points, Lines, Polygons (NetTopologySuite)
       - GIS.Projection: reproject between CRS (ProjNet; EPSG:4326, EPSG:3857, UTM)
       - GIS.Serialization: parse/write WKT, WKB, GeoJSON
-      - GIS.Tiles: fetch map tiles from OSM, WMTS and XYZ sources (BruTile)
+      - GIS.Tiles: fetch map tiles from OSM and XYZ sources (BruTile)
       - GIS.Mesh: local coordinates, polygon tessellation, heightmaps
 
       Requires vvvv gamma 7.2 or newer (.NET 8).
