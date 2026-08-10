@@ -168,9 +168,10 @@ regenerate the file: existing IDs are identities and must stay stable across rel
 
 ### Releasing
 
-1. Bump `<version>` in `VL.GIS.nuspec`, update `<releaseNotes>`
+1. Bump `<version>` in `VL.GIS.nuspec`, update `<releaseNotes>`, and keep the version
+   `test\SmokeTest.vl` pins in step with it
 2. `.\build.ps1 ; .\test\verify.ps1 -EndToEnd`, and check the categories in the GUI
-3. Commit, then `git tag v0.1.0 && git push origin v0.1.0`
+3. Commit, then `git tag v0.1.0-alpha && git push origin v0.1.0-alpha`
 
 The tag triggers `.github/workflows/publish.yml`, which builds, validates, packs and
 pushes to nuget.org using the `NUGET_KEY` repository secret. A published version can never

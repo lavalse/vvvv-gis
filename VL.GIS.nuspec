@@ -2,7 +2,13 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>VL.GIS</id>
-    <version>0.1.0</version>
+    <!--
+      Prerelease on purpose. nuget.org hides prerelease versions from default search and
+      vvvv needs an explicit opt-in to install one, which enforces "not for real projects"
+      mechanically rather than relying on anyone reading the description.
+      Drop the -alpha once the nodes have actually been exercised.
+    -->
+    <version>0.1.0-alpha</version>
     <title>VL.GIS — GIS Library for vvvv gamma</title>
     <authors>VL.GIS Contributors</authors>
     <owners>VL.GIS Contributors</owners>
@@ -31,7 +37,7 @@
     </description>
     <summary>GIS geometry, projection, serialization, map tiles and mesh nodes for vvvv gamma.</summary>
     <releaseNotes>
-      0.1.0 - First release whose nodes actually appear in vvvv.
+      0.1.0-alpha - First release whose nodes actually appear in vvvv.
 
       The 0.0.x line (0.0.1 - 0.0.4, now unlisted) installed and contributed no nodes at
       all, for three independent reasons, none of which produced an error message:
