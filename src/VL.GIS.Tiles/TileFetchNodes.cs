@@ -37,6 +37,22 @@ public static class TileFetchNodes
         => new TileIndex(col, row, level);
 
     /// <summary>
+    /// Split a TileIndex into its column, row and zoom level.
+    /// </summary>
+    public static void TileIndexParts(
+        TileIndex tileIndex, out int col, out int row, out int level)
+    {
+        // TileIndex is a BruTile struct, so an IOBox can only display its type name, and
+        // BruTile is a plain NugetDependency rather than an [ImportAsIs] assembly, which
+        // leaves Col/Row/Level reachable only as raw .NET reflection nodes that the
+        // NodeBrowser hides. Without this node the first question you ask when a tile looks
+        // wrong -- which tile am I requesting -- cannot be answered inside a patch.
+        col   = tileIndex.Col;
+        row   = tileIndex.Row;
+        level = tileIndex.Level;
+    }
+
+    /// <summary>
     /// Compute the TileIndex for a given longitude/latitude at a specific zoom level.
     /// Uses Web Mercator / OSM tile numbering convention.
     /// </summary>
@@ -93,8 +109,10 @@ public static class TileFetchNodes
     /// <summary>
     /// Fetch a single tile as raw bytes, blocking until it arrives.
     /// Returns null on failure (404, network error, timeout).
-    /// Stalls the whole patch for the duration of the request — prefer FetchTileAsync,
-    /// which does the same work without holding up the frame.
+    /// Stalls the patch for the length of the request, so do not evaluate it every frame:
+    /// wrap it in a Cache region driven by the tile index, or by the region's Force pin, and
+    /// take FetchTileAsync instead whenever tiles change as the patch runs.
+    /// See help/HowTo Fetch a map tile.vl.
     /// </summary>
     public static byte[]? FetchTileBytes(IHttpTileSource tileSource, TileIndex tileIndex)
     {

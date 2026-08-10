@@ -168,6 +168,48 @@ public class TilesTests
     }
 
     [Fact]
+    public void TileIndexParts_reads_back_what_CreateTileIndex_was_given()
+    {
+        TileFetchNodes.TileIndexParts(
+            TileFetchNodes.CreateTileIndex(3637, 1612, 12),
+            out int col, out int row, out int level);
+
+        Assert.Equal(3637, col);
+        Assert.Equal(1612, row);
+        Assert.Equal(12, level);
+    }
+
+    [Fact]
+    public void TileIndexParts_exposes_what_TileIndexFromLonLat_computed()
+    {
+        // The whole reason this node exists: a TileIndex is opaque inside a patch, so
+        // debugging a tile request meant guessing which tile had been asked for.
+        TileFetchNodes.TileIndexParts(
+            TileFetchNodes.TileIndexFromLonLat(Lon, Lat, Zoom),
+            out int col, out int row, out int level);
+
+        Assert.Equal(3637, col);
+        Assert.Equal(1612, row);
+        Assert.Equal(Zoom, level);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(8)]
+    [InlineData(19)]
+    public void TileIndexParts_round_trips_through_CreateTileIndex(int zoom)
+    {
+        var original = TileFetchNodes.TileIndexFromLonLat(Lon, Lat, zoom);
+
+        TileFetchNodes.TileIndexParts(original, out int col, out int row, out int level);
+        var rebuilt = TileFetchNodes.CreateTileIndex(col, row, level);
+
+        Assert.Equal(original.Col, rebuilt.Col);
+        Assert.Equal(original.Row, rebuilt.Row);
+        Assert.Equal(original.Level, rebuilt.Level);
+    }
+
+    [Fact]
     public void OsmTileSource_declares_its_attribution()
     {
         // OSM requires attribution to be displayed and the README points users at

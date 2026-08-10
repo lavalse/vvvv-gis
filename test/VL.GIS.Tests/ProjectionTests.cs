@@ -48,6 +48,106 @@ public class ProjectionTests
     }
 
     [Fact]
+    public void CoordinateSystemInfo_names_WGS84()
+    {
+        ProjectionNodes.CoordinateSystemInfo(ProjectionNodes.Wgs84(),
+            out string name, out string authority, out int code, out string wkt);
+
+        Assert.Equal("WGS 84", name);
+        Assert.Equal("EPSG", authority);
+        Assert.Equal(4326, code);
+        Assert.StartsWith("GEOGCS", wkt);
+    }
+
+    [Fact]
+    public void CoordinateSystemInfo_names_Web_Mercator()
+    {
+        ProjectionNodes.CoordinateSystemInfo(ProjectionNodes.WebMercator(),
+            out string name, out _, out int code, out string wkt);
+
+        Assert.Equal("WGS 84 / Pseudo-Mercator", name);
+        Assert.Equal(3857, code);
+        Assert.StartsWith("PROJCS", wkt);
+    }
+
+    [Theory]
+    [InlineData(54, true, "WGS 84 / UTM zone 54N", 32654)]
+    [InlineData(54, false, "WGS 84 / UTM zone 54S", 32754)]
+    [InlineData(31, true, "WGS 84 / UTM zone 31N", 32631)]
+    public void CoordinateSystemInfo_identifies_the_UTM_zone_that_was_built(
+        int zone, bool north, string expectedName, int expectedCode)
+    {
+        // This is what the node is for. CreateUtm takes a number and a bool and hands back an
+        // object a patch cannot inspect, so getting the hemisphere wrong used to be invisible
+        // -- 54N and 54S are both perfectly valid, and only one of them is Tokyo.
+        ProjectionNodes.CoordinateSystemInfo(ProjectionNodes.CreateUtm(zone, north),
+            out string name, out string authority, out int code, out _);
+
+        Assert.Equal(expectedName, name);
+        Assert.Equal("EPSG", authority);
+        Assert.Equal(expectedCode, code);
+    }
+
+    [Fact]
+    public void CoordinateSystemInfo_agrees_with_the_SRID_stamped_on_reprojected_geometry()
+    {
+        // Both read the CRS's authority code, so a patch that displays the CRS and a geometry
+        // that carries an SRID can never disagree.
+        var utm = ProjectionNodes.CreateUtm(54, true);
+
+        ProjectionNodes.CoordinateSystemInfo(utm, out _, out _, out int code, out _);
+        var projected = ProjectionNodes.ReprojectGeometry(
+            GeometryNodes.CreatePoint(Lon, Lat), ProjectionNodes.Wgs84(), utm);
+
+        Assert.Equal(code, projected.SRID);
+    }
+
+    [Fact]
+    public void CoordinateSystemInfo_round_trips_through_ParseWkt()
+    {
+        ProjectionNodes.CoordinateSystemInfo(
+            ProjectionNodes.CreateUtm(54, true), out string name, out _, out _, out string wkt);
+
+        ProjectionNodes.CoordinateSystemInfo(
+            ProjectionNodes.ParseWkt(wkt), out string reparsedName, out _, out _, out _);
+
+        Assert.Equal(name, reparsedName);
+    }
+
+    [Fact]
+    public void ReprojectGeometry_labels_the_result_with_the_target_CRS()
+    {
+        // ReprojectGeometry copies the geometry and transforms the coordinates in place, and
+        // Geometry.Copy() carries the SRID over. The result therefore used to come back
+        // holding UTM metres while still declaring EPSG:4326. The numbers were right and
+        // only the label was wrong, so nothing downstream had any way to notice.
+        var projected = ProjectionNodes.ReprojectGeometry(
+            GeometryNodes.CreatePoint(Lon, Lat),
+            ProjectionNodes.Wgs84(),
+            ProjectionNodes.CreateUtm(54, true));
+
+        Assert.Equal(32654, projected.SRID);
+    }
+
+    [Fact]
+    public void The_two_reprojection_nodes_agree_on_coordinates_and_on_SRID()
+    {
+        // ReprojectPointGeometry always set the SRID; ReprojectGeometry did not. Two sibling
+        // nodes disagreeing about the same operation is worse than either behaviour alone,
+        // because which one you happened to pick decided whether your data was labelled.
+        var point = GeometryNodes.CreatePoint(Lon, Lat);
+        var wgs84 = ProjectionNodes.Wgs84();
+        var utm    = ProjectionNodes.CreateUtm(54, true);
+
+        var viaGeometry = ProjectionNodes.ReprojectGeometry(point, wgs84, utm);
+        var viaPoint    = ProjectionNodes.ReprojectPointGeometry(point, wgs84, utm);
+
+        Assert.Equal(viaPoint.X, viaGeometry.Coordinates[0].X, 6);
+        Assert.Equal(viaPoint.Y, viaGeometry.Coordinates[0].Y, 6);
+        Assert.Equal(viaPoint.SRID, viaGeometry.SRID);
+    }
+
+    [Fact]
     public void UTM_easting_is_within_the_zone_and_northing_matches_the_hemisphere()
     {
         // UTM gives the central meridian a false easting of 500 km, and a zone is 6 degrees

@@ -31,6 +31,28 @@ public static class ProjectionNodes
         => CsFactory.CreateFromWkt(wkt);
 
     /// <summary>
+    /// Read a coordinate system's name, authority and WKT — for example
+    /// "WGS 84 / UTM zone 54N", "EPSG", 32654.
+    /// Use it to confirm in a patch which CRS you actually built.
+    /// </summary>
+    public static void CoordinateSystemInfo(
+        CoordinateSystem coordinateSystem,
+        out string name,
+        out string authority,
+        out int authorityCode,
+        out string wkt)
+    {
+        // A CoordinateSystem is opaque in a patch: an IOBox can only show the type name, so
+        // until this node existed there was no way to check that CreateUtm(54) had produced
+        // the zone you meant. The help patch for metric buffering had to infer it from the
+        // resulting area.
+        name          = coordinateSystem.Name ?? string.Empty;
+        authority     = coordinateSystem.Authority ?? string.Empty;
+        authorityCode = GetSrid(coordinateSystem);
+        wkt           = coordinateSystem.WKT ?? string.Empty;
+    }
+
+    /// <summary>
     /// Create a UTM projected CRS for a given zone number and hemisphere.
     /// Useful for metric distance/area calculations.
     /// </summary>
@@ -93,6 +115,13 @@ public static class ProjectionNodes
         var clone = geometry.Copy();
         clone.Apply(filter);
         clone.GeometryChanged();
+
+        // Copy() carries the source SRID across, so without this the result holds target-CRS
+        // coordinates while still declaring the CRS it came from -- right numbers, wrong
+        // label, and nothing downstream can tell. ReprojectPointGeometry above has always
+        // done this; the two nodes disagreeing was the worse half of the bug, since which
+        // one you picked decided whether your data was labelled correctly.
+        clone.SRID = GetSrid(target);
         return clone;
     }
 
@@ -135,19 +164,14 @@ public static class ProjectionNodes
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// The CRS's EPSG code, or 0 if it does not declare one. AuthorityCode is declared on
+    /// CoordinateSystem's base class, so no type test is needed; the earlier version checked
+    /// for ProjectedCoordinateSystem and GeographicCoordinateSystem separately and would
+    /// silently have returned 0 for any third kind.
+    /// </summary>
     private static int GetSrid(CoordinateSystem cs)
-    {
-        // Best-effort: parse EPSG authority code from the CRS
-        if (cs is ProjectedCoordinateSystem pcs)
-        {
-            if (pcs.AuthorityCode > 0) return (int)pcs.AuthorityCode;
-        }
-        else if (cs is GeographicCoordinateSystem gcs)
-        {
-            if (gcs.AuthorityCode > 0) return (int)gcs.AuthorityCode;
-        }
-        return 0;
-    }
+        => cs.AuthorityCode > 0 ? (int)cs.AuthorityCode : 0;
 
     /// <summary>NTS coordinate filter that applies a ProjNet math transform.</summary>
     private sealed class CoordinateTransformFilter : ICoordinateSequenceFilter

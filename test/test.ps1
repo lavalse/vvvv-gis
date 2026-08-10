@@ -87,7 +87,12 @@ In vvvv:
   Ctrl+Shift+F2  Log window (look for red entries mentioning VL.GIS)
   Ctrl+J         Solution Explorer (Dependencies live here)
   Ctrl+U         Solution Explorer, .NET Dependencies
-  F5 / F8        run / stop
+  F5 / F7 / F8   run / pause / stop
+
+  If a patch produces nothing at all -- every output pin blank rather than wrong -- suspect
+  evaluation before logic. Put an IOBox on a node that cannot fail, and relaunch with --log
+  to get %UserProfile%\Documents\vvvv\gamma\vvvv_<timestamp>.log. An empty log file is
+  itself evidence that nothing ran. See docs\VL-PACKAGING.md.
 "@ -ForegroundColor Yellow
 
 & $VvvvPath @vvvvArgs

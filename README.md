@@ -242,9 +242,10 @@ Coordinates are `(longitude, latitude)` — **longitude first**.
 | `Wgs84` / `WebMercator` | EPSG:4326 and EPSG:3857 coordinate systems |
 | `CreateUtm` / `UtmZoneFromLongitude` | UTM zone for metric calculations |
 | `ParseWkt` | Parse any CRS from a WKT string |
+| `CoordinateSystemInfo` | Name, authority, EPSG code and WKT of a CRS — the only way to confirm in a patch which one you built |
 | `CreateTransformation` | Build a reusable transform — cache it, do not rebuild per frame |
 | `ReprojectPoint` / `ReprojectPoints` | Reproject raw coordinate pairs; the plural form is much cheaper in bulk |
-| `ReprojectPointGeometry` / `ReprojectGeometry` | Reproject geometries |
+| `ReprojectPointGeometry` / `ReprojectGeometry` | Reproject geometries; the result carries the target CRS's SRID |
 | `LonLatToWebMercator` / `WebMercatorToLonLat` | Direct formulas, no ProjNet involved |
 
 ### GIS.Serialization
@@ -268,8 +269,11 @@ street level.
 
 There is no WMTS source. Point `XyzTileSource` at a WMTS GetTile URL template instead.
 
-**Indexing** — `CreateTileIndex`, `TileIndexFromLonLat`, `TileIndicesForBounds`,
-`TileBounds`
+**Indexing** — `CreateTileIndex`, `TileIndexFromLonLat`, `TileIndexParts`,
+`TileIndicesForBounds`, `TileBounds`
+
+A `TileIndex` is opaque in a patch — an IOBox shows only its type. Use `TileIndexParts` to
+see the column, row and zoom, or `TileBounds` to see the area it covers.
 
 **Fetching** — `FetchTileBytes`, `FetchTileToFile`, `FetchTileAsync`, `FetchTilesAsync`,
 `CreateFileCache`, `IsTileCached`
