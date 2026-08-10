@@ -15,19 +15,19 @@ attribution obligations that installing VL.GIS alone does not.
 
 ---
 
-## ⚠️ Status: early, and largely untested
+## ⚠️ Status: early
 
-**Please do not use this in a real project yet.**
+**Be careful about using this in a real project yet.**
 
-This is a spare-time project that moves slowly. What has actually been verified so far is
-narrow:
+This is a spare-time project that moves slowly. What has actually been verified is still
+narrow, and it is worth being precise about where the edges are:
 
 | | |
 |---|---|
 | ✅ Verified | The package builds, packs, installs, and its nodes appear in the NodeBrowser under the right categories. |
-| ✅ Verified | Geometry, projection, serialization, tile indexing and mesh arithmetic, by 76 tests run on every push. Two help patches exercise the same paths inside vvvv. |
-| ⚠️ Not verified | **Tile fetching over the network.** Nothing has ever downloaded a tile. Also untested: WKT parsing of exotic CRS, tessellation of concave and holed polygons, everything to do with caching. |
-| ❌ Missing | More help patches. There are two, covering points and buffers. |
+| ✅ Verified | Geometry, projection, serialization, tile indexing and mesh arithmetic, by 95 tests run on every push. Three help patches exercise the same paths inside vvvv. |
+| ⚠️ Thinly verified | **Tile fetching over the network** — one tile, fetched by hand, no test coverage. Also untested: WKT parsing of exotic CRS, tessellation of concave and holed polygons, everything to do with caching. |
+| ❌ Missing | More help patches. There are three, covering points, buffers and map tiles. |
 
 Expect missing edge cases and breaking changes to node names and categories between
 releases. If you try it, treat it as a starting point to read and fix rather than something
@@ -172,7 +172,7 @@ once in the GUI.
 ### Tests
 
 ```powershell
-dotnet test VL.GIS.sln          # 76 functional tests, about a second
+dotnet test VL.GIS.sln          # 95 functional tests, about a second
 ```
 
 `test\VL.GIS.Tests\` calls the same public statics vvvv turns into nodes, so it covers the
@@ -204,7 +204,7 @@ checklist to work through when nodes do not show up.
 1. Bump `<version>` in `VL.GIS.nuspec`, update `<releaseNotes>`, and keep the version
    `test\SmokeTest.vl` pins in step with it
 2. `.\build.ps1 ; .\test\verify.ps1 -EndToEnd`, and check the categories in the GUI
-3. Commit, then `git tag v0.1.0-alpha && git push origin v0.1.0-alpha`
+3. Commit, then `git tag v0.2.0-alpha && git push origin v0.2.0-alpha`
 
 The tag triggers `.github/workflows/publish.yml`, which builds, validates, packs and
 pushes to nuget.org using the `NUGET_KEY` repository secret. A published version can never

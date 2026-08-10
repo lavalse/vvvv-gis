@@ -12,10 +12,15 @@ It is a thin wrapper. Almost all the substance is upstream; what this repository
 solves is **how those libraries show up as nodes in a patch** — which turned out to be the
 hard part. See [docs/VL-PACKAGING.md](docs/VL-PACKAGING.md).
 
-**Current state:** `0.1.0-alpha` is on nuget.org. Verified: the package builds, packs,
-installs, and its nodes appear in the NodeBrowser under the right categories. **Not
-verified: the GIS functionality itself** — almost no node has ever been run. Do not
-describe this library as working; describe it as loading.
+**Current state:** `0.1.0-alpha` is the version on nuget.org; `0.2.0-alpha` is prepared in
+the nuspec and waiting for the user to push its tag. Verified: the package builds, packs and
+installs, its nodes appear under the right categories, and 95 tests cover the geometry,
+projection, serialization, tile-indexing and mesh arithmetic. Thin: tile fetching over the
+network has been done exactly once, by hand. Plenty of nodes have still never run — check
+before claiming any particular one works.
+
+Do not tell anyone to install `0.1.0-alpha`. Fetching a tile with it deadlocks vvvv so
+thoroughly that the window closes without the process exiting.
 
 ## Repository Structure
 
@@ -63,7 +68,7 @@ Everything else — `NuGet.exe`, `vvvvc.exe` — ships inside vvvv; nothing extr
 
 ```powershell
 .\build.ps1                  # build + stage dist\VL.GIS\
-dotnet test VL.GIS.sln       # 76 functional tests, ~1s, no vvvv and no network
+dotnet test VL.GIS.sln       # 95 functional tests, ~1s, no vvvv and no network
 .\test\verify.ps1            # headless check, seconds
 .\test\verify.ps1 -EndToEnd  # also packs and consumes the .nupkg like a real user would
 .\test\test.ps1              # launch vvvv against dist\ and open SmokeTest.vl

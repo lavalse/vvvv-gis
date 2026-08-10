@@ -8,7 +8,13 @@
       mechanically rather than relying on anyone reading the description.
       Drop the -alpha once the nodes have actually been exercised.
     -->
-    <version>0.1.0-alpha</version>
+    <!--
+      0.2.0 rather than 0.1.1 despite being motivated by bug fixes: WmtsTileSource is gone
+      and three tile source factories changed their return type, both of which are breaking.
+      Calling it a patch release would imply it is safe to take without reading, and it is
+      not. SemVer puts breaking changes and new features in MINOR while the major is 0.
+    -->
+    <version>0.2.0-alpha</version>
     <title>VL.GIS — GIS Library for vvvv gamma</title>
     <authors>VL.GIS Contributors</authors>
     <owners>VL.GIS Contributors</owners>
@@ -17,12 +23,14 @@
     <readme>docs\README.md</readme>
     <projectUrl>https://github.com/lavalse/vvvv-gis</projectUrl>
     <description>
-      EARLY AND LARGELY UNTESTED - please do not use this in a real project yet.
+      EARLY - please be careful about using this in a real project yet.
 
-      What is verified: the package installs and its nodes appear in the NodeBrowser.
-      What is NOT verified: the GIS functionality itself. Almost none of the nodes have
-      been run. There are no help patches and no tests. Node names and categories will
-      change between releases. Bug reports and PRs welcome.
+      What is verified: the package installs, its nodes appear in the NodeBrowser, and 95
+      tests cover the geometry, projection, serialization, tile indexing and mesh
+      arithmetic on every push. Three help patches exercise the same paths inside vvvv.
+      What is NOT verified: tile fetching over the network is covered by one manual run
+      rather than by tests, and plenty of nodes have still never been executed. Node names
+      and categories will change between releases. Bug reports and PRs welcome.
 
       Geographic Information System (GIS) library for vvvv gamma.
 
@@ -37,6 +45,42 @@
     </description>
     <summary>GIS geometry, projection, serialization, map tiles and mesh nodes for vvvv gamma.</summary>
     <releaseNotes>
+      0.2.0-alpha - GIS.Tiles was unusable in 0.1.0-alpha. Please upgrade.
+
+      If you fetched a tile with 0.1.0-alpha, vvvv deadlocked: FetchTileBytes awaited on the
+      calling thread and blocked on the result, and vvvv's runtime thread carries a
+      SynchronizationContext, so the continuation was posted back to the thread waiting for
+      it. The runtime stopped evaluating, F5 could not restart it, and closing the window
+      left vvvv.exe running. Fixed.
+
+      Also fixed, all of them silent:
+      - the tile source factories returned ITileSource while every fetch node takes
+        IHttpTileSource, so in a patch the two pins simply would not connect. The whole
+        GIS.Tiles category was decorative. BREAKING: the factories now return
+        IHttpTileSource.
+      - OsmTileSource passed no attribution to BruTile, so TileAttribution returned an empty
+        string - while the OSM tile usage policy requires attribution to be displayed and the
+        README points at that node as the way to get it. OSM and OpenTopoMap now declare
+        theirs, and XyzTileSource takes attributionText / attributionUrl.
+      - ReprojectGeometry returned geometry holding target-CRS coordinates while still
+        declaring the source CRS. Right numbers, wrong label, and its sibling
+        ReprojectPointGeometry had always set it correctly, so which node you picked decided
+        whether your data was labelled.
+      - BREAKING: WmtsTileSource is removed. Its entire body threw NotSupportedException,
+        because BruTile 6.0 dropped the parser it was written against, while the README and
+        this description both advertised WMTS support. Use XyzTileSource with a WMTS GetTile
+        URL template.
+
+      New: TileIndexParts splits a TileIndex into column, row and level, and
+      CoordinateSystemInfo reports a CRS's name, authority, EPSG code and WKT. Both exist
+      because those values are opaque inside a patch - an IOBox shows only the type name -
+      so there was no way to confirm which tile you were requesting or which CRS you had
+      built.
+
+      Also new: 95 tests, run on every push and before every publish, including a regression
+      test for the deadlock that uses a single-threaded SynchronizationContext and no
+      network. And three help patches, where there were none.
+
       0.1.0-alpha - First release whose nodes actually appear in vvvv.
 
       The 0.0.x line (0.0.1 - 0.0.4, now unlisted) installed and contributed no nodes at
