@@ -36,13 +36,25 @@ vvvv-gis/
 │   ├── Test-VLImportAttribute.ps1 # does an assembly carry [ImportAsIs]?
 │   └── Test-VLPackage.ps1        # static package validator — what CI runs
 ├── test/
+│   ├── VL.GIS.Tests/      # xunit functional tests — `dotnet test`, no network
 │   ├── verify.ps1         # headless verification, 3 stages
 │   ├── test.ps1           # launch vvvv against dist\
 │   ├── dev.ps1 + DevLoop.vl   # C# hot-reload loop (ProjectDependency)
 │   └── SmokeTest.vl       # consumer document; pins the VL.GIS version
 ├── docs/VL-PACKAGING.md   # ⭐ the traps and why they are traps — read before packaging work
-└── help/                  # example patches (currently EMPTY — the biggest gap)
+└── help/                  # example patches: points, buffers
 ```
+
+### Three kinds of verification, no overlap
+
+| | Proves |
+|---|---|
+| `dotnet test` | the arithmetic is right |
+| `Test-VLPackage.ps1` | the package is structurally capable of contributing nodes |
+| `verify.ps1` | vvvv actually loads, compiles and can consume it |
+
+Only the GUI proves a node appears under the expected category. Be precise about which of
+these you have shown.
 
 ## Commands
 
@@ -51,12 +63,17 @@ Everything else — `NuGet.exe`, `vvvvc.exe` — ships inside vvvv; nothing extr
 
 ```powershell
 .\build.ps1                  # build + stage dist\VL.GIS\
+dotnet test VL.GIS.sln       # 76 functional tests, ~1s, no vvvv and no network
 .\test\verify.ps1            # headless check, seconds
 .\test\verify.ps1 -EndToEnd  # also packs and consumes the .nupkg like a real user would
 .\test\test.ps1              # launch vvvv against dist\ and open SmokeTest.vl
 .\tools\Test-VLPackage.ps1   # static checks only, no vvvv needed (this is what CI runs)
 .\test\dev.ps1               # C# hot-reload loop for writing node code
 ```
+
+**vvvv must be launched with `--package-repositories dist`** or VL.GIS is simply not
+available — it is never installed into `%LOCALAPPDATA%\vvvv\gamma\nugets\`. Use
+`test\test.ps1`; launching vvvv from the Start menu will not find the package.
 
 Do **not** use `dotnet pack` — it packs per-project. The package is defined by
 `VL.GIS.nuspec` and must be packed with `nuget pack VL.GIS.nuspec` (`pack.ps1` does this).

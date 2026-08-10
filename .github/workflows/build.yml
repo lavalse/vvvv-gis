@@ -26,6 +26,11 @@ jobs:
       - name: Build
         run: dotnet build VL.GIS.sln --no-restore -c Release
 
+      # Does the arithmetic come out right. Complements the structural validation below,
+      # which only proves the package loads and contributes nodes.
+      - name: Test
+        run: dotnet test VL.GIS.sln --no-build -c Release --verbosity normal
+
       # Replaces the old inline checks, which passed every one of the broken 0.0.x
       # releases. See tools/Test-VLPackage.ps1 for what each assertion is guarding.
       - name: Validate package structure

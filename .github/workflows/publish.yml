@@ -21,6 +21,10 @@ jobs:
 
       - run: dotnet build VL.GIS.sln -c Release --no-restore
 
+      # Same reasoning as the validation below: a published version is permanent, so do not
+      # trust that build.yml ran the tests on this commit.
+      - run: dotnet test VL.GIS.sln --no-build -c Release
+
       # A tag push goes straight to nuget.org and a published version can never be
       # replaced, so validate here too rather than trusting that build.yml ran on the
       # same commit. Nine 0.0.x releases shipped without this check and none of them

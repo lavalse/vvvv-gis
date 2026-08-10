@@ -51,6 +51,13 @@ public static class TileProviderNodes
             new GlobalSphericalMercator(0, 19),
             "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             name: "OpenStreetMap",
+            // Required, not decorative. The OSM tile usage policy obliges you to display
+            // this, and TileAttribution is documented as the way to get it -- but nothing
+            // was passed here, so it returned an empty string and anyone following the
+            // README shipped no attribution at all.
+            attribution: new Attribution(
+                "© OpenStreetMap contributors",
+                "https://www.openstreetmap.org/copyright"),
             configureHttpRequestMessage: msg =>
                 msg.Headers.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)"));
 
@@ -62,6 +69,10 @@ public static class TileProviderNodes
             new GlobalSphericalMercator(0, 17),
             "https://tile.opentopomap.org/{z}/{x}/{y}.png",
             name: "OpenTopoMap",
+            attribution: new Attribution(
+                "Map data: © OpenStreetMap contributors, SRTM | "
+                    + "Map style: © OpenTopoMap (CC-BY-SA)",
+                "https://opentopomap.org/"),
             configureHttpRequestMessage: msg =>
                 msg.Headers.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)"));
 
@@ -71,16 +82,20 @@ public static class TileProviderNodes
     /// Create a custom XYZ tile source from a URL template.
     /// Template variables: {z} = zoom, {x} = tile X, {y} = tile Y.
     /// Example: "https://example.com/tiles/{z}/{x}/{y}.png"
+    /// Set attributionText to whatever the provider requires you to display.
     /// </summary>
     public static IHttpTileSource XyzTileSource(
         string urlTemplate,
         string name = "XYZ",
         int minZoom = 0,
-        int maxZoom = 19)
+        int maxZoom = 19,
+        string attributionText = "",
+        string attributionUrl = "")
         => new HttpTileSource(
             new GlobalSphericalMercator(minZoom, maxZoom),
             urlTemplate,
             name: name,
+            attribution: new Attribution(attributionText, attributionUrl),
             configureHttpRequestMessage: msg =>
                 msg.Headers.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)"));
 

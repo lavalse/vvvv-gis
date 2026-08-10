@@ -25,13 +25,14 @@ narrow:
 | | |
 |---|---|
 | ✅ Verified | The package builds, packs, installs, and its nodes appear in the NodeBrowser under the right categories. |
-| ⚠️ Not verified | **The GIS functionality itself.** Almost none of the nodes have been run. Geometry operations, reprojection and tile fetching have not been exercised beyond compiling. |
-| ❌ Missing | Help patches, examples, any test suite. |
+| ✅ Verified | Geometry, projection, serialization, tile indexing and mesh arithmetic, by 76 tests run on every push. Two help patches exercise the same paths inside vvvv. |
+| ⚠️ Not verified | **Tile fetching over the network.** Nothing has ever downloaded a tile. Also untested: WKT parsing of exotic CRS, tessellation of concave and holed polygons, everything to do with caching. |
+| ❌ Missing | More help patches. There are two, covering points and buffers. |
 
-Expect wrong results, missing edge cases, and breaking changes to node names and
-categories between releases. If you try it, treat it as a starting point to read and fix
-rather than something to build on. Bug reports and PRs are very welcome — that is the
-fastest way for this to become trustworthy.
+Expect missing edge cases and breaking changes to node names and categories between
+releases. If you try it, treat it as a starting point to read and fix rather than something
+to build on. Bug reports and PRs are very welcome — that is the fastest way for this to
+become trustworthy.
 
 The 0.0.x releases on nuget.org (0.0.1 – 0.0.4) never worked at all: the package installed
 and contributed no nodes. They are unlisted. Do not use them.
@@ -167,6 +168,20 @@ Two rules for anything that ships:
 
 Neither proves a node appears in the NodeBrowser under the expected category — check that
 once in the GUI.
+
+### Tests
+
+```powershell
+dotnet test VL.GIS.sln          # 76 functional tests, about a second
+```
+
+`test\VL.GIS.Tests\` calls the same public statics vvvv turns into nodes, so it covers the
+arithmetic — coordinate order, buffer units, UTM zones, projection round trips, tile
+indexing, WKT/WKB/GeoJSON, mesh conversion. It says nothing about whether a node *appears*;
+that is what `Test-VLPackage.ps1` and `verify.ps1` are for, and the three do not overlap.
+
+No test touches the network. Fetching a tile during a build would be flaky and would breach
+the OSM tile usage policy.
 
 ### Editing VL.GIS.vl
 

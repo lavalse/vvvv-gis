@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Functional tests for the node methods, run with `dotnet test`.
+
+    These call the same public statics that vvvv turns into nodes, so they cover the
+    arithmetic but say nothing about whether a node appears in the NodeBrowser. That is what
+    tools\Test-VLPackage.ps1 and test\verify.ps1 are for, and the three do not overlap.
+
+    Note for anyone editing this file: MSBuild rejects a '- -' pair inside an XML comment
+    with MSB4025, so the prose here avoids dashes as punctuation.
+
+    An earlier attempt at this was a PowerShell script driving reflection over the built
+    assemblies. It worked here and would have failed on CI: a library build does not copy
+    its NuGet dependencies into bin\, so the script resolved NetTopologySuite and friends
+    out of %LOCALAPPDATA%\vvvv\gamma\nugets, a directory that exists only where vvvv is
+    installed. A test project gets correct resolution for free.
+
+    No test here touches the network. Tile tests cover indexing, bounds and schema
+    metadata only; fetching a tile from tile.openstreetmap.org during a build would be
+    both flaky and a breach of the OSM tile usage policy.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\VL.GIS.Core\VL.GIS.Core.csproj" />
+    <ProjectReference Include="..\..\src\VL.GIS.Tiles\VL.GIS.Tiles.csproj" />
+    <ProjectReference Include="..\..\src\VL.GIS.Mesh\VL.GIS.Mesh.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
