@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="R3IrhrEo7UeOwS2XrpB3ge" LanguageVersion="2025.7.4" Version="0.128">
+  <NugetDependency Id="HMoH4QrR1HTLSaXde0djfA" Location="VL.CoreLib" Version="2025.7.4" />
+  <Patch Id="F7RRnVpzy1QO1gNLE9K4Up">
+    <Canvas Id="PuPCfuEeWK0OrHyQqcVaFT" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="GljxcAuZfRcNRlGVS6eVt6">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <CategoryReference Kind="Category" Name="Primitive" />
+      </p:NodeReference>
+      <Patch Id="N4n3PX2eFiiOrHXqWnLTwj">
+        <Canvas Id="Ok5OcpONF5QOOFR14M4vxo" CanvasType="Group">
+          <Node Bounds="81,30,65,19" Id="P8juWNA95acNJKRkGSELlB">
+            <p:NodeReference LastCategoryFullName="GIS.About" LastDependency="VL.GIS.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="GisVersion" />
+            </p:NodeReference>
+            <Pin Id="NxSrUzuMSq7Lk9rvl6ao1F" Name="Result" Kind="OutputPin" />
+          </Node>
+          <Pad Id="So3cTFX14GEMtmXmKmDXJ3" Comment="" Bounds="83,81,35,15" ShowValueBox="true" isIOBox="true" />
+          <Node Bounds="39,210,69,19" Id="ApRd4jw60uKMLtRkSayll1">
+            <p:NodeReference LastCategoryFullName="GIS.Geometry" LastDependency="VL.GIS.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="CreatePoint" />
+            </p:NodeReference>
+            <Pin Id="AdmnAetsZ8mP2VJOfIsNHr" Name="Longitude" Kind="InputPin" />
+            <Pin Id="KfRS4MGa67NOPIfy0q3ORT" Name="Latitude" Kind="InputPin" />
+            <Pin Id="B9gQo8QO3BaNCNDyjG6lJQ" Name="Result" Kind="OutputPin" />
+          </Node>
+          <Pad Id="UIUpVVjCAUyOZES8nDd1Ij" Comment="Longitude" Bounds="41,140,59,15" ShowValueBox="true" isIOBox="true" Value="139.9879748">
+            <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
+              <Choice Kind="TypeFlag" Name="Float64" />
+            </p:TypeAnnotation>
+          </Pad>
+          <Pad Id="SOTQLFu4Q0pN6SOVlTOoDC" Comment="Latitude" Bounds="181,140,71,15" ShowValueBox="true" isIOBox="true" Value="35.8573187">
+            <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
+              <Choice Kind="TypeFlag" Name="Float64" />
+            </p:TypeAnnotation>
+          </Pad>
+          <Node Bounds="39,290,45,19" Id="IkLY6cvws2aORVw8UwWAYr">
+            <p:NodeReference LastCategoryFullName="GIS.Serialization" LastDependency="VL.GIS.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="ToWkt" />
+            </p:NodeReference>
+            <Pin Id="CkgOxWHjdg3LrQdiDxH1sa" Name="Geometry" Kind="InputPin" />
+            <Pin Id="MUB19gJrl0cNVbUZT8JDMe" Name="Result" Kind="OutputPin" />
+          </Node>
+          <Pad Id="LBywk9gUFi9Prz439iowHX" Comment="" Bounds="41,340,165,54" ShowValueBox="true" isIOBox="true" Value="POINT (139.9879748 35.8573187)" />
+        </Canvas>
+        <Patch Id="IM5RiDWjrkBL5FewOvo5Nq" Name="Create" />
+        <Patch Id="Uq7DLnHGK3yPmMe9oF7IAQ" Name="Update" />
+        <ProcessDefinition Id="B0YnHLksjUfLKjoHNOTnlt">
+          <Fragment Id="ErLUNdeM0aKQMunYJaRbZg" Patch="IM5RiDWjrkBL5FewOvo5Nq" Enabled="true" />
+          <Fragment Id="Rz9rjNSz8ybNSkh02yJXL1" Patch="Uq7DLnHGK3yPmMe9oF7IAQ" Enabled="true" />
+        </ProcessDefinition>
+        <Link Id="IoWp3QB1PaaPQpee0IyYFm" Ids="NxSrUzuMSq7Lk9rvl6ao1F,So3cTFX14GEMtmXmKmDXJ3" />
+        <Link Id="SmXn7iq1UYoNojvebqtR6L" Ids="UIUpVVjCAUyOZES8nDd1Ij,AdmnAetsZ8mP2VJOfIsNHr" />
+        <Link Id="K3oRIx2bAeZNzi4EE6XkJH" Ids="SOTQLFu4Q0pN6SOVlTOoDC,KfRS4MGa67NOPIfy0q3ORT" />
+        <Link Id="EnssmiF7AnkL3dZLdEygKP" Ids="B9gQo8QO3BaNCNDyjG6lJQ,CkgOxWHjdg3LrQdiDxH1sa" />
+        <Link Id="UkoXMgLaBxKMyR3TZKqBIz" Ids="MUB19gJrl0cNVbUZT8JDMe,LBywk9gUFi9Prz439iowHX" />
+      </Patch>
+    </Node>
+  </Patch>
+  <NugetDependency Id="BUMdfXGZ73XM28roDJIvvX" Location="VL.GIS" Version="0.1.0-alpha" />
+</Document>
