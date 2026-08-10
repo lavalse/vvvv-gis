@@ -14,16 +14,50 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      # nuget.exe is needed to pack a .nuspec file; dotnet pack only works with .csproj
+      # nuget.exe is needed to pack a .nuspec; dotnet pack only handles .csproj
       - uses: nuget/setup-nuget@v2
 
       - run: dotnet restore VL.GIS.sln
 
       - run: dotnet build VL.GIS.sln -c Release --no-restore
 
-      - name: Pack and Push
+      # A tag push goes straight to nuget.org and a published version can never be
+      # replaced, so validate here too rather than trusting that build.yml ran on the
+      # same commit. Nine 0.0.x releases shipped without this check and none of them
+      # loaded in vvvv.
+      - name: Validate package structure
+        shell: pwsh
+        run: ./tools/Test-VLPackage.ps1 -FromBuildOutput
+
+      - name: Pack
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart("v")
+          $ErrorActionPreference = 'Stop'
+          # The tag is the source of truth for the version; the nuspec value is only used
+          # for local packs. "v0.1.0" -> "0.1.0" (Substring, not TrimStart, which trims a
+          # character set and would eat a leading digit).
+          $tag = "${{ github.ref_name }}"
+          if ($tag -notmatch '^v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$') {
+            throw "Tag '$tag' is not of the form v<semver>, e.g. v0.1.0"
+          }
+          $version = $Matches[1]
+          Write-Host "publishing version $version"
           nuget pack VL.GIS.nuspec -Version $version -OutputDirectory nupkg/
-          dotnet nuget push "nupkg\VL.GIS.$version.nupkg" --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json
+          "PKG_VERSION=$version" | Out-File $env:GITHUB_ENV -Append
+
+      - name: Push to nuget.org
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not "${{ secrets.NUGET_KEY }}") {
+            throw "Repository secret NUGET_KEY is not set (Settings > Secrets and variables > Actions)."
+          }
+          dotnet nuget push "nupkg\VL.GIS.$env:PKG_VERSION.nupkg" `
+            --api-key "${{ secrets.NUGET_KEY }}" `
+            --source https://api.nuget.org/v3/index.json
+
+      - name: Upload nupkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VL.GIS-${{ github.ref_name }}
+          path: nupkg/*.nupkg

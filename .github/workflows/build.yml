@@ -18,69 +18,50 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Validate VL.GIS.vl
-        shell: pwsh
-        run: |
-          [xml]$vl = Get-Content VL.GIS.vl
-          if ($vl.Document -eq $null) { throw "Missing <Document> root element" }
-          $ns = $vl.Document.GetAttribute("xmlns:p")
-          if ($ns -ne "property") { throw "Missing xmlns:p='property' namespace" }
-          $deps = $vl.Document.NugetDependency
-          if ($deps.Count -eq 0) { throw "No <NugetDependency> elements found" }
-          foreach ($dep in $deps) {
-            if (-not $dep.Id) { throw "NugetDependency missing Id: $($dep.Location)" }
-            if (-not $dep.Location) { throw "NugetDependency missing Location" }
-            if (-not $dep.Version) { throw "NugetDependency missing Version" }
-          }
-          Write-Host "VL.GIS.vl validation passed — $($deps.Count) dependencies found"
-          # Cross-check: every NugetDependency Location must appear in nuspec dependencies
-          [xml]$nuspec = Get-Content VL.GIS.nuspec
-          $nuspecDeps = $nuspec.package.metadata.dependencies.group.dependency | ForEach-Object { $_.id }
-          foreach ($dep in $deps) {
-            if ($dep.Location -eq "VL.CoreLib") { continue }
-            if (-not ($nuspecDeps -contains $dep.Location)) {
-              throw "VL.GIS.vl declares NugetDependency '$($dep.Location)' but it is missing from VL.GIS.nuspec <dependencies>"
-            }
-          }
-          Write-Host "Dependency cross-check passed."
-
       - name: Restore
         run: dotnet restore VL.GIS.sln
 
+      # Must run before validation: the validator reads the built assemblies to check
+      # each one carries a VL.Core import attribute.
       - name: Build
         run: dotnet build VL.GIS.sln --no-restore -c Release
+
+      # Replaces the old inline checks, which passed every one of the broken 0.0.x
+      # releases. See tools/Test-VLPackage.ps1 for what each assertion is guarding.
+      - name: Validate package structure
+        shell: pwsh
+        run: ./tools/Test-VLPackage.ps1 -FromBuildOutput
 
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
-      - name: Pack NuGet
+      - name: Pack
         run: nuget pack VL.GIS.nuspec -OutputDirectory nupkg/
 
-      - name: Validate package contents
+      - name: Validate packed contents
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $nupkg = Get-Item nupkg\*.nupkg | Select-Object -First 1
-          Write-Host "Package: $($nupkg.Name)"
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $zip = [System.IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
-          $entries = $zip.Entries | ForEach-Object { $_.FullName }
-          $zip.Dispose()
+          $zip = [IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
+          try   { $entries = $zip.Entries | ForEach-Object { $_.FullName } }
+          finally { $zip.Dispose() }
 
-          $required = @(
-            "VL.GIS.vl",
-            "lib/net8.0/VL.GIS.Core.dll",
-            "lib/net8.0/VL.GIS.Core.xml",
-            "lib/net8.0/VL.GIS.Tiles.dll",
-            "lib/net8.0/VL.GIS.Tiles.xml",
-            "lib/net8.0/VL.GIS.Stride.dll",
-            "lib/net8.0/VL.GIS.Stride.xml"
+          # Derived from VL.GIS.vl rather than hardcoded, so adding an assembly cannot
+          # leave this list stale (the old hardcoded list still named VL.GIS.Stride).
+          [xml]$vl = Get-Content VL.GIS.vl -Raw
+          $required = @('VL.GIS.vl') + @(
+            $vl.DocumentElement.ChildNodes |
+              Where-Object { $_.LocalName -eq 'PlatformDependency' } |
+              ForEach-Object { $_.Attributes['Location'].Value } |
+              Where-Object { $_ -like './lib/*' } |
+              ForEach-Object { $_ -replace '^\./', '' }
           )
-          foreach ($r in $required) {
-            $found = $entries | Where-Object { $_ -like "*$r*" }
-            if (-not $found) { throw "Missing from package: $r" }
-            Write-Host "OK: $r"
-          }
-          Write-Host "Package structure validated."
+
+          $missing = $required | Where-Object { $_ -notin $entries }
+          if ($missing) { throw "Missing from package: $($missing -join ', ')" }
+          $required | ForEach-Object { Write-Host "  ok  $_" }
 
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4

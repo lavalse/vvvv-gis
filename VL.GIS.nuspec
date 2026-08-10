@@ -8,6 +8,7 @@
     <owners>VL.GIS Contributors</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
+    <readme>docs\README.md</readme>
     <projectUrl>https://github.com/lavalse/vvvv-gis</projectUrl>
     <description>
       Geographic Information System (GIS) library for vvvv gamma.
@@ -64,5 +65,13 @@
     <file src="src\VL.GIS.Mesh\bin\Release\net8.0\VL.GIS.Mesh.xml"   target="lib\net8.0\" />
 
     <file src="help\**\*.vl" target="help\" />
+
+    <!-- Shown on the nuget.org listing page. -->
+    <file src="README.md"               target="docs\" />
+    <file src="THIRD-PARTY-NOTICES.md"  target="docs\" />
+    <!-- LICENSE is not packed: <license type="expression">MIT</license> above is what
+         nuget.org displays, and the extensionless filename makes nuget read any target
+         as a directory name, producing docs\LICENSE.txt\LICENSE. -->
+
   </files>
 </package>
