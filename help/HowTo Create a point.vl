@@ -66,5 +66,5 @@
       </Patch>
     </Node>
   </Patch>
-  <NugetDependency Id="BUMdfXGZ73XM28roDJIvvX" Location="VL.GIS" Version="0.1.0-alpha" />
+  <NugetDependency Id="BUMdfXGZ73XM28roDJIvvX" Location="VL.GIS" Version="0.0.0" />
 </Document>

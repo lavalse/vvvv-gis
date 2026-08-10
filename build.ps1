@@ -87,6 +87,11 @@ foreach ($fwd in $forwards) {
 
 $helpSrc = Join-Path $RepoRoot 'help'
 if ((Test-Path $helpSrc) -and (Get-ChildItem $helpSrc -File -Recurse -ErrorAction SilentlyContinue)) {
+    # Normalise the repo copy, not the staged one. VL.GIS.nuspec packs help patches
+    # straight out of help\ -- dist\ is not involved at release time -- so a fix applied
+    # on the way into dist\ would be invisible in the published package.
+    & (Join-Path $RepoRoot 'tools\Normalize-HelpPatches.ps1')
+
     Copy-Item $helpSrc -Destination $PkgDir -Recurse
     Write-Host "   staged help\"
 }

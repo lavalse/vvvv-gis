@@ -17,6 +17,7 @@
       7. nuspec ships the .vl at root    a subfolder means vvvv never finds it
       8. nuspec ships every assembly     forwarding a .dll that is not in the package
       9. nuspec declares every nuget     third-party deps the .vl references
+     10. help patches                    BOM, no ProjectDependency, VL.GIS pinned to 0.0.0
 
     Run .\build.ps1 first, or pass -FromBuildOutput to read assemblies straight out of
     src\*\bin\<Configuration>\net8.0 (what CI does).
@@ -151,6 +152,45 @@ foreach ($dep in $needed) {
     }
 }
 if (-not ($needed | Where-Object { $_ -notin $declared })) { Ok "nuspec declares all $($needed.Count) referenced nugets" }
+
+# 10. help patches -----------------------------------------------------------
+# These are shipped documents too -- VL.GIS.nuspec packs help\**\*.vl straight out of the
+# repo -- so they carry the same load-silently-fail risks as VL.GIS.vl itself.
+$helpDir = Join-Path $RepoRoot 'help'
+# The @() must wrap the whole if-expression: PowerShell unwraps a single-element array on
+# the way out of one, and StrictMode then throws on .Count. Same trap as Get-Child above.
+$helpDocs = @(if (Test-Path $helpDir) { Get-ChildItem $helpDir -File -Recurse -Filter *.vl })
+
+foreach ($helpDoc in $helpDocs) {
+    $name = $helpDoc.Name
+    $head = Get-Content $helpDoc.FullName -AsByteStream -TotalCount 3
+    if ($head.Count -lt 3 -or $head[0] -ne 0xEF -or $head[1] -ne 0xBB -or $head[2] -ne 0xBF) {
+        Fail "help\$name has no UTF-8 BOM."
+    }
+
+    $helpRaw = Get-Content $helpDoc.FullName -Raw
+
+    # A ProjectDependency points at a .csproj that is not in the package, and forces
+    # everything downstream to stay editable. It belongs only in test\DevLoop.vl.
+    if ($helpRaw -match '<ProjectDependency\b') {
+        Fail "help\$name contains a <ProjectDependency>. Shipped documents must not reference a .csproj."
+    }
+
+    # Must be the 0.0.0 sentinel, not whichever version vvvv resolved while authoring --
+    # see tools\Normalize-HelpPatches.ps1.
+    $pin = [regex]::Match($helpRaw, '<NugetDependency\b[^>]*\bLocation="VL\.GIS"[^>]*\bVersion="([^"]*)"')
+    if (-not $pin.Success) {
+        Fail "help\$name declares no VL.GIS dependency, so none of its nodes will resolve."
+    } elseif ($pin.Groups[1].Value -ne '0.0.0') {
+        Fail "help\$name pins VL.GIS $($pin.Groups[1].Value); it must be 0.0.0 or it will ask for that exact version forever. Run tools\Normalize-HelpPatches.ps1."
+    }
+}
+
+if ($helpDocs.Count -eq 0) {
+    Write-Host "  warn  no help patches" -ForegroundColor DarkYellow
+} elseif (-not ($errors | Where-Object { $_ -like 'help\*' })) {
+    Ok "$($helpDocs.Count) help patch(es) valid"
+}
 
 # ---------------------------------------------------------------------------
 Write-Host ''
