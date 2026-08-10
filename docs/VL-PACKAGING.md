@@ -236,6 +236,59 @@ forces the package and everything downstream to stay editable.
 
 ---
 
+## Never block on a task inside a node
+
+`FetchTileBytes` shipped in `0.1.0-alpha` doing this:
+
+```csharp
+return tileSource.GetTileAsync(client, tileInfo).GetAwaiter().GetResult();
+```
+
+Running that node deadlocked vvvv. Awaiting on the calling thread captures its
+`SynchronizationContext`, and vvvv's runtime thread has one, so the continuation was posted
+back to the thread already sitting in `GetResult()` waiting for it.
+
+What that looked like from the outside, none of it pointing at the cause:
+
+- the runtime stopped evaluating — every output pin in the patch went blank
+- `F5` would not restart it
+- the log file was created and stayed **0 bytes**
+- the window closed but `vvvv.exe` kept running, `Responding: True`
+- `vvvvc` compiled and exported the same patch with no errors, because compiling never
+  runs it
+
+**The misleading verification.** Calling the node from PowerShell returned the tile
+perfectly, 47967 bytes, every time. PowerShell installs no `SynchronizationContext`, so the
+deadlock cannot occur there. An hour went into "the node works, so the patch must be
+wrong". Exercising sync-over-async in a host without a context proves nothing about a host
+that has one.
+
+The fix is `Task.Run(() => ...).GetAwaiter().GetResult()` — the await then happens on a
+thread pool thread with no context to post back to. It still stalls the frame for the
+length of the request, so prefer the observable form (`FetchTileAsync`) in a patch.
+
+`test\VL.GIS.Tests\FetchDeadlockTests.cs` covers this with a single-threaded
+`SynchronizationContext` and a fake tile source, no network. One of its tests asserts that
+the *original* pattern still fails to complete, so the harness cannot quietly stop being
+sensitive.
+
+### Diagnosing "the patch does nothing"
+
+Blank outputs and wrong outputs are different symptoms with different causes. If **every**
+output is blank, suspect evaluation, not logic:
+
+1. Find one node that cannot fail — pure arithmetic, no I/O — and put an IOBox on it. Here
+   `TileBounds` served: a value meant the runtime was alive, a blank meant it was not.
+2. Check `F5` / `F7` / `F8` (run / pause / stop). `--stoppedonstartup` exists, so a stopped
+   runtime is a real state.
+3. Launch with **`--log`**, which writes to
+   `%UserProfile%\Documents\vvvv\gamma\vvvv_<timestamp>.log`. An empty log is itself
+   evidence: nothing ran.
+4. Compile the document with `vvvvc`. Success means the patch is valid and the problem is
+   at runtime.
+5. Check whether outputs are even *connected*. A node with nothing on its output pins
+   displays nothing, which reads exactly like a node that failed.
+
 ## Smaller traps
 
 **NuGet versions are immutable, including in the local cache.** Repacking `0.1.0` after
@@ -288,6 +341,11 @@ hand-maintained `.nuspec` and needs `nuget pack VL.GIS.nuspec`.
 | reference packages | `<vvvv>\packs\` — `VL.Stride`, `VL.CoreLib`, `VL.Serialization.MessagePack` are the useful samples |
 | installed packages | `%LOCALAPPDATA%\vvvv\gamma\nugets\` |
 | NuGet global cache | `%USERPROFILE%\.nuget\packages\` |
+| log, with `--log` | `%USERPROFILE%\Documents\vvvv\gamma\vvvv_<timestamp>.log` |
+
+Useful `vvvv.exe` switches beyond `--package-repositories`: `--log` (log to disk),
+`--stoppedonstartup` (do not start the runtime), `--nocache` (recompile packages from
+source), `--editable-packages`, `-m` (allow a second instance). `--help` lists the rest.
 
 `%LOCALAPPDATA%\vvvv\gamma\_nugets-backup-VL.GIS\` holds the seven broken local installs
 (0.0.4, 0.0.6–0.0.11). They were **moved, not deleted** — 0.0.6 through 0.0.11 were never

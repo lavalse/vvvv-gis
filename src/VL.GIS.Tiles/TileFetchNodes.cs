@@ -91,15 +91,30 @@ public static class TileFetchNodes
     // ── Synchronous Fetch ─────────────────────────────────────────────────────
 
     /// <summary>
-    /// Fetch a single tile as raw bytes synchronously.
-    /// Returns null on failure (e.g. 404, network error).
+    /// Fetch a single tile as raw bytes, blocking until it arrives.
+    /// Returns null on failure (404, network error, timeout).
+    /// Stalls the whole patch for the duration of the request — prefer FetchTileAsync,
+    /// which does the same work without holding up the frame.
     /// </summary>
     public static byte[]? FetchTileBytes(IHttpTileSource tileSource, TileIndex tileIndex)
     {
         try
         {
-            return tileSource.GetTileAsync(SharedClient, new TileInfo { Index = tileIndex })
-                             .GetAwaiter().GetResult();
+            // Task.Run is not decoration. Awaiting GetTileAsync directly on the calling
+            // thread captures that thread's SynchronizationContext, and vvvv's runtime
+            // thread has one: the continuation is posted back to the very thread that is
+            // sitting in GetResult() waiting for it, and neither side ever moves. It
+            // deadlocked vvvv hard enough that the runtime stopped evaluating, F5 could not
+            // restart it, the log stayed empty, and closing the window left the process
+            // alive. Task.Run moves the await onto a thread pool thread, where there is no
+            // context to post back to.
+            //
+            // This is also why it appeared to work when called from PowerShell, which has
+            // no SynchronizationContext at all. Testing sync-over-async in a host without
+            // one proves nothing about a host that has one.
+            return Task.Run(() =>
+                       tileSource.GetTileAsync(SharedClient, new TileInfo { Index = tileIndex }))
+                       .GetAwaiter().GetResult();
         }
         catch
         {
