@@ -1,69 +1,93 @@
 <#
 .SYNOPSIS
-  Fast local test loop for VL.GIS. Builds, stages DLLs to lib/net8.0/, and
-  launches vvvv with the package loaded directly from the repo — no pack/install needed.
+    Launches vvvv gamma with the locally staged VL.GIS package loaded.
 
-.USAGE
-  .\test\test.ps1
-  .\test\test.ps1 -VvvvPath "C:\custom\path\to\vvvv.exe"
+.DESCRIPTION
+    Points vvvv at dist\ as a source package repository. Note the nesting: the argument
+    is the *repository* (dist\), which contains one folder per package (dist\VL.GIS\).
+    Passing the package folder itself, or the repo root, does not work.
+
+    Nothing is published or installed -- vvvv reads the package straight off disk, and
+    prefers a source package over an installed nuget of the same name.
+
+    Opens test\SmokeTest.vl, which already declares
+
+        <NugetDependency Location="VL.GIS" Version="0.1.0" />
+
+    That matters: a package sitting in a repository is *available*, not *referenced*.
+    A blank patch does not depend on VL.GIS, so its nodes do not show up in the
+    NodeBrowser, and searching for one there instead offers to fetch the package from
+    nuget.org -- which is the wrong VL.GIS entirely. Opening a document that already
+    declares the dependency avoids that trap.
+
+    Run .\build.ps1 first (or pass -Build).
+
+.EXAMPLE
+    .\build.ps1; .\test\test.ps1
+
+.EXAMPLE
+    .\test\test.ps1 -Build -Editable
 #>
 param(
-    [string]$VvvvPath = ""
+    [string]$VvvvPath = '',
+    [switch]$Build,
+    # Loads VL.GIS from source so patches inside it stay editable; packages are
+    # read-only by default.
+    [switch]$Editable,
+    # Start from an empty patch instead of SmokeTest.vl. You will then have to add the
+    # VL.GIS dependency yourself via Ctrl+J > Dependencies.
+    [switch]$Blank
 )
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
 $RepoRoot = Split-Path $PSScriptRoot -Parent
+$Dist     = Join-Path $RepoRoot 'dist'
 
-# 1. Build
-Write-Host "Building VL.GIS..." -ForegroundColor Cyan
-dotnet build "$RepoRoot\VL.GIS.sln" -c Release
-if ($LASTEXITCODE -ne 0) { Write-Error "Build failed."; exit 1 }
-
-# 2. Verify DLLs
-$required = @(
-    "src\VL.GIS.Core\bin\Release\net8.0\VL.GIS.Core.dll",
-    "src\VL.GIS.Tiles\bin\Release\net8.0\VL.GIS.Tiles.dll",
-    "src\VL.GIS.Stride\bin\Release\net8.0\VL.GIS.Stride.dll"
-)
-foreach ($rel in $required) {
-    $full = Join-Path $RepoRoot $rel
-    if (-not (Test-Path $full)) { Write-Error "Missing DLL: $rel"; exit 1 }
-    Write-Host "OK: $rel" -ForegroundColor Green
+if ($Build) {
+    & (Join-Path $RepoRoot 'build.ps1')
+    if ($LASTEXITCODE -ne 0) { throw "build.ps1 failed" }
 }
 
-# 2.5 Stage DLLs to lib/net8.0/ for --package-repositories mode
-# VL.GIS.vl references ./lib/net8.0/*.dll relative to the repo root,
-# so we copy the build outputs there before launching vvvv.
-$libDir = Join-Path $RepoRoot "lib\net8.0"
-New-Item -ItemType Directory -Force -Path $libDir | Out-Null
-foreach ($rel in $required) {
-    Copy-Item (Join-Path $RepoRoot $rel) $libDir -Force
-    Write-Host "Staged: $(Split-Path $rel -Leaf)" -ForegroundColor Green
+if (-not (Test-Path (Join-Path $Dist 'VL.GIS\VL.GIS.vl'))) {
+    throw "dist\VL.GIS\VL.GIS.vl not found. Run .\build.ps1 first."
 }
 
-# 3. Find vvvv.exe
 if (-not $VvvvPath) {
-    $found = Get-ChildItem "C:\Program Files\vvvv" -Filter "vvvv.exe" -Recurse -ErrorAction SilentlyContinue |
-             Select-Object -First 1
-    if ($found) { $VvvvPath = $found.FullName }
-    else {
-        $candidates = @(
-            "C:\Program Files\vvvv\vvvv_gamma_7.0\vvvv.exe",
-            "$env:LOCALAPPDATA\vvvv\gamma\vvvv.exe"
-        )
-        foreach ($c in $candidates) {
-            if (Test-Path $c) { $VvvvPath = $c; break }
-        }
-    }
+    $VvvvPath = & (Join-Path $RepoRoot 'tools\Find-Vvvv.ps1')
 }
-if (-not $VvvvPath -or -not (Test-Path $VvvvPath)) {
-    Write-Error "Cannot find vvvv.exe. Pass -VvvvPath 'C:\path\to\vvvv.exe'"
-    exit 1
+if (-not (Test-Path $VvvvPath)) {
+    throw "vvvv.exe not found at '$VvvvPath'. Pass -VvvvPath explicitly."
 }
 
-# 4. Launch vvvv with local package repository
-Write-Host ""
-Write-Host "Launching vvvv with VL.GIS from: $RepoRoot" -ForegroundColor Cyan
-Write-Host "NodeBrowser: search 'GIS' or 'CreatePoint' to verify nodes." -ForegroundColor Yellow
-Write-Host "Log: Ctrl+Shift+L — look for red errors on VL.GIS." -ForegroundColor Yellow
-Write-Host ""
-& $VvvvPath --package-repositories $RepoRoot
+$vvvvArgs = @('--package-repositories', $Dist)
+if ($Editable) { $vvvvArgs += @('--editable-packages', 'VL.GIS') }
+
+$doc = Join-Path $PSScriptRoot 'SmokeTest.vl'
+if (-not $Blank) {
+    if (-not (Test-Path $doc)) { throw "$doc not found." }
+    $vvvvArgs += @('--open', $doc)
+}
+
+Write-Host "vvvv       : $VvvvPath"
+Write-Host "repository : $Dist"
+Write-Host "document   : $(if ($Blank) { '(blank patch)' } else { $doc })"
+Write-Host @"
+
+In vvvv:
+  1. Double left-click empty canvas -> NodeBrowser
+  2. Type  GisVersion   -- smoke-test node, proves the package loaded
+  3. Type  CreatePoint  -- a real GIS node
+  4. Drag from an output pin, then Alt+left-click empty canvas -> IOBox showing the value
+
+  Do NOT accept a NodeBrowser offer to download/install "VL.GIS" -- that is the old
+  broken package on nuget.org. The one under test is loaded from dist\ already.
+
+  Ctrl+Shift+F2  Log window (look for red entries mentioning VL.GIS)
+  Ctrl+J         Solution Explorer (Dependencies live here)
+  Ctrl+U         Solution Explorer, .NET Dependencies
+  F5 / F8        run / stop
+"@ -ForegroundColor Yellow
+
+& $VvvvPath @vvvvArgs

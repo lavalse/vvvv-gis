@@ -1,0 +1,85 @@
+<#
+.SYNOPSIS
+    Builds VL.GIS and packs it into a .nupkg under dist\feed.
+
+.DESCRIPTION
+    dist\feed is a local NuGet feed. Nothing is published; it exists so the package can
+    be consumed exactly the way a real installed package would be:
+
+        vvvvc SomeDoc.vl --export-package-sources <repo>\dist\feed
+
+    That is what test\verify.ps1 -EndToEnd does, and it is the closest automated
+    equivalent to a user installing VL.GIS from nuget.org.
+
+    Uses the NuGet.exe that ships with vvvv, so nothing extra needs installing.
+
+    Note: `nuget pack` reads <version> from the nuspec. The publish workflow overrides it
+    with -Version from the git tag, so the tag is the source of truth at release time.
+
+.EXAMPLE
+    .\pack.ps1
+#>
+param(
+    [string]$Configuration = 'Release',
+    [string]$NuGetPath = '',
+    # Skip the build step when dist\ is already current.
+    [switch]$NoBuild
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$RepoRoot = $PSScriptRoot
+$FeedDir  = Join-Path $RepoRoot 'dist\feed'
+$Nuspec   = Join-Path $RepoRoot 'VL.GIS.nuspec'
+
+if (-not $NoBuild) {
+    & (Join-Path $RepoRoot 'build.ps1') -Configuration $Configuration
+    if ($LASTEXITCODE -ne 0) { throw "build.ps1 failed" }
+}
+
+if (-not $NuGetPath) {
+    $NuGetPath = & (Join-Path $RepoRoot 'tools\Find-Vvvv.ps1') -NuGet
+}
+if (-not (Test-Path $NuGetPath)) {
+    throw "NuGet.exe not found at '$NuGetPath'. Pass -NuGetPath explicitly."
+}
+
+New-Item -ItemType Directory -Force -Path $FeedDir | Out-Null
+Get-ChildItem $FeedDir -Filter '*.nupkg' -ErrorAction SilentlyContinue | Remove-Item -Force
+
+Write-Host "`n== pack ==" -ForegroundColor Cyan
+Write-Host "nuget : $NuGetPath"
+& $NuGetPath pack $Nuspec -OutputDirectory $FeedDir -NonInteractive
+if ($LASTEXITCODE -ne 0) { throw "nuget pack failed ($LASTEXITCODE)" }
+
+$pkg = Get-ChildItem $FeedDir -Filter '*.nupkg' | Select-Object -First 1
+
+# A package missing its .vl at the root, or missing a forwarded assembly, installs fine
+# and then silently contributes no nodes -- so assert the layout here.
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zip = [IO.Compression.ZipFile]::OpenRead($pkg.FullName)
+try   { $entries = $zip.Entries | ForEach-Object { $_.FullName } }
+finally { $zip.Dispose() }
+
+[xml]$vl = Get-Content (Join-Path $RepoRoot 'VL.GIS.vl') -Raw
+$required = @('VL.GIS.vl') + @(
+    $vl.Document.PlatformDependency |
+        Where-Object { $_.Location -like './lib/*' } |
+        ForEach-Object { $_.Location -replace '^\./', '' }
+)
+
+$missing = $required | Where-Object { $_ -notin $entries }
+if ($missing) {
+    throw "Package is missing required entries: $($missing -join ', ')"
+}
+
+Write-Host "`n== done ==" -ForegroundColor Green
+Write-Host "   $($pkg.Name)  [$($pkg.Length) B]"
+$entries | Where-Object { $_ -notmatch '^_rels|^package/|Content_Types' } | ForEach-Object { "   $_" }
+
+Write-Host @"
+
+Next:
+  .\test\verify.ps1 -EndToEnd            consume the packed nupkg from a separate document
+"@ -ForegroundColor Yellow

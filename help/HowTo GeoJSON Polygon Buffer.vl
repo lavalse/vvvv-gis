@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Document xmlns:p="property" xmlns:r="reflection"
-          Id="GISHlp1aB3cD5eF7gH9iJ1b"
-          LanguageVersion="2025.7.0"
-          Version="0.128">
-    <NugetDependency Id="GISHlp1bC3dE5fG7hI9jK1c" Location="VL.GIS" Version="0.0.10" IsFriend="true" />
-</Document>

@@ -15,6 +15,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      VL.Core supplies the [ImportAsIs] attribute (see AssemblyInfo.cs). Without it the
+      assembly's public statics are only reachable as raw .NET reflection nodes, hidden
+      behind the NodeBrowser's dependency toggle, instead of appearing as normal nodes.
+
+      Not declared in VL.GIS.nuspec on purpose: VL.Core ships with vvvv, so it is always
+      present at runtime. Same as VL.Devices.RealSense / VL.OpenCV.
+      Pinned one patch below the current 2025.7.4 so gamma 7.0 stays usable; vvvv 7.1+
+      rewrites this version to whatever the running system uses anyway.
+    -->
+    <PackageReference Include="VL.Core" Version="2025.7.0" />
+
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
     <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />
     <PackageReference Include="ProjNet" Version="2.1.0" />

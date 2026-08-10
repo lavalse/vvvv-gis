@@ -6,6 +6,10 @@ lib/
 *.suo
 .vs/
 
+# Staged package repository produced by build.ps1 (dist\VL.GIS is the package,
+# dist\ itself is what you pass to vvvv --package-repositories)
+dist/
+
 # NuGet
 *.nupkg
 *.snupkg

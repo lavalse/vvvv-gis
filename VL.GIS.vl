@@ -1,15 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Document xmlns:p="property" xmlns:r="reflection"
-          Id="VLGISDoc1aB3cD5eF7gH9iJ"
-          LanguageVersion="2025.7.0"
-          Version="0.128">
-    <NugetDependency Id="VLCoreLib1bC3dE5fG7hI9j" Location="VL.CoreLib" Version="2025.7.0" IsFriend="true" />
-    <NugetDependency Id="NTSuite1aC3eE5gG7iI9kK" Location="NetTopologySuite" Version="2.6.0" />
-    <NugetDependency Id="NTSGeoJ1bD3fF5hH7jJ9lL" Location="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />
-    <NugetDependency Id="ProjNt1cE3gG5iI7kK9mM" Location="ProjNet" Version="2.1.0" />
-    <NugetDependency Id="BruTil1dF3hH5jJ7lL9nN" Location="BruTile" Version="6.0.0" />
-    <NugetDependency Id="SysRxt1eG3iI5kK7mM9oO" Location="System.Reactive" Version="6.0.1" />
-    <PlatformDependency Id="GISPldC1kM3oO5qQ7sS9uU" Location="./lib/net8.0/VL.GIS.Core.dll" IsForward="true" />
-    <PlatformDependency Id="GISPldT1lN3pP5rR7tT9vV" Location="./lib/net8.0/VL.GIS.Tiles.dll" IsForward="true" />
-    <PlatformDependency Id="GISPldS1mO3qQ5sS7uU9wW" Location="./lib/net8.0/VL.GIS.Stride.dll" IsForward="true" />
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="FqHTylH8f5Xr5fijQaKgIm" LanguageVersion="2024.6.7-0009-ga0a8422da0" Version="0.128">
+  <NugetDependency Id="OKaC4Q1aqGqJqVnaiHW3V0" Location="VL.CoreLib" Version="2025.7.0" />
+  <NugetDependency Id="GR2BZIR7FDuJtIsXko6N7p" Location="NetTopologySuite" Version="2.6.0" />
+  <NugetDependency Id="FTM4S6hcf96g6roWLiXt1M" Location="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />
+  <NugetDependency Id="LamOVJE1DRs2jMHdH2ZYPz" Location="ProjNet" Version="2.1.0" />
+  <Patch Id="BHeGLVnDJMW8978PekxtWJ">
+    <Canvas Id="AfttJ2yDuN0Wx1dEvvypns" DefaultCategory="GIS" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="RY2EWHMzRLnHQ2KoqRb2NC">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <FullNameCategoryReference ID="Primitive" />
+      </p:NodeReference>
+      <Patch Id="RxMdAt30JkyUrYdVNrrs8g">
+        <Canvas Id="UJwb4HqUxxPzk1XxX4byeI" CanvasType="Group" />
+        <Patch Id="LqZSHgNxHvvdpljXBp2F2J" Name="Create" />
+        <Patch Id="F7bHMgHW3eKCDMisUU6dxJ" Name="Update" />
+        <ProcessDefinition Id="RIa1EZgrK0DKcTeyHjvdxz">
+          <Fragment Id="Sh7uoQAb3q8mUHcQhNQRCy" Patch="LqZSHgNxHvvdpljXBp2F2J" Enabled="true" />
+          <Fragment Id="Bkh22nvOAOI2IM7PZAM2YI" Patch="F7bHMgHW3eKCDMisUU6dxJ" Enabled="true" />
+        </ProcessDefinition>
+      </Patch>
+    </Node>
+  </Patch>
+  <PlatformDependency Id="D7x4HFS7SLaqqzddflk6Ob" Location="./lib/net8.0/VL.GIS.Core.dll" IsForward="true" />
 </Document>

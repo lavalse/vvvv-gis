@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="GY4TrD9LWpty3Y0npO87d1" LanguageVersion="2024.6.7-0009-ga0a8422da0" Version="0.128">
+  <NugetDependency Id="QzW0AGWavX80tFZFEChK70" Location="VL.CoreLib" Version="2025.7.0" />
+  <NugetDependency Id="J9Yyk9Nu0r0lrrptihGxiH" Location="VL.GIS" Version="0.1.0" />
+  <Patch Id="HvDA2tgnIukTbqIpISlK6D">
+    <Canvas Id="OfH2eY0gCcWq78lQ1bA7FW" DefaultCategory="SmokeTest" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="TDLLml6Fwcdm0GQ67Xrt5u">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <FullNameCategoryReference ID="Primitive" />
+      </p:NodeReference>
+      <Patch Id="EOPlmMQTP19h8cig9uAq2O">
+        <Canvas Id="HnRXum0ESei0N2BMFC2It9" CanvasType="Group" />
+        <Patch Id="B9lZI6xzlJYnaGtoiBR6kk" Name="Create" />
+        <Patch Id="KgrkCYrpPiPGFrOz6zFsIZ" Name="Update" />
+        <ProcessDefinition Id="PzbMEJ1WtFMnt5j0DxS4AM">
+          <Fragment Id="QS4Z427gxMRTPuqIdt9GJR" Patch="B9lZI6xzlJYnaGtoiBR6kk" Enabled="true" />
+          <Fragment Id="SDfJo4fe13CjaIMU2dBQhC" Patch="KgrkCYrpPiPGFrOz6zFsIZ" Enabled="true" />
+        </ProcessDefinition>
+      </Patch>
+    </Node>
+  </Patch>
+</Document>

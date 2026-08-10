@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="KlMpLkOSgMd2qfMeiBgzmF" LanguageVersion="2024.6.7-0009-ga0a8422da0" Version="0.128">
+  <NugetDependency Id="FMuOh49HEmubTCkHg86ZE0" Location="VL.CoreLib" Version="2025.7.0" />
+  <Patch Id="SILufwfteoXL4LpTPk0XK0">
+    <Canvas Id="JOfffS16sOeGMGxV9tGAuf" DefaultCategory="DevLoop" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="Vlv7JKEEOO8fDGkWic1BRN">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <FullNameCategoryReference ID="Primitive" />
+      </p:NodeReference>
+      <Patch Id="FjuckQ22kAdR0abQMMAEz1">
+        <Canvas Id="OkG9jv3ayuy8mxcqCN1Bgx" CanvasType="Group" />
+        <Patch Id="JHzEAX3QuHWQCKjtzaZBlr" Name="Create" />
+        <Patch Id="M7IOrXZAb6C0MaSK6dFjGy" Name="Update" />
+        <ProcessDefinition Id="EK8DUc30WmPOKhGiT8ldtg">
+          <Fragment Id="PCJN4nULaMYClchAqOxJt7" Patch="JHzEAX3QuHWQCKjtzaZBlr" Enabled="true" />
+          <Fragment Id="VPZmNhOSwz3fBSKSK0dM6i" Patch="M7IOrXZAb6C0MaSK6dFjGy" Enabled="true" />
+        </ProcessDefinition>
+      </Patch>
+    </Node>
+  </Patch>
+  <ProjectDependency Id="RJJJfKfu24jo7k6Xo0mTkw" Location="../src/VL.GIS.Core/VL.GIS.Core.csproj" />
+</Document>
