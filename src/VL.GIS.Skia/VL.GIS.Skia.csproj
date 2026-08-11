@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <AssemblyName>VL.GIS.Skia</AssemblyName>
+    <!--
+      Same trick as the other projects: the VL category comes from the namespace, not the
+      assembly name, so VL.GIS.Skia is the package while GIS.Skia.* is where the nodes land.
+    -->
+    <RootNamespace>VL.GIS</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>VL.GIS Contributors</Authors>
+    <Description>Skia rendering helpers for VL.GIS: map viewports, tile placement, geometry to SKPath</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VL.Core" Version="2025.7.2" />
+
+    <!--
+      2.88.8 is not a preference, it is vvvv's version: SkiaSharp ships inside vvvv rather
+      than as an installable nuget, and vvvv substitutes its own copy for whatever a package
+      pins. Referencing anything else compiles and then loads vvvv's assembly regardless.
+      Deliberately absent from the nuspec for the same reason VL.Core is.
+
+      The whole 2.88.x line carries assembly version 2.88.0.0, so a patch-level difference is
+      invisible to the loader; a move to SkiaSharp 3 or 4 would not be.
+    -->
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+
+    <PackageReference Include="NetTopologySuite" Version="2.6.0" />
+    <PackageReference Include="BruTile" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      The tile arithmetic lives in VL.GIS.Tiles and is not duplicated here. At package level
+      this is what makes VL.GIS.Skia depend on VL.GIS.
+    -->
+    <ProjectReference Include="..\VL.GIS.Tiles\VL.GIS.Tiles.csproj" />
+  </ItemGroup>
+
+</Project>

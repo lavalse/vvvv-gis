@@ -40,6 +40,7 @@
     <ProjectReference Include="..\..\src\VL.GIS.Core\VL.GIS.Core.csproj" />
     <ProjectReference Include="..\..\src\VL.GIS.Tiles\VL.GIS.Tiles.csproj" />
     <ProjectReference Include="..\..\src\VL.GIS.Mesh\VL.GIS.Mesh.csproj" />
+    <ProjectReference Include="..\..\src\VL.GIS.Skia\VL.GIS.Skia.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,3 +48,4 @@
   </ItemGroup>
 
 </Project>
+
