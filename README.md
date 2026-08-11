@@ -51,6 +51,11 @@ and contributed no nodes. They are unlisted. Do not use them.
 - [Dependencies and licences](#dependencies-and-licences)
 - [Roadmap](#roadmap)
 
+Two documents sit behind this one: [docs/DESIGN.md](docs/DESIGN.md) explains why the library is
+shaped the way it is — what it is for, what it will never contain, and the principles a new node
+follows — and [docs/VL-PACKAGING.md](docs/VL-PACKAGING.md) records everything that silently
+breaks when packaging for vvvv.
+
 ---
 
 ## What's included
@@ -438,11 +443,13 @@ Ordered by what would make the library trustworthy soonest, not by ambition.
 
 | | |
 |---|---|
-| Next | Help patches — building them is also the first real functional test of the nodes |
+| Now | **A whole map, not one tile.** `VisibleTiles` already returns every index a view needs; drawing them all needs a `ForEach` region in the patch |
+| Now | Geometry on top of that map — `GeometryToPath` exists and has never been drawn |
+| Next | Publish `VL.GIS.Skia`, which is built and working but unreleased |
 | Next | Move GeoJSON to `GeoJSON4STJ`, dropping the Newtonsoft.Json version clash with vvvv's own |
-| Later | 2D rendering via VL.Skia: tiles as `SKBitmap`, vectors as `SKPath` |
-| Later | Real Stride integration: tile quads and meshes as Stride resources |
+| Later | `VL.GIS.Stride`: tile textures, terrain and extruded buildings on the existing `GIS.Mesh.*` |
 | Maybe | File I/O — GeoTIFF, Shapefile, KML — via MaxRev.Gdal.Core |
+| Never | Our own map engine, or a Cesium-style globe. [Why](docs/DESIGN.md#what-this-will-never-contain) |
 
 ---
 

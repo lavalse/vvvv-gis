@@ -54,6 +54,8 @@ vvvv-gis/
 │   ├── dev.ps1 + DevLoop.vl   # C# hot-reload loop (ProjectDependency)
 │   └── SmokeTest.vl       # consumer document; pins the VL.GIS version
 ├── docs/VL-PACKAGING.md   # ⭐ the traps and why they are traps — read before packaging work
+├── docs/DESIGN.md         # why the library is shaped this way — read before adding a node
+│                          #   or answering "should VL.GIS also do X?"
 └── help/<PackageName>/    # example patches, one folder per package (see below)
 ```
 
@@ -188,7 +190,8 @@ absent from the nuspec — it ships with vvvv.
 
 Settled by surveying every pack shipped with vvvv 7.4, the community packages installed
 here, and all 304 `VL.*` packages on nuget.org. Recorded so it does not have to be
-re-derived.
+re-derived. The counts are here; the reasoning behind them, and the rest of the library's
+design philosophy, is in [docs/DESIGN.md](docs/DESIGN.md).
 
 **Declare the upstream nuget, forward only your own assembly.** Every community package
 that wraps a third-party library declares it as a `<NugetDependency>` in its `.vl` —
