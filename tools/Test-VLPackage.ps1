@@ -202,13 +202,20 @@ foreach ($helpDoc in $helpDocs) {
         Fail "help\$name contains a <ProjectDependency>. Shipped documents must not reference a .csproj."
     }
 
-    # Must be the 0.0.0 sentinel, not whichever version vvvv resolved while authoring --
-    # see tools\Normalize-HelpPatches.ps1.
-    $pin = [regex]::Match($helpRaw, '<NugetDependency\b[^>]*\bLocation="VL\.GIS"[^>]*\bVersion="([^"]*)"')
-    if (-not $pin.Success) {
-        Fail "help\$name declares no VL.GIS dependency, so none of its nodes will resolve."
-    } elseif ($pin.Groups[1].Value -ne '0.0.0') {
-        Fail "help\$name pins VL.GIS $($pin.Groups[1].Value); it must be 0.0.0 or it will ask for that exact version forever. Run tools\Normalize-HelpPatches.ps1."
+    # Every dependency on a package from this repository must be the 0.0.0 sentinel, not
+    # whichever version vvvv resolved while authoring -- see tools\Normalize-HelpPatches.ps1.
+    # A patch may reference more than one of them, so check them all rather than the first.
+    $localNames = @($Packages | ForEach-Object { $_.BaseName })
+    $pins = @([regex]::Matches($helpRaw, '<NugetDependency\b[^>]*\bLocation="([^"]*)"[^>]*\bVersion="([^"]*)"') |
+        Where-Object { $_.Groups[1].Value -in $localNames })
+
+    if ($pins.Count -eq 0) {
+        Fail "help\$name declares no dependency on any package in this repository, so none of its nodes will resolve."
+    }
+    foreach ($pin in $pins) {
+        if ($pin.Groups[2].Value -ne '0.0.0') {
+            Fail "help\$name pins $($pin.Groups[1].Value) $($pin.Groups[2].Value); it must be 0.0.0 or it will ask for that exact version forever. Run tools\Normalize-HelpPatches.ps1."
+        }
     }
 }
 

@@ -90,6 +90,26 @@ public class SkiaLayoutTests
     }
 
     [Fact]
+    public void TileDestinationParts_agrees_with_TileDestination()
+    {
+        // The form VL.Skia's DrawImage actually takes. ImageLayer, which would have accepted
+        // the SKRect, turns out to be internal to VL.Skia -- vvvvc rejects a patch using it
+        // with "Not found: ImageLayer" -- so without this the rectangle could be computed and
+        // not drawn.
+        var view = Tokyo();
+        var tile = TileFetchNodes.TileIndexFromLonLat(Lon, Lat, 12);
+
+        var rect = TileLayoutNodes.TileDestination(view, tile);
+        TileLayoutNodes.TileDestinationParts(view, tile,
+            out float x, out float y, out float width, out float height);
+
+        Assert.Equal(rect.Left, x, 4);
+        Assert.Equal(rect.Top, y, 4);
+        Assert.Equal(256f, width, 4);
+        Assert.Equal(256f, height, 4);
+    }
+
+    [Fact]
     public void VisibleTileLayout_pairs_each_tile_with_its_own_rectangle()
     {
         TileLayoutNodes.VisibleTileLayout(Tokyo(), out var tiles, out var rects);

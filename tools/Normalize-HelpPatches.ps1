@@ -49,8 +49,17 @@ $HelpDir  = Join-Path $RepoRoot 'help'
 # The sentinel every shipped pack uses. Lowest possible version, so it is satisfied by
 # whichever build of the package the patch happens to be sitting inside.
 $Pinned  = '0.0.0'
+# Every package in this repository, not just VL.GIS -- a help patch may reference several,
+# and vvvv rewrites the version of each on save. Discovered the same way build.ps1 does.
+$LocalPackages = @(
+    Get-ChildItem $RepoRoot -Filter '*.vl' -File |
+        Where-Object { Test-Path (Join-Path $RepoRoot "$($_.BaseName).nuspec") } |
+        ForEach-Object { $_.BaseName }
+)
 # Three groups so the current version can be reported, not just replaced.
-$Pattern = '(<NugetDependency\b[^>]*\bLocation="VL\.GIS"[^>]*\bVersion=")([^"]*)(")'
+$Pattern = '(<NugetDependency\b[^>]*\bLocation="(?:' +
+           (($LocalPackages | ForEach-Object { [regex]::Escape($_) }) -join '|') +
+           ')"[^>]*\bVersion=")([^"]*)(")'
 
 if (-not (Test-Path $HelpDir)) {
     Write-Host "no help\ directory - nothing to normalise"
@@ -70,16 +79,19 @@ foreach ($patch in $patches) {
     $text     = [IO.File]::ReadAllText($patch.FullName)
 
     if ($text -notmatch $Pattern) {
-        # Not every help patch has to use VL.GIS nodes, but one that does not is much more
-        # likely to have lost its dependency than to be deliberate.
-        Write-Warning "$relative declares no VL.GIS dependency"
+        # Not every help patch has to use nodes from this repository, but one that does not
+        # is much more likely to have lost its dependency than to be deliberate.
+        Write-Warning "$relative declares no dependency on any package in this repository"
         continue
     }
 
     $rewritten = $text -replace $Pattern, "`${1}$Pinned`${3}"
     if ($rewritten -eq $text) { continue }
 
-    $was = ([regex]$Pattern).Match($text).Groups[2].Value
+    # A patch may reference several of our packages; report every version being replaced.
+    $was = @(([regex]$Pattern).Matches($text) |
+        Where-Object { $_.Groups[2].Value -ne $Pinned } |
+        ForEach-Object { $_.Groups[2].Value }) -join ', '
     $stale += $relative
 
     if ($Check) {
@@ -87,7 +99,7 @@ foreach ($patch in $patches) {
     }
     else {
         [IO.File]::WriteAllText($patch.FullName, $rewritten, (New-Object System.Text.UTF8Encoding($true)))
-        Write-Host "   help\$($patch.Name): pinned VL.GIS $was -> $Pinned"
+        Write-Host "   help\$($patch.Name): pinned $was -> $Pinned"
     }
 }
 

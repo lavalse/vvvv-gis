@@ -84,6 +84,28 @@ public static class TileLayoutNodes
     }
 
     /// <summary>
+    /// Where a tile belongs on screen, as a position and a size rather than a rectangle.
+    /// This is the form VL.Skia's DrawImage takes: build a Vector2 from x/y for Position and
+    /// from width/height for Size.
+    /// VL.GIS's own implementation; TileIndex is BruTile's type.
+    /// </summary>
+    public static void TileDestinationParts(
+        MapView view, TileIndex tileIndex,
+        out float x, out float y, out float width, out float height)
+    {
+        // DrawImage is the public layer node; ImageLayer, which takes an SKRect directly, is
+        // internal to VL.Skia and vvvvc rejects it with "Not found: ImageLayer". An SKRect is
+        // also opaque in a patch -- there is no node to open one -- so a caller given only
+        // TileDestination could see neither the numbers nor a way to use them. Plain floats
+        // connect to anything and can be read.
+        var rect = TileDestination(view, tileIndex);
+        x      = rect.Left;
+        y      = rect.Top;
+        width  = rect.Width;
+        height = rect.Height;
+    }
+
+    /// <summary>
     /// Both halves at once: the tiles a view needs, each paired with the rectangle to draw
     /// it into. Saves keeping two lists in step.
     /// VL.GIS's own implementation; TileIndex is BruTile's type, SKRect is SkiaSharp's.
