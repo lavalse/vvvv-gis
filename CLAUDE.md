@@ -199,25 +199,41 @@ the attribution already in `THIRD-PARTY-NOTICES.md`.
 vvvv shows as the tooltip. Nodes that are our own arithmetic say so — that is information
 too, since our code lacks the mileage NTS has.
 
-## Mapsui compatibility, measured
+## Mapsui: blocked, and exactly why
 
-Wrapping Mapsui for 2D map rendering is viable. Verified on 2026-08-10 with a throwaway
-console project, not inferred:
+Measured on 2026-08-10 with a throwaway console project. **Wrapping Mapsui is not currently
+possible**, and it is worth recording precisely what blocks it, because the blockage is
+narrow and will lift on its own.
 
-| | |
-|---|---|
-| Mapsui 4.1.9 (last of 4.x) | renders a correct, labelled OSM map of Tokyo to PNG, no UI involved |
-| the same, running against vvvv's SkiaSharp 2.88.8 | still renders — swap confirmed by file version and native-library size |
-| Mapsui 5.x | **unusable**: needs SkiaSharp >= 3.119.2, vvvv ships 2.88.8 |
+Each Mapsui line is individually fine and collectively unusable:
 
-The 2.88.8/2.88.9 gap turns out not to matter because SkiaSharp keeps assembly version
-`2.88.0.0` across the whole 2.88.x line, so the CLR sees one identity. The probe was
-negative-tested first — pinning SkiaSharp 2.80.2 fails the build with NU1605 — because a
-compatibility check that has never rejected anything proves nothing.
+| | SkiaSharp | BruTile | verdict |
+|---|---|---|---|
+| Mapsui 4.1.9 | 2.88.9 — works against vvvv's 2.88.8 ✅ | `>= 5.0.6 && < 6.0.0` ❌ | conflicts with VL.GIS |
+| Mapsui 5.1.0 | `>= 3.119.2` ❌ vvvv ships 2.88.8 | `>= 6.0.0 && < 7.0.0` ✅ | conflicts with vvvv |
 
-Still unresolved before `VL.Mapsui` can ship: Mapsui 4.1.9 resolves **BruTile 5.0.6** while
-VL.GIS uses **6.0.0**, and vvvv loads one assembly set for all packages. Whether the two can
-coexist in one vvvv has not been tested.
+4.1.9 does render — a correct, labelled OSM map of Tokyo to PNG with no UI — and keeps
+rendering when run against vvvv's SkiaSharp, because SkiaSharp holds assembly version
+`2.88.0.0` across all of 2.88.x so the CLR sees one identity. Forcing BruTile 6.0.0 into that
+same probe fails at runtime:
+
+```
+System.TypeLoadException: Could not load type 'BruTile.Attribution' from assembly
+'Mapsui.Tiling, Version=4.1.9.0' due to value type mismatch.
+```
+
+`Attribution` is a struct in both versions, so its field layout changed — an ABI break
+nothing can paper over. `IHttpTileSource` also does not exist at all in BruTile 5, and
+VL.GIS's whole tile API returns it, so downgrading is a redesign rather than a version bump.
+
+**Mapsui 5.x otherwise matches VL.GIS exactly** — BruTile 6.0.0, NetTopologySuite 2.6.0,
+GeoJSON4STJ 4.0. The single obstacle is SkiaSharp, and vvvv is two majors behind (SkiaSharp
+reached a stable 4.x in June 2026, co-maintained by Microsoft and Uno). There is no public
+signal about when vvvv will move, so **nothing near-term may depend on Mapsui**. Revisit the
+moment vvvv ships SkiaSharp 3 or newer; at that point everything lines up at once.
+
+Both probes were negative-tested before being believed: pinning SkiaSharp 2.80.2 fails the
+build with NU1605, so the check can in fact reject something.
 
 ## Release process
 
@@ -250,7 +266,7 @@ users prefer to work.
 
 | | |
 |---|---|
-| Next | See a map. Either `VL.Mapsui` (a separate repo, now known to be feasible) or `VL.GIS.Skia` as a thin bridge — tiles to positioned images, geometry to `SKPath` or SVG path data, both drawn by VL.Skia's existing nodes |
+| Next | See a map, via `VL.GIS.Skia` — tiles to positioned images, geometry to `SKPath` or SVG path data, both drawn by VL.Skia's existing nodes. Not via Mapsui: see above |
 | Next | GeoJSON → `GeoJSON4STJ 4.0.0`, dropping the Newtonsoft.Json clash with vvvv's 13.0.3 |
 | Later | File I/O via `MaxRev.Gdal.Core` — Shapefile, GeoTIFF. Without it users can only type coordinates by hand |
 | Later | `VL.GIS.Stride`: tile textures, terrain and extruded buildings, built on the existing `GIS.Mesh.*` |
