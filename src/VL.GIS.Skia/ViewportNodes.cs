@@ -7,6 +7,22 @@ namespace VL.GIS.Skia;
 /// Map viewport: what is on screen, and the conversion between geographic coordinates and
 /// screen pixels.
 /// </summary>
+/// <remarks>
+/// Positions are pixels from the top-left of the view, y downward — the convention tile
+/// arithmetic and browser maps use. **VL.Skia does not draw in that space**, so finish with
+/// ToRendererSpace before handing anything to a layer node.
+///
+/// VL.Skia's default space spans roughly 2.8 by 2 units with the origin at the centre, and a
+/// pixel coordinate of a few hundred put into it lands far off screen — nothing drawn, no
+/// error. The Renderer's Space pin can be set to <c>DIPTopLeft</c> to change that, but its
+/// CommonSpace has only four members (<c>Normalized</c>, <c>DIP</c>, <c>DIPTopLeft</c>,
+/// <c>Projection</c>) and anything else is *silently replaced by the default*, so a patch that
+/// depends on it depends on something whose failure is invisible. ToRendererSpace converts the
+/// numbers instead and works in the default space.
+///
+/// The Renderer's ClientBounds output reports in the current space's own units, which is how to
+/// check which space is really in effect. See help/HowTo Show a map.vl.
+/// </remarks>
 [Name("Viewport")]
 public static class ViewportNodes
 {
@@ -131,6 +147,44 @@ public static class ViewportNodes
         maxLongitude = eastLon;
         minLatitude  = southLat;
         maxLatitude  = northLat;
+    }
+
+    // ── Renderer space ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Convert a position and size given in view pixels into the units the renderer actually
+    /// draws in, centred on its origin.
+    /// Read spaceHeight off the Renderer's ClientBounds output; it is 2 in VL.Skia's default
+    /// Normalized space, which is what the default here assumes.
+    /// VL.GIS's own implementation, not an upstream library.
+    /// </summary>
+    /// <remarks>
+    /// This exists because VL.Skia does not draw in pixels. Its default space spans about
+    /// 2.8 by 2 units, so feeding it a pixel coordinate of a few hundred puts the layer far
+    /// outside the window — silently, with nothing drawn and no error. Setting the Renderer's
+    /// Space pin is meant to change that, but a value it does not recognise is replaced by the
+    /// default without complaint, so converting here rather than relying on that setting is
+    /// the arrangement that cannot fail quietly.
+    ///
+    /// One scale is used for both axes, derived from the height, so a square tile stays square.
+    /// Give the MapView the same aspect ratio as the renderer and the map fills it; give it a
+    /// different one and the map is simply narrower or taller than the window, which is
+    /// visible rather than wrong.
+    /// </remarks>
+    public static void ToRendererSpace(
+        MapView view,
+        float pixelX, float pixelY, float pixelWidth, float pixelHeight,
+        out float x, out float y, out float width, out float height,
+        float spaceHeight = 2f)
+    {
+        float scale = view.Height == 0f ? 0f : spaceHeight / view.Height;
+
+        // Pixels are measured from the top-left of the view; the renderer's origin is its
+        // centre, hence the half-view shift before scaling.
+        x      = (pixelX - view.Width / 2f) * scale;
+        y      = (pixelY - view.Height / 2f) * scale;
+        width  = pixelWidth * scale;
+        height = pixelHeight * scale;
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────

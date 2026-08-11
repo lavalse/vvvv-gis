@@ -241,6 +241,128 @@ forces the package and everything downstream to stay editable.
 
 ---
 
+## An invalid enum value is silently replaced by the default
+
+The most expensive mistake in this repository after the packaging traps, and the same shape as
+all of them: no error, no warning, nothing drawn.
+
+VL.Skia's `CommonSpace` has **exactly four members**, and `Normalized` is the default:
+
+| | |
+|---|---|
+| `Normalized` | the default; the visible area spans roughly 2.8 × 2 units |
+| `DIP` | device-independent pixels |
+| `DIPTopLeft` | device-independent pixels, origin top-left — what `GIS.Skia` wants |
+| `Projection` | |
+
+`PixelTopLeft` is **not one of them.** That string was harvested from
+`VL.Stride.Rendering.TextureFX.vl`, where it belongs to a different enum on a pin named
+`Common Screen Space`. Writing it into a `CommonSpace` IOBox leaves the space at `Normalized`,
+so a tile positioned at pixel (278, 61) is drawn 278 units into a space two units tall — far
+outside the window, and identically invisible whatever else you change. Three separate attempts
+failed the same way for this one reason.
+
+**Harvest enum values from the library that owns the enum.** Values were collected by scanning
+every `.vl` that ships with vvvv, which mixed VL.Skia's `CommonSpace` with Stride's lookalike;
+grouping the hits by file would have shown it immediately.
+
+### Do not rely on a setting that fails silently — convert instead
+
+Switching the value to `DIPTopLeft` would probably work, but it makes every patch depend on a
+pin whose failure mode is invisible. `GIS.Skia.Viewport.ToRendererSpace` converts the numbers
+instead, so the map draws in whatever space the renderer happens to be in — including the
+default, unconfigured one:
+
+```
+scale = spaceHeight / view.Height          // 2 in the default space, hence the default
+x     = (pixelX - view.Width / 2) * scale  // pixels from the top-left → units from the centre
+```
+
+For the tile at pixel (278, 61) in an 800 × 600 view: (−0.43, −0.80), size (0.85, 0.85) — inside
+the 2.795 × 2 space, where 278 never could be. One scale serves both axes, taken from the
+height, so a square tile stays square when the view's aspect ratio differs from the renderer's.
+
+The patch now shows both rows of numbers, pixels above and units below, which makes the
+conversion the visible subject of the example rather than a hidden detail.
+
+**The general rule: when a setting's wrong value is indistinguishable from a broken patch,
+prefer an arrangement that does not need the setting.** The same reasoning removed
+`WithinCommonSpace` — one less node whose misconfiguration looks like nothing at all.
+
+### `ClientBounds` is the probe; `Actual Bounds` is not
+
+`Renderer.ClientBounds` reports the visible extent **in the current space's own units**, which
+makes it a direct answer to "which space am I actually in":
+
+| space | ClientBounds |
+|---|---|
+| `Normalized` | Pos (-1.3975, -1.00), Size (2.795, 2.00) |
+| `DIPTopLeft` | Pos (0, 0), Size = the view in pixels |
+
+`DrawImage.Actual Bounds` looks like the same kind of evidence and is not: it echoes the
+position and size it was handed regardless of the space they are in, so it read a plausible
+(278.26, 61.40) and (256, 256) throughout.
+
+**Two more `DrawImage` pins must be set explicitly**, also silent when wrong:
+
+| pin | values | want |
+|---|---|---|
+| `Size Mode` | `AutoHeight`, `AutoWidth`, `FitIn`, `OriginalSize`, `Size` | `Size` |
+| `Anchor` | `TopLeft`, `TopRight`, `MiddleLeft`, `Center`, `MiddleRight`, `BottomLeft`, `BottomRight` | `TopLeft` |
+
+**Two more pins on `DrawImage` have to be set explicitly**, and are silent when wrong:
+
+| pin | values | want |
+|---|---|---|
+| `Size Mode` | `AutoHeight`, `AutoWidth`, `FitIn`, `OriginalSize`, `Size` | `Size` |
+| `Anchor` | `TopLeft`, `TopRight`, `MiddleLeft`, `Center`, `MiddleRight`, `BottomLeft`, `BottomRight` | `TopLeft` |
+
+### How this was found, because the symptom is useless on its own
+
+Everything reported success: no red nodes, `vvvvc` exited 0, the structural validator passed,
+and `DrawImage.Actual Bounds` gave Position (278.26, 61.40) and Size (256, 256) — all correct.
+The window was simply black.
+
+What separated the possibilities, in order:
+
+1. **Give the Renderer a bright background colour.** It turned blue, which proved the Renderer
+   was rendering and that its `Space` pin was connected — so the fault was in the layer, not
+   the renderer. One IOBox, and it halved the search space.
+2. **Read `DrawImage.Actual Bounds`.** Correct position and size meant `Size Mode`, `Anchor`
+   and our own arithmetic were all fine, leaving only the space itself. Note the trap: that
+   output echoes the position and size it was handed regardless of the space they are in, so
+   plausible numbers there prove nothing about visibility.
+3. **Read `ClientBounds`.** Pos (-1.3975, -1.00), Size (2.795, 2.00) — the space was
+   `Normalized` all along, and the `Space` dropdown confirmed it by displaying `Normalized`
+   rather than the value that had been written into it.
+4. **Group the harvested enum values by source file.** `PixelTopLeft` came from a Stride file
+   and no VL.Skia one, which is what made it invalid.
+
+The lesson is about method rather than about Skia. Three rounds of reasoning over which enum
+member *ought* to be correct lost to one screenshot of what the renderer actually reported.
+When a value decides whether anything is visible at all, wire it to an IOBox, read the probe
+that describes the result, and try every legal option — do not argue about which name sounds
+right.
+
+Note also why a passing probe had been misleading: rendering the same map to a PNG worked,
+because that drew straight onto an `SKCanvas` in pixel coordinates with no VL space involved.
+Another case of verifying in a host where the fault cannot occur.
+
+## Do not patch a .vl in place — regenerate it
+
+Adding a node by inserting XML into an existing document went wrong immediately: the anchor
+pattern matched thirteen times, so thirteen copies were inserted and six IDs ended up
+duplicated. vvvv had also rewritten the file in the background, replacing every ID, which
+invalidated the pin IDs the edit was aiming at.
+
+Keep a script that emits the whole document and re-run it. That is the same rule as
+"never regenerate `VL.GIS.vl`, append one line" seen from the other side: an entry point's
+IDs are identities that must persist across releases, while a help patch is disposable and is
+safest rebuilt from a generator.
+
+Either way, run the structural checks afterwards — count IDs, look for duplicates, confirm
+every `<Link>` end resolves — because none of these mistakes produce an error on load.
+
 ## Never block on a task inside a node
 
 `FetchTileBytes` shipped in `0.1.0-alpha` doing this:

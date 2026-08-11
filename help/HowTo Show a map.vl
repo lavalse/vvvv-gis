@@ -14,7 +14,7 @@
       <Patch Id="F3dTs4DAFvpuIGqW1gN1oJ">
         <Canvas Id="U0ZyxRkpRiwfKAw8KAp9ak" CanvasType="Group">
 
-          <Pad Id="Sy0b0NCKRzQskbBap1RdrL" Bounds="60,40,560,60" ShowValueBox="true" isIOBox="true" Value="One map tile, fetched and drawn.&#xD;&#xA;Press Force to fetch. The tile is cached, so it is requested once and not once per frame -- the OSM tile usage policy forbids that.">
+          <Pad Id="CKZndGiH5v9LUQSP6f4RG4" Bounds="60,40,560,60" ShowValueBox="true" isIOBox="true" Value="One map tile, fetched and drawn.&#xD;&#xA;&#xD;&#xA;The tile appears on its own: the Cache region has to evaluate once to produce an output at all, so the fetch happens on the first frame. Force re-fetches. Either way it is requested once rather than once per frame, which the OSM tile usage policy forbids.&#xD;&#xA;&#xD;&#xA;GIS.Skia works in pixels from the top-left of the view. VL.Skia does not: its default space is about 2.8 by 2 units with the origin at the centre, so a pixel position of 278 lands nowhere near the window. ToRendererSpace converts between the two -- compare the two rows of readouts below.&#xD;&#xA;&#xD;&#xA;The Renderer's Space pin is left alone deliberately. An unrecognised value there is silently replaced by the default, so converting the numbers is the arrangement that cannot fail quietly. ClientBounds reports in the current space's units, which is how you check.">
             <p:TypeAnnotation>
               <Choice Kind="TypeFlag" Name="String" />
             </p:TypeAnnotation>
@@ -50,28 +50,28 @@
             </p:TypeAnnotation>
           </Pad>
 
-          <Node Bounds="60,200,110,19" Id="JW1zjVDNDumtnYWccYUOHw">
+          <Node Bounds="60,200,110,19" Id="GkoVLB2Rf9RUTLyyIfR2ja">
             <p:NodeReference LastCategoryFullName="GIS.Skia.Viewport" LastDependency="VL.GIS.Skia.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="CreateMapView" />
             </p:NodeReference>
-            <Pin Id="FNeWLpu61a4pGYPRLHbeqQ" Name="Center Longitude" Kind="InputPin" />
-            <Pin Id="GkoVLB2Rf9RUTLyyIfR2ja" Name="Center Latitude" Kind="InputPin" />
-            <Pin Id="LfY7j4nV7bGD6etnRIyp3d" Name="Zoom" Kind="InputPin" />
-            <Pin Id="G3uQVFgczKeYpAb4fl8D1x" Name="Width" Kind="InputPin" />
-            <Pin Id="AaKBmbTNk0L2R2bE4oznxY" Name="Height" Kind="InputPin" />
-            <Pin Id="DUkxqYaI1zxBCdruirmhRg" Name="Result" Kind="OutputPin" />
+            <Pin Id="LfY7j4nV7bGD6etnRIyp3d" Name="Center Longitude" Kind="InputPin" />
+            <Pin Id="G3uQVFgczKeYpAb4fl8D1x" Name="Center Latitude" Kind="InputPin" />
+            <Pin Id="AaKBmbTNk0L2R2bE4oznxY" Name="Zoom" Kind="InputPin" />
+            <Pin Id="DUkxqYaI1zxBCdruirmhRg" Name="Width" Kind="InputPin" />
+            <Pin Id="FjhqkLnBYsq4NJg9O8Ornh" Name="Height" Kind="InputPin" />
+            <Pin Id="CN24hZvclwOrVZH3e50DYv" Name="Result" Kind="OutputPin" />
           </Node>
 
-          <Node Bounds="220,200,132,19" Id="FjhqkLnBYsq4NJg9O8Ornh">
+          <Node Bounds="220,200,132,19" Id="UrYPE03untGHuiC5hOtghH">
             <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="TileIndexFromLonLat" />
             </p:NodeReference>
-            <Pin Id="CN24hZvclwOrVZH3e50DYv" Name="Longitude" Kind="InputPin" />
-            <Pin Id="UrYPE03untGHuiC5hOtghH" Name="Latitude" Kind="InputPin" />
-            <Pin Id="SAXRruhv8igLCJeCq1s9Dz" Name="Zoom" Kind="InputPin" />
-            <Pin Id="DZP4Ybrm4gXn32vGKHBvBg" Name="Result" Kind="OutputPin" />
+            <Pin Id="SAXRruhv8igLCJeCq1s9Dz" Name="Longitude" Kind="InputPin" />
+            <Pin Id="DZP4Ybrm4gXn32vGKHBvBg" Name="Latitude" Kind="InputPin" />
+            <Pin Id="KxTndWS8U90hxVIutdYDUn" Name="Zoom" Kind="InputPin" />
+            <Pin Id="DZVOCjU5yKUieB3UHDWiFc" Name="Result" Kind="OutputPin" />
           </Node>
 
           <Pad Id="SYksEJUEZ8qHwZJ2z0ilDC" Comment="Force" Bounds="450,200,35,35" ShowValueBox="true" isIOBox="true" Value="false">
@@ -83,127 +83,202 @@
             </p:ValueBoxSettings>
           </Pad>
 
-          <Node Bounds="220,260,190,150" Id="UKsD8aQeDpHBzha5F29gmi">
+          <Node Bounds="220,260,190,150" Id="INAfCRche63xdnW0FJa8MZ">
             <p:NodeReference LastCategoryFullName="Primitive" LastDependency="Builtin">
               <Choice Kind="StatefulRegion" Name="Region (Stateful)" Fixed="true" />
               <CategoryReference Kind="Category" Name="Primitive" />
               <Choice Kind="ProcessStatefulRegion" Name="Cache" />
             </p:NodeReference>
-            <Pin Id="JG8VQg7xi5Gdx9hNsBy6pQ" Name="Force" Kind="InputPin" />
-            <Pin Id="INAfCRche63xdnW0FJa8MZ" Name="Dispose Cached Outputs" Kind="InputPin" />
-            <Pin Id="H4Nh2pWmHtrtAxXJ6gellY" Name="Has Changed" Kind="OutputPin" />
-            <Patch Id="CLs7826gAvwl54cJrXBsed" ManuallySortedPins="true">
-              <Patch Id="H6kNnLVWXeTGiD815Ggdh7" Name="Create" ManuallySortedPins="true" />
-              <Patch Id="QLsz0b9jPq3n0XzZWSW0Qh" Name="Then" ManuallySortedPins="true" />
-              <Node Bounds="232,296,84,19" Id="DFKSx7WKaFere7O3nsObyi">
+            <Pin Id="H4Nh2pWmHtrtAxXJ6gellY" Name="Force" Kind="InputPin" />
+            <Pin Id="CLs7826gAvwl54cJrXBsed" Name="Dispose Cached Outputs" Kind="InputPin" />
+            <Pin Id="H6kNnLVWXeTGiD815Ggdh7" Name="Has Changed" Kind="OutputPin" />
+            <Patch Id="QLsz0b9jPq3n0XzZWSW0Qh" ManuallySortedPins="true">
+              <Patch Id="Qgl84IO5queUJRrO4iECfe" Name="Create" ManuallySortedPins="true" />
+              <Patch Id="Rpk2pXhkJZmQXyo7oPI8cN" Name="Then" ManuallySortedPins="true" />
+              <Node Bounds="232,296,84,19" Id="HZM7nS48KNdcZf3npIwnjI">
                 <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
                   <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
                   <Choice Kind="OperationCallFlag" Name="OsmTileSource" />
                 </p:NodeReference>
-                <Pin Id="IY74vDYSASsjjoj2bNJWuK" Name="Result" Kind="OutputPin" />
+                <Pin Id="VPVHm9psTeqLZJ0WF8DqGA" Name="Result" Kind="OutputPin" />
               </Node>
-              <Node Bounds="232,330,81,19" Id="HZM7nS48KNdcZf3npIwnjI">
+              <Node Bounds="232,330,81,19" Id="EyqzYNnJ0r7H5l2wm9GD1s">
                 <p:NodeReference LastCategoryFullName="GIS.Tiles" LastDependency="VL.GIS.vl">
                   <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
                   <Choice Kind="OperationCallFlag" Name="FetchTileBytes" />
                 </p:NodeReference>
-                <Pin Id="VPVHm9psTeqLZJ0WF8DqGA" Name="Tile Source" Kind="InputPin" />
-                <Pin Id="EyqzYNnJ0r7H5l2wm9GD1s" Name="Tile Index" Kind="InputPin" />
-                <Pin Id="DSoYQlGgeLtx13knVTgAGd" Name="Result" Kind="OutputPin" />
+                <Pin Id="DSoYQlGgeLtx13knVTgAGd" Name="Tile Source" Kind="InputPin" />
+                <Pin Id="N767JYrMPd3sJZcNreJeQ2" Name="Tile Index" Kind="InputPin" />
+                <Pin Id="DyTY16JxxAwSA3xmRjCTbN" Name="Result" Kind="OutputPin" />
               </Node>
-              <Node Bounds="232,364,74,19" Id="N767JYrMPd3sJZcNreJeQ2">
+              <Node Bounds="232,364,74,19" Id="Rs4LlVR3Sbj8Re3NZeHlYU">
                 <p:NodeReference LastCategoryFullName="GIS.Skia.Tiles" LastDependency="VL.GIS.Skia.vl">
                   <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
                   <Choice Kind="OperationCallFlag" Name="DecodeTile" />
                 </p:NodeReference>
-                <Pin Id="DyTY16JxxAwSA3xmRjCTbN" Name="Tile Bytes" Kind="InputPin" />
-                <Pin Id="Rs4LlVR3Sbj8Re3NZeHlYU" Name="Result" Kind="OutputPin" />
+                <Pin Id="THE06hHSXTbzy0Awb5iYG2" Name="Tile Bytes" Kind="InputPin" />
+                <Pin Id="AxN6UNak0TCjEU5qcs8fTq" Name="Result" Kind="OutputPin" />
               </Node>
             </Patch>
-            <ControlPoint Id="Qgl84IO5queUJRrO4iECfe" Bounds="240,266" Alignment="Top" />
-            <ControlPoint Id="Rpk2pXhkJZmQXyo7oPI8cN" Bounds="240,404" Alignment="Bottom" />
+            <ControlPoint Id="DFKSx7WKaFere7O3nsObyi" Bounds="240,266" Alignment="Top" />
+            <ControlPoint Id="IY74vDYSASsjjoj2bNJWuK" Bounds="240,404" Alignment="Bottom" />
           </Node>
 
-          <Node Bounds="60,300,140,19" Id="KxTndWS8U90hxVIutdYDUn">
+          <Node Bounds="60,300,140,19" Id="RyOaNNTvdoVBy2NxXuvvJX">
             <p:NodeReference LastCategoryFullName="GIS.Skia.Tiles" LastDependency="VL.GIS.Skia.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="TileDestinationParts" />
             </p:NodeReference>
-            <Pin Id="DZVOCjU5yKUieB3UHDWiFc" Name="View" Kind="InputPin" />
-            <Pin Id="RyOaNNTvdoVBy2NxXuvvJX" Name="Tile Index" Kind="InputPin" />
-            <Pin Id="Eo0CWwtz9wnakgd4dcYFrb" Name="X" Kind="OutputPin" />
-            <Pin Id="UwbQZOy6LydKsCMDeZmAs4" Name="Y" Kind="OutputPin" />
-            <Pin Id="Pm1sbWUWMQdpzYr4VtnVDq" Name="Width" Kind="OutputPin" />
-            <Pin Id="HFjJvrTcmAkpNalopG4Ldf" Name="Height" Kind="OutputPin" />
+            <Pin Id="Eo0CWwtz9wnakgd4dcYFrb" Name="View" Kind="InputPin" />
+            <Pin Id="UwbQZOy6LydKsCMDeZmAs4" Name="Tile Index" Kind="InputPin" />
+            <Pin Id="Pm1sbWUWMQdpzYr4VtnVDq" Name="X" Kind="OutputPin" />
+            <Pin Id="HFjJvrTcmAkpNalopG4Ldf" Name="Y" Kind="OutputPin" />
+            <Pin Id="EejwYBD2TPwN8ozUyBmOr0" Name="Width" Kind="OutputPin" />
+            <Pin Id="PkyAFgJyQ7aDFd46M9BfcE" Name="Height" Kind="OutputPin" />
           </Node>
 
-          <Node Bounds="60,360,90,19" Id="EejwYBD2TPwN8ozUyBmOr0">
+          <!--
+            The four numbers on show, because when nothing appears the first question is
+            whether the arithmetic or the coordinate space is at fault, and these separate
+            them. For the values above expect roughly 278, 61, 256, 256.
+          -->
+          <Pad Id="QkRg8EGgaEkth5O9GlK9YN" Comment="X" Bounds="60,340,70,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="HQ6UUTTXrbsteIImpBkGqe" Comment="Y" Bounds="140,340,70,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="HJZkOWx7Bf9bVgutie3dKC" Comment="Width px" Bounds="220,340,70,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="S4qGKR99IcdxOuDSjKRuNa" Comment="Height px" Bounds="300,340,70,15" ShowValueBox="true" isIOBox="true" />
+
+          <!--
+            The step that was missing every time this patch failed to draw.
+
+            VL.Skia does not draw in pixels. Its default space is about 2.8 by 2 units wide, so
+            handing DrawImage a position of 278 puts the tile a hundred times further out than
+            the whole window is wide: off screen, with nothing drawn and no error. The Space
+            pin on the Renderer is meant to change that, but an unrecognised value is silently
+            replaced by the default, so relying on it means relying on something that fails
+            quietly. Converting here does not.
+
+            Space Height is left unconnected: its default of 2 is the height of VL.Skia's
+            default space. Read the Renderer's ClientBounds below to confirm that.
+          -->
+          <Node Bounds="60,370,145,19" Id="S7NUdha4NOdYgyQMBENHbJ">
+            <p:NodeReference LastCategoryFullName="GIS.Skia.Viewport" LastDependency="VL.GIS.Skia.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="ToRendererSpace" />
+            </p:NodeReference>
+            <Pin Id="EbiWtkRDd1ar8XZLdXij0W" Name="View" Kind="InputPin" />
+            <Pin Id="FOW5pXqpNCW9flIIYGQ9ZV" Name="Pixel X" Kind="InputPin" />
+            <Pin Id="RjUHb9pGzF2fjbNCsObMSK" Name="Pixel Y" Kind="InputPin" />
+            <Pin Id="BXyVMpYKX8GaWPe2OymhqB" Name="Pixel Width" Kind="InputPin" />
+            <Pin Id="Lmkq9SzXhDORcBYnkYPr2r" Name="Pixel Height" Kind="InputPin" />
+            <Pin Id="JH97SZTQ06adQDMbHYBeVN" Name="X" Kind="OutputPin" />
+            <Pin Id="MeEiyg7asDNVPjlYn6Kr4y" Name="Y" Kind="OutputPin" />
+            <Pin Id="JiKmgYh8mWrOo2vCuqTRif" Name="Width" Kind="OutputPin" />
+            <Pin Id="G3Wc5i8y1NBs7zqTgNRARG" Name="Height" Kind="OutputPin" />
+          </Node>
+
+          <!--
+            The same rectangle in the units the renderer actually uses. Expect roughly
+            -0.43, -0.80, 0.85, 0.85, all well inside the 2.8 by 2 space, which the pixel
+            figures above were not.
+          -->
+          <Pad Id="BAAVpGXklnhto0Q981SccJ" Comment="X units" Bounds="60,400,70,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="HFQiIIs2ahsNwZNftSTjfz" Comment="Y units" Bounds="140,400,70,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="PI1UukvOx29s2vqlKAolCf" Comment="Width units" Bounds="220,400,70,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="O5pqHgPYI8klSmTmAnOHPz" Comment="Height units" Bounds="300,400,70,15" ShowValueBox="true" isIOBox="true" />
+
+          <Node Bounds="60,430,90,19" Id="LVZ2tCRxP2sbBLCYS5HHsu">
             <p:NodeReference LastCategoryFullName="2D.Vector2" LastDependency="VL.CoreLib.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="Vector (Join)" />
               <CategoryReference Kind="Vector2Type" Name="Vector2" NeedsToBeDirectParent="true" />
             </p:NodeReference>
-            <Pin Id="PkyAFgJyQ7aDFd46M9BfcE" Name="X" Kind="InputPin" />
-            <Pin Id="LVZ2tCRxP2sbBLCYS5HHsu" Name="Y" Kind="InputPin" />
-            <Pin Id="E7vvmWf7hpR80XfRBSILEi" Name="Output" Kind="OutputPin" />
+            <Pin Id="E7vvmWf7hpR80XfRBSILEi" Name="X" Kind="InputPin" />
+            <Pin Id="FLpdLnUkKXROBLMBgNmsDr" Name="Y" Kind="InputPin" />
+            <Pin Id="Oo4L31kjDDnsAey0x8FAwV" Name="Output" Kind="OutputPin" />
           </Node>
 
-          <Node Bounds="170,360,90,19" Id="FLpdLnUkKXROBLMBgNmsDr">
+          <Node Bounds="170,430,90,19" Id="VYFLpNKZ01nXCSZ9gvVAEl">
             <p:NodeReference LastCategoryFullName="2D.Vector2" LastDependency="VL.CoreLib.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="OperationCallFlag" Name="Vector (Join)" />
               <CategoryReference Kind="Vector2Type" Name="Vector2" NeedsToBeDirectParent="true" />
             </p:NodeReference>
-            <Pin Id="Oo4L31kjDDnsAey0x8FAwV" Name="X" Kind="InputPin" />
-            <Pin Id="VYFLpNKZ01nXCSZ9gvVAEl" Name="Y" Kind="InputPin" />
-            <Pin Id="KP7weG8L4H0pK9aR5jJ1QW" Name="Output" Kind="OutputPin" />
+            <Pin Id="KP7weG8L4H0pK9aR5jJ1QW" Name="X" Kind="InputPin" />
+            <Pin Id="UKsD8aQeDpHBzha5F29gmi" Name="Y" Kind="InputPin" />
+            <Pin Id="JG8VQg7xi5Gdx9hNsBy6pQ" Name="Output" Kind="OutputPin" />
           </Node>
 
-          <Node Bounds="60,450,125,19" Id="THE06hHSXTbzy0Awb5iYG2">
+          <Node Bounds="60,510,125,19" Id="Khn11vJ4IJAjTvsXxvbB1P">
             <p:NodeReference LastCategoryFullName="Graphics.Skia.Layers" LastDependency="VL.Skia.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="ProcessAppFlag" Name="DrawImage" />
               <PinReference Kind="InputPin" Name="Position" />
             </p:NodeReference>
-            <Pin Id="Khn11vJ4IJAjTvsXxvbB1P" Name="Image" Kind="InputPin" />
-            <Pin Id="J47srTNA7yAJKk7WS2iCiv" Name="Position" Kind="InputPin" />
-            <Pin Id="AxN6UNak0TCjEU5qcs8fTq" Name="Size" Kind="InputPin" />
-            <Pin Id="CVn4P3RAv7YqBIoJ2QkVpK" Name="Size Mode" Kind="InputPin" />
-            <Pin Id="NFQHaS64tHYz9d5wKAmP7g" Name="Anchor" Kind="InputPin" />
-            <Pin Id="MYZk3cupPnTrMo8b6RkN7n" Name="Output" Kind="OutputPin" />
+            <Pin Id="CVn4P3RAv7YqBIoJ2QkVpK" Name="Image" Kind="InputPin" />
+            <Pin Id="NFQHaS64tHYz9d5wKAmP7g" Name="Position" Kind="InputPin" />
+            <Pin Id="J47srTNA7yAJKk7WS2iCiv" Name="Size" Kind="InputPin" />
+            <Pin Id="MYZk3cupPnTrMo8b6RkN7n" Name="Size Mode" Kind="InputPin" />
+            <Pin Id="IJb0ATfcsEAkANlbLKWcBJ" Name="Anchor" Kind="InputPin" />
+            <Pin Id="Vh1KFVWriiQ5tCqXoQhmIi" Name="Output" Kind="OutputPin" />
           </Node>
 
-          <Pad Id="CKZndGiH5v9LUQSP6f4RG4" Comment="Space" Bounds="240,500,85,19" ShowValueBox="true" isIOBox="true" Value="DIP">
-            <p:TypeAnnotation LastCategoryFullName="VL.Skia" LastDependency="VL.Skia.dll">
-              <Choice Kind="TypeFlag" Name="CommonSpace" />
+          <!--
+            ClientBounds tells you which space is actually in effect, because it reports in
+            that space's own units. With Space = DIPTopLeft expect Pos (0, 0) and a Size equal
+            to the view. If it reads Pos (-1.4, -1) and Size (2.8, 2) then the Space value was
+            rejected and silently replaced by Normalized, which is what happens to any string
+            that is not one of the four members.
+          -->
+          <Pad Id="P7iXhPmQnV6juUIOXJ6fU1" Comment="ClientBounds" Bounds="380,630,190,44" ShowValueBox="true" isIOBox="true" />
+
+          <!--
+            Size Mode and Anchor decide how Position and Size are read, and leaving them at
+            their defaults drew nothing at all. "Size" means use the Size input literally;
+            "TopLeft" makes Position the top-left corner, which is what TileDestinationParts
+            reports. VL.Skia's own pixel-space example sets both explicitly too.
+          -->
+          <Pad Id="Sy0b0NCKRzQskbBap1RdrL" Comment="Size Mode" Bounds="380,510,90,19" ShowValueBox="true" isIOBox="true" Value="Size">
+            <p:TypeAnnotation LastCategoryFullName="Graphics.Skia" LastDependency="VL.Skia.vl">
+              <Choice Kind="TypeFlag" Name="SizeMode" />
+            </p:TypeAnnotation>
+          </Pad>
+          <Pad Id="JW1zjVDNDumtnYWccYUOHw" Comment="Anchor" Bounds="490,510,90,19" ShowValueBox="true" isIOBox="true" Value="TopLeft">
+            <p:TypeAnnotation LastCategoryFullName="2D" LastDependency="VL.CoreLib.vl">
+              <Choice Kind="TypeFlag" Name="RectangleAnchor" />
+            </p:TypeAnnotation>
+          </Pad>
+          <Pad Id="FNeWLpu61a4pGYPRLHbeqQ" Comment="Background" Bounds="380,590,143,20" ShowValueBox="true" isIOBox="true" Value="0.15, 0.35, 0.55, 1">
+            <p:TypeAnnotation LastCategoryFullName="Color" LastDependency="VL.CoreLib.vl">
+              <Choice Kind="TypeFlag" Name="RGBA" />
             </p:TypeAnnotation>
           </Pad>
 
-          <Node Bounds="60,560,165,19" Id="IJb0ATfcsEAkANlbLKWcBJ">
+
+          <Node Bounds="60,620,165,19" Id="LlxBBnuGnVhLBnCi4g11xh">
             <p:NodeReference LastCategoryFullName="Graphics.Skia" LastDependency="VL.Skia.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
               <Choice Kind="ProcessAppFlag" Name="Renderer" />
             </p:NodeReference>
-            <Pin Id="Vh1KFVWriiQ5tCqXoQhmIi" Name="Bounds" Kind="InputPin" DefaultValue="100, 100, 800, 600">
+            <Pin Id="UdBsnZwsfvG7LFs3SHOBrg" Name="Bounds" Kind="InputPin" DefaultValue="100, 100, 800, 600">
               <p:TypeAnnotation LastCategoryFullName="System.Drawing" LastDependency="System.Drawing.dll">
                 <Choice Kind="TypeFlag" Name="Rectangle" />
               </p:TypeAnnotation>
             </Pin>
-            <Pin Id="S7NUdha4NOdYgyQMBENHbJ" Name="Bound to Document" Kind="InputPin" DefaultValue="True">
+            <Pin Id="BEPCiFbpWqCW9wbAB0Yozx" Name="Bound to Document" Kind="InputPin" DefaultValue="True">
               <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
                 <Choice Kind="TypeFlag" Name="Boolean" />
               </p:TypeAnnotation>
             </Pin>
-            <Pin Id="EbiWtkRDd1ar8XZLdXij0W" Name="Input" Kind="InputPin" />
-            <Pin Id="FOW5pXqpNCW9flIIYGQ9ZV" Name="Color" Kind="InputPin" />
-            <Pin Id="RjUHb9pGzF2fjbNCsObMSK" Name="Clear" Kind="InputPin" />
-            <Pin Id="BXyVMpYKX8GaWPe2OymhqB" Name="Space" Kind="InputPin" />
-            <Pin Id="Lmkq9SzXhDORcBYnkYPr2r" Name="Show Cursor" Kind="InputPin" />
-            <Pin Id="JH97SZTQ06adQDMbHYBeVN" Name="VSync" Kind="InputPin" />
-            <Pin Id="MeEiyg7asDNVPjlYn6Kr4y" Name="Enabled" Kind="InputPin" />
-            <Pin Id="JiKmgYh8mWrOo2vCuqTRif" Name="Form" Kind="OutputPin" />
-            <Pin Id="G3Wc5i8y1NBs7zqTgNRARG" Name="ClientBounds" Kind="OutputPin" />
-            <Pin Id="QkRg8EGgaEkth5O9GlK9YN" Name="Render Time" Kind="OutputPin" />
+            <Pin Id="Reciwl0Ab4UluhLW4KDMpQ" Name="Input" Kind="InputPin" />
+            <Pin Id="JnlOlKNmhwzmPuF1M3M40S" Name="Color" Kind="InputPin" />
+            <Pin Id="A5KYqFONkf9icF9wGUmUaQ" Name="Clear" Kind="InputPin" />
+            <Pin Id="DoWuP8UbjmW7kLHuQbVa6j" Name="Space" Kind="InputPin" />
+            <Pin Id="Tm2TP2v5krGAxyuqGFgyj7" Name="Show Cursor" Kind="InputPin" />
+            <Pin Id="Jm6buuU31ClYPmgG8l9bau" Name="VSync" Kind="InputPin" />
+            <Pin Id="MnBrkck9uNpOUdyxIS80gE" Name="Enabled" Kind="InputPin" />
+            <Pin Id="KECkhqavkjYZP5Ejxz0oCm" Name="Form" Kind="OutputPin" />
+            <Pin Id="TFlozXNvUjpC4Hx69bktW9" Name="ClientBounds" Kind="OutputPin" />
+            <Pin Id="LZxE38aGvdde0EESeXiuE6" Name="Render Time" Kind="OutputPin" />
           </Node>
 
         </Canvas>
@@ -213,31 +288,47 @@
           <Fragment Id="TGH5E5l3jKiWYA1tapR69a" Patch="Ux28whIW91sMwNkFjirOxc" Enabled="true" />
           <Fragment Id="UAKzapREjZ4NJAaNYXGyD9" Patch="UB2DcTddrNt62qXVZX2KCU" Enabled="true" />
         </ProcessDefinition>
-        <Link Id="HQ6UUTTXrbsteIImpBkGqe" Ids="OXb8aKeI14IWP608yGjWCA,FNeWLpu61a4pGYPRLHbeqQ" />
-        <Link Id="HJZkOWx7Bf9bVgutie3dKC" Ids="OuAWHniWdPwNkR3l9LdCrG,GkoVLB2Rf9RUTLyyIfR2ja" />
-        <Link Id="S4qGKR99IcdxOuDSjKRuNa" Ids="RUvdVroTVLM7jkYQitpTeF,LfY7j4nV7bGD6etnRIyp3d" />
-        <Link Id="BAAVpGXklnhto0Q981SccJ" Ids="Rs9USbECEVQJAEV94ygaeJ,G3uQVFgczKeYpAb4fl8D1x" />
-        <Link Id="HFQiIIs2ahsNwZNftSTjfz" Ids="HzbBHpiAQxnCMA2HNiecE6,AaKBmbTNk0L2R2bE4oznxY" />
-        <Link Id="PI1UukvOx29s2vqlKAolCf" Ids="OXb8aKeI14IWP608yGjWCA,CN24hZvclwOrVZH3e50DYv" />
-        <Link Id="O5pqHgPYI8klSmTmAnOHPz" Ids="OuAWHniWdPwNkR3l9LdCrG,UrYPE03untGHuiC5hOtghH" />
-        <Link Id="P7iXhPmQnV6juUIOXJ6fU1" Ids="RUvdVroTVLM7jkYQitpTeF,SAXRruhv8igLCJeCq1s9Dz" />
-        <Link Id="LlxBBnuGnVhLBnCi4g11xh" Ids="SYksEJUEZ8qHwZJ2z0ilDC,JG8VQg7xi5Gdx9hNsBy6pQ" />
-        <Link Id="UdBsnZwsfvG7LFs3SHOBrg" Ids="DZP4Ybrm4gXn32vGKHBvBg,Qgl84IO5queUJRrO4iECfe" />
-        <Link Id="BEPCiFbpWqCW9wbAB0Yozx" Ids="Qgl84IO5queUJRrO4iECfe,EyqzYNnJ0r7H5l2wm9GD1s" />
-        <Link Id="Reciwl0Ab4UluhLW4KDMpQ" Ids="IY74vDYSASsjjoj2bNJWuK,VPVHm9psTeqLZJ0WF8DqGA" />
-        <Link Id="JnlOlKNmhwzmPuF1M3M40S" Ids="DSoYQlGgeLtx13knVTgAGd,DyTY16JxxAwSA3xmRjCTbN" />
-        <Link Id="A5KYqFONkf9icF9wGUmUaQ" Ids="Rs4LlVR3Sbj8Re3NZeHlYU,Rpk2pXhkJZmQXyo7oPI8cN" />
-        <Link Id="DoWuP8UbjmW7kLHuQbVa6j" Ids="Rpk2pXhkJZmQXyo7oPI8cN,Khn11vJ4IJAjTvsXxvbB1P" />
-        <Link Id="Tm2TP2v5krGAxyuqGFgyj7" Ids="DUkxqYaI1zxBCdruirmhRg,DZVOCjU5yKUieB3UHDWiFc" />
-        <Link Id="Jm6buuU31ClYPmgG8l9bau" Ids="DZP4Ybrm4gXn32vGKHBvBg,RyOaNNTvdoVBy2NxXuvvJX" />
-        <Link Id="MnBrkck9uNpOUdyxIS80gE" Ids="Eo0CWwtz9wnakgd4dcYFrb,PkyAFgJyQ7aDFd46M9BfcE" />
-        <Link Id="KECkhqavkjYZP5Ejxz0oCm" Ids="UwbQZOy6LydKsCMDeZmAs4,LVZ2tCRxP2sbBLCYS5HHsu" />
-        <Link Id="TFlozXNvUjpC4Hx69bktW9" Ids="Pm1sbWUWMQdpzYr4VtnVDq,Oo4L31kjDDnsAey0x8FAwV" />
-        <Link Id="LZxE38aGvdde0EESeXiuE6" Ids="HFjJvrTcmAkpNalopG4Ldf,VYFLpNKZ01nXCSZ9gvVAEl" />
-        <Link Id="Cq7hh4qR881wYAdVM10EpB" Ids="E7vvmWf7hpR80XfRBSILEi,J47srTNA7yAJKk7WS2iCiv" />
-        <Link Id="C8PAflCFA4XJBoyQd9gSRi" Ids="KP7weG8L4H0pK9aR5jJ1QW,AxN6UNak0TCjEU5qcs8fTq" />
-        <Link Id="IxKigKcMMbYMVZsoRBGpWx" Ids="MYZk3cupPnTrMo8b6RkN7n,EbiWtkRDd1ar8XZLdXij0W" />
-        <Link Id="OtZzBH2ksgDXK3IOhveNXU" Ids="CKZndGiH5v9LUQSP6f4RG4,BXyVMpYKX8GaWPe2OymhqB" />
+        <Link Id="Cq7hh4qR881wYAdVM10EpB" Ids="OXb8aKeI14IWP608yGjWCA,LfY7j4nV7bGD6etnRIyp3d" />
+        <Link Id="C8PAflCFA4XJBoyQd9gSRi" Ids="OuAWHniWdPwNkR3l9LdCrG,G3uQVFgczKeYpAb4fl8D1x" />
+        <Link Id="IxKigKcMMbYMVZsoRBGpWx" Ids="RUvdVroTVLM7jkYQitpTeF,AaKBmbTNk0L2R2bE4oznxY" />
+        <Link Id="OtZzBH2ksgDXK3IOhveNXU" Ids="Rs9USbECEVQJAEV94ygaeJ,DUkxqYaI1zxBCdruirmhRg" />
+        <Link Id="TKs6cLHycQyidZHnb17b32" Ids="HzbBHpiAQxnCMA2HNiecE6,FjhqkLnBYsq4NJg9O8Ornh" />
+        <Link Id="JwIdC1wdatJSnYlMTjvbRn" Ids="OXb8aKeI14IWP608yGjWCA,SAXRruhv8igLCJeCq1s9Dz" />
+        <Link Id="TdqJZYwEqA0uP3mWo1p0XC" Ids="OuAWHniWdPwNkR3l9LdCrG,DZP4Ybrm4gXn32vGKHBvBg" />
+        <Link Id="UIFfREj63ojtJkICFb4aI6" Ids="RUvdVroTVLM7jkYQitpTeF,KxTndWS8U90hxVIutdYDUn" />
+        <Link Id="HoetT7ECj6PwFXSfrVcnJJ" Ids="SYksEJUEZ8qHwZJ2z0ilDC,H4Nh2pWmHtrtAxXJ6gellY" />
+        <Link Id="L3uCMl5TEi6JH5hVmHwfiQ" Ids="DZVOCjU5yKUieB3UHDWiFc,DFKSx7WKaFere7O3nsObyi" />
+        <Link Id="DMnGFbWOIfCn9tGdy8fTsB" Ids="DFKSx7WKaFere7O3nsObyi,N767JYrMPd3sJZcNreJeQ2" />
+        <Link Id="UBaUy7KT8vO7cJAGvdJD5I" Ids="VPVHm9psTeqLZJ0WF8DqGA,DSoYQlGgeLtx13knVTgAGd" />
+        <Link Id="OAtgMlH7ioacoYaLxHOfLw" Ids="DyTY16JxxAwSA3xmRjCTbN,THE06hHSXTbzy0Awb5iYG2" />
+        <Link Id="PxsIzurUS9ZvxaxR70HdZW" Ids="AxN6UNak0TCjEU5qcs8fTq,IY74vDYSASsjjoj2bNJWuK" />
+        <Link Id="B0me3HDxoeEUgYfhXt4eON" Ids="IY74vDYSASsjjoj2bNJWuK,CVn4P3RAv7YqBIoJ2QkVpK" />
+        <Link Id="MHvoXW1BUQSqtENegtcrpR" Ids="CN24hZvclwOrVZH3e50DYv,Eo0CWwtz9wnakgd4dcYFrb" />
+        <Link Id="G5azu3r1t5RykeBu8XAqMh" Ids="DZVOCjU5yKUieB3UHDWiFc,UwbQZOy6LydKsCMDeZmAs4" />
+        <Link Id="MW1FgvOk0Ka5TBJH24BEBE" Ids="JH97SZTQ06adQDMbHYBeVN,E7vvmWf7hpR80XfRBSILEi" />
+        <Link Id="EdVHI5BfIkGhNQE5CeFMoH" Ids="MeEiyg7asDNVPjlYn6Kr4y,FLpdLnUkKXROBLMBgNmsDr" />
+        <Link Id="CjDTTfs6tkbEbTSaC7UA02" Ids="JiKmgYh8mWrOo2vCuqTRif,KP7weG8L4H0pK9aR5jJ1QW" />
+        <Link Id="OMCwc0bYIqKvNXLC1apqrg" Ids="G3Wc5i8y1NBs7zqTgNRARG,UKsD8aQeDpHBzha5F29gmi" />
+        <Link Id="Qk0VBt3tITPFvPK9mIJA6W" Ids="Oo4L31kjDDnsAey0x8FAwV,NFQHaS64tHYz9d5wKAmP7g" />
+        <Link Id="OnCCKCNNpqHoqRV2t9izVV" Ids="JG8VQg7xi5Gdx9hNsBy6pQ,J47srTNA7yAJKk7WS2iCiv" />
+        <Link Id="AmXPkdfrp3ECXiILIneHN3" Ids="Vh1KFVWriiQ5tCqXoQhmIi,Reciwl0Ab4UluhLW4KDMpQ" />
+        <Link Id="DprHWSkBDJxKlzCZWobxtI" Ids="TFlozXNvUjpC4Hx69bktW9,P7iXhPmQnV6juUIOXJ6fU1" />
+        <Link Id="S1fXuTafVPyp2Z11Yuu6hE" Ids="Pm1sbWUWMQdpzYr4VtnVDq,QkRg8EGgaEkth5O9GlK9YN" />
+        <Link Id="VOQ0J9VAnwGzLa6M5y21ed" Ids="HFjJvrTcmAkpNalopG4Ldf,HQ6UUTTXrbsteIImpBkGqe" />
+        <Link Id="TNC4yhBsuuB0ttehQ3JHIA" Ids="EejwYBD2TPwN8ozUyBmOr0,HJZkOWx7Bf9bVgutie3dKC" />
+        <Link Id="ETe2IdWtcuFvUp3xyyfPGn" Ids="PkyAFgJyQ7aDFd46M9BfcE,S4qGKR99IcdxOuDSjKRuNa" />
+        <Link Id="A1c7x106scVGXMBHcSMKLK" Ids="CN24hZvclwOrVZH3e50DYv,EbiWtkRDd1ar8XZLdXij0W" />
+        <Link Id="QVeareet0IcSN1ry5FPcnL" Ids="Pm1sbWUWMQdpzYr4VtnVDq,FOW5pXqpNCW9flIIYGQ9ZV" />
+        <Link Id="OBNYMw6j0cQvuATPg8tCMl" Ids="HFjJvrTcmAkpNalopG4Ldf,RjUHb9pGzF2fjbNCsObMSK" />
+        <Link Id="QuD7VwkBpFOCJ6jylvnwly" Ids="EejwYBD2TPwN8ozUyBmOr0,BXyVMpYKX8GaWPe2OymhqB" />
+        <Link Id="TBfud89WQBSX9qNHGyUOpG" Ids="PkyAFgJyQ7aDFd46M9BfcE,Lmkq9SzXhDORcBYnkYPr2r" />
+        <Link Id="KYBy3yzyxiwd5jM3y030hr" Ids="JH97SZTQ06adQDMbHYBeVN,BAAVpGXklnhto0Q981SccJ" />
+        <Link Id="UgPOgp7ulRvn29XVM0Td6N" Ids="MeEiyg7asDNVPjlYn6Kr4y,HFQiIIs2ahsNwZNftSTjfz" />
+        <Link Id="MwFIe7KILGwXD6sXBYjQNm" Ids="JiKmgYh8mWrOo2vCuqTRif,PI1UukvOx29s2vqlKAolCf" />
+        <Link Id="PAdk9NZisOpY9mrzD44I5i" Ids="G3Wc5i8y1NBs7zqTgNRARG,O5pqHgPYI8klSmTmAnOHPz" />
+        <Link Id="OvDGjGCKIwoex74SUoNiW9" Ids="Sy0b0NCKRzQskbBap1RdrL,MYZk3cupPnTrMo8b6RkN7n" />
+        <Link Id="BVLPxRVWviuqDlXceaCw3A" Ids="JW1zjVDNDumtnYWccYUOHw,IJb0ATfcsEAkANlbLKWcBJ" />
+        <Link Id="VQ21gm2UzzQcGAiEjxi2r6" Ids="FNeWLpu61a4pGYPRLHbeqQ,JnlOlKNmhwzmPuF1M3M40S" />
       </Patch>
     </Node>
   </Patch>

@@ -10,9 +10,14 @@ namespace VL.GIS.Skia;
 /// Works out which map tiles a view needs and where each one belongs on screen.
 /// </summary>
 /// <remarks>
-/// The output is meant to be wired straight into VL.Skia: fetch each index with
-/// GIS.Tiles FetchTileAsync, decode the bytes to an SKImage, and draw it into the matching
-/// SKRect with ImageLayer.
+/// Positions are pixels from the top-left of the view. The chain is: fetch each index with
+/// GIS.Tiles, decode the bytes with DecodeTile, take the rectangle from TileDestinationParts,
+/// **put it through GIS.Skia.Viewport ToRendererSpace**, and draw it with DrawImage.
+///
+/// That conversion is not optional. VL.Skia does not draw in pixels — its default space is
+/// roughly 2.8 by 2 units — so a pixel position of a few hundred lands far off screen with
+/// nothing drawn and no error. Two DrawImage pins are equally silent when wrong: Size Mode
+/// must be <c>Size</c> and Anchor <c>TopLeft</c>. See help/HowTo Show a map.vl.
 /// </remarks>
 [Name("Tiles")]
 public static class TileLayoutNodes
@@ -63,8 +68,9 @@ public static class TileLayoutNodes
     }
 
     /// <summary>
-    /// Where a tile belongs on screen, as a rectangle to draw its image into.
-    /// Wire this to the Dest pin of VL.Skia's ImageLayer.
+    /// Where a tile belongs on screen, as a rectangle in pixels from the top-left of the view.
+    /// Prefer TileDestinationParts for drawing: VL.Skia's public image node takes a position
+    /// and a size rather than a rectangle.
     /// VL.GIS's own implementation; TileIndex is BruTile's type, SKRect is SkiaSharp's.
     /// </summary>
     public static SKRect TileDestination(MapView view, TileIndex tileIndex)
@@ -85,8 +91,9 @@ public static class TileLayoutNodes
 
     /// <summary>
     /// Where a tile belongs on screen, as a position and a size rather than a rectangle.
-    /// This is the form VL.Skia's DrawImage takes: build a Vector2 from x/y for Position and
-    /// from width/height for Size.
+    /// These are pixels: pass them through GIS.Skia.Viewport ToRendererSpace before building
+    /// the Vector2s for DrawImage, and set its Size Mode to <c>Size</c> and Anchor to
+    /// <c>TopLeft</c>.
     /// VL.GIS's own implementation; TileIndex is BruTile's type.
     /// </summary>
     public static void TileDestinationParts(

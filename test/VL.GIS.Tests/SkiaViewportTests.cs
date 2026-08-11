@@ -189,4 +189,118 @@ public class SkiaViewportTests
         Assert.InRange(x, rect.Left, rect.Right);
         Assert.InRange(y, rect.Top, rect.Bottom);
     }
+
+    // ── ToRendererSpace ───────────────────────────────────────────────────────
+    //
+    // These are the tests that would have caught the map patch drawing nothing. The pixel
+    // figures were right the whole time; nothing checked that they were in the space the
+    // renderer actually draws in, and the answer was off by a factor of about a hundred.
+
+    [Fact]
+    public void A_pixel_rectangle_becomes_a_rectangle_inside_the_default_space()
+    {
+        var view = Tokyo(12);
+        var tile = TileFetchNodes.TileIndexFromLonLat(Lon, Lat, 12);
+        TileLayoutNodes.TileDestinationParts(view, tile,
+            out float px, out float py, out float pw, out float ph);
+
+        ViewportNodes.ToRendererSpace(view, px, py, pw, ph,
+            out float x, out float y, out float w, out float h);
+
+        // VL.Skia's default space is 2 units tall and about 2.795 wide with the origin at the
+        // centre. Every edge has to land inside that, which the pixel figures did not.
+        Assert.InRange(x, -1.3975f, 1.3975f);
+        Assert.InRange(y, -1f, 1f);
+        Assert.InRange(x + w, -1.3975f, 1.3975f);
+        Assert.InRange(y + h, -1f, 1f);
+    }
+
+    [Fact]
+    public void The_centre_pixel_of_the_view_maps_to_the_origin()
+    {
+        var view = Tokyo(12);
+
+        ViewportNodes.ToRendererSpace(view, view.Width / 2f, view.Height / 2f, 0f, 0f,
+            out float x, out float y, out _, out _);
+
+        Assert.Equal(0f, x, 6);
+        Assert.Equal(0f, y, 6);
+    }
+
+    [Fact]
+    public void The_scale_is_the_same_on_both_axes_so_a_square_tile_stays_square()
+    {
+        // Scaling x and y independently would stretch the tile whenever the view's aspect
+        // ratio differs from the space's, which for a 4:3 view it does.
+        var view = ViewportNodes.CreateMapView(0, 0, 4, 800f, 600f);
+
+        ViewportNodes.ToRendererSpace(view, 0f, 0f, 256f, 256f,
+            out _, out _, out float w, out float h);
+
+        Assert.Equal(w, h, 6);
+    }
+
+    [Fact]
+    public void A_view_with_the_spaces_aspect_ratio_maps_corner_onto_corner()
+    {
+        var view = ViewportNodes.CreateMapView(0, 0, 4, 559f, 400f);
+
+        ViewportNodes.ToRendererSpace(view, 0f, 0f, view.Width, view.Height,
+            out float x, out float y, out float w, out float h);
+
+        Assert.Equal(-1.3975f, x, 4);
+        Assert.Equal(-1f, y, 4);
+        Assert.Equal(2.795f, w, 4);
+        Assert.Equal(2f, h, 4);
+    }
+
+    [Fact]
+    public void A_taller_space_scales_everything_in_proportion()
+    {
+        // Proves the space height is honoured rather than the default being baked in: this is
+        // what lets the same patch work in DIP or a projection space.
+        var view = Tokyo(12);
+
+        ViewportNodes.ToRendererSpace(view, 278f, 61f, 256f, 256f,
+            out float x1, out float y1, out float w1, out _);
+        ViewportNodes.ToRendererSpace(view, 278f, 61f, 256f, 256f,
+            out float x2, out float y2, out float w2, out _, spaceHeight: 4f);
+
+        Assert.Equal(x1 * 2f, x2, 5);
+        Assert.Equal(y1 * 2f, y2, 5);
+        Assert.Equal(w1 * 2f, w2, 5);
+    }
+
+    [Fact]
+    public void A_zero_height_view_does_not_divide_by_zero()
+    {
+        // Height is a user-typed pin, so an empty box has to be survivable rather than
+        // producing infinities that propagate into the layer graph.
+        var view = ViewportNodes.CreateMapView(0, 0, 4, 800f, 0f);
+
+        ViewportNodes.ToRendererSpace(view, 278f, 61f, 256f, 256f,
+            out float x, out float y, out float w, out float h);
+
+        Assert.Equal(0f, x);
+        Assert.Equal(0f, y);
+        Assert.Equal(0f, w);
+        Assert.Equal(0f, h);
+    }
+
+    [Fact]
+    public void A_tile_off_the_left_of_the_view_stays_off_the_left_after_conversion()
+    {
+        // The conversion must not fold an off-screen tile back into view: a negative pixel
+        // position has to stay left of the space's own left edge.
+        var view = Tokyo(12);
+
+        ViewportNodes.ToRendererSpace(view, -300f, 0f, 256f, 256f,
+            out float x, out _, out float w, out _);
+
+        // The space spans one unit either side of the origin vertically, so for a renderer
+        // matching the view's aspect ratio its left edge is at -Width/Height.
+        float leftEdge = -(view.Width / view.Height);
+        Assert.True(x + w < leftEdge,
+            $"expected the tile to stay left of {leftEdge}, got x={x} w={w}");
+    }
 }

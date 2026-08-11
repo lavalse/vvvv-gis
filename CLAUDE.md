@@ -13,9 +13,11 @@ solves is **how those libraries show up as nodes in a patch** — which turned o
 hard part. See [docs/VL-PACKAGING.md](docs/VL-PACKAGING.md).
 
 **Current state:** `0.2.0-alpha` is on nuget.org. Verified: the package builds, packs and
-installs, its nodes appear under the right categories, and 95 tests cover the geometry,
-projection, serialization, tile-indexing and mesh arithmetic. Thin: tile fetching over the
-network has been done exactly once, by hand. Plenty of nodes have still never run — check
+installs, its nodes appear under the right categories, and 134 tests cover the geometry,
+projection, serialization, tile-indexing, mesh and viewport arithmetic. `VL.GIS.Skia` draws a
+real OSM tile on screen — the first end-to-end run of the whole chain — but is unpublished.
+Thin: one tile, not many, and no automated test crosses the network. Plenty of nodes have
+still never run — check
 before claiming any particular one works.
 
 `0.1.0-alpha` and `0.0.1`–`0.0.4` are on nuget.org and must never be recommended. The 0.0.x
@@ -279,7 +281,8 @@ users prefer to work.
 
 | | |
 |---|---|
-| Next | See a map, via `VL.GIS.Skia` — tiles to positioned images, geometry to `SKPath` or SVG path data, both drawn by VL.Skia's existing nodes. Not via Mapsui: see above |
+| Now | One tile renders. Next is many, which needs a `ForEach` region in the patch, then publishing `VL.GIS.Skia` |
+| Next | Geometry on the map — `GeometryToPath` exists and has never been drawn |
 | Next | GeoJSON → `GeoJSON4STJ 4.0.0`, dropping the Newtonsoft.Json clash with vvvv's 13.0.3 |
 | Later | File I/O via `MaxRev.Gdal.Core` — Shapefile, GeoTIFF. Without it users can only type coordinates by hand |
 | Later | `VL.GIS.Stride`: tile textures, terrain and extruded buildings, built on the existing `GIS.Mesh.*` |
