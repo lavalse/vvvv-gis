@@ -17,16 +17,16 @@ public static class ProjectionNodes
     private static readonly CoordinateTransformationFactory CtFactory = new CoordinateTransformationFactory();
 
     // Well-known CRS instances
-    /// <summary>WGS84 geographic CRS (EPSG:4326) — longitude/latitude in degrees.</summary>
+    /// <summary>WGS84 geographic CRS (EPSG:4326) — longitude/latitude in degrees. Uses ProjNet.</summary>
     public static CoordinateSystem Wgs84() => GeographicCoordinateSystem.WGS84;
 
-    /// <summary>Web Mercator projected CRS (EPSG:3857) — used by OSM/Google/Bing tiles.</summary>
+    /// <summary>Web Mercator projected CRS (EPSG:3857) — used by OSM/Google/Bing tiles. Uses ProjNet.</summary>
     public static CoordinateSystem WebMercator()
         => ProjectedCoordinateSystem.WebMercator;
 
     // ── CRS Parsing ───────────────────────────────────────────────────────────
 
-    /// <summary>Parse a CRS from a WKT (Well-Known Text) string.</summary>
+    /// <summary>Parse a CRS from a WKT (Well-Known Text) string. Uses ProjNet.</summary>
     public static CoordinateSystem ParseWkt(string wkt)
         => CsFactory.CreateFromWkt(wkt);
 
@@ -34,6 +34,7 @@ public static class ProjectionNodes
     /// Read a coordinate system's name, authority and WKT — for example
     /// "WGS 84 / UTM zone 54N", "EPSG", 32654.
     /// Use it to confirm in a patch which CRS you actually built.
+    /// Uses ProjNet.
     /// </summary>
     public static void CoordinateSystemInfo(
         CoordinateSystem coordinateSystem,
@@ -55,6 +56,7 @@ public static class ProjectionNodes
     /// <summary>
     /// Create a UTM projected CRS for a given zone number and hemisphere.
     /// Useful for metric distance/area calculations.
+    /// Uses ProjNet.
     /// </summary>
     public static CoordinateSystem CreateUtm(int zoneNumber, bool isNorthernHemisphere = true)
         => ProjectedCoordinateSystem.WGS84_UTM(zoneNumber, isNorthernHemisphere);
@@ -62,6 +64,7 @@ public static class ProjectionNodes
     /// <summary>
     /// Determine the UTM zone number for a given longitude.
     /// Returns zone 1–60.
+    /// Plain arithmetic, no ProjNet involved.
     /// </summary>
     public static int UtmZoneFromLongitude(double longitude)
         => (int)Math.Floor((longitude + 180.0) / 6.0) % 60 + 1;
@@ -71,13 +74,14 @@ public static class ProjectionNodes
     /// <summary>
     /// Create a coordinate transformation between two CRS definitions.
     /// Cache and reuse this for bulk reprojection.
+    /// Uses ProjNet.
     /// </summary>
     public static ICoordinateTransformation CreateTransformation(
         CoordinateSystem source,
         CoordinateSystem target)
         => CtFactory.CreateFromCoordinateSystems(source, target);
 
-    /// <summary>Reproject a single (x, y) coordinate using a pre-built transformation.</summary>
+    /// <summary>Reproject a single (x, y) coordinate using a pre-built transformation. Uses ProjNet.</summary>
     public static (double x, double y) ReprojectPoint(
         ICoordinateTransformation transformation,
         double x, double y)
@@ -89,6 +93,7 @@ public static class ProjectionNodes
     /// <summary>
     /// Reproject a Point geometry from source CRS to target CRS.
     /// Input point coordinates must be in the source CRS.
+    /// Uses ProjNet.
     /// </summary>
     public static Point ReprojectPointGeometry(
         Point point,
@@ -104,6 +109,7 @@ public static class ProjectionNodes
     /// <summary>
     /// Reproject any NTS Geometry from source CRS to target CRS.
     /// Uses coordinate-by-coordinate transformation.
+    /// Uses ProjNet.
     /// </summary>
     public static Geometry ReprojectGeometry(
         Geometry geometry,
@@ -128,6 +134,7 @@ public static class ProjectionNodes
     /// <summary>
     /// Reproject a list of (x, y) coordinates in bulk.
     /// More efficient than calling ReprojectPoint repeatedly.
+    /// Uses ProjNet.
     /// </summary>
     public static IReadOnlyList<(double x, double y)> ReprojectPoints(
         ICoordinateTransformation transformation,
@@ -144,7 +151,7 @@ public static class ProjectionNodes
 
     // ── Web Mercator Utilities ────────────────────────────────────────────────
 
-    /// <summary>Convert WGS84 longitude/latitude to Web Mercator (EPSG:3857) meters.</summary>
+    /// <summary>Convert WGS84 longitude/latitude to Web Mercator (EPSG:3857) metres. Closed-form formula, no ProjNet involved.</summary>
     public static (double x, double y) LonLatToWebMercator(double longitude, double latitude)
     {
         const double R = 6378137.0; // Earth radius in metres (WGS84 semi-major axis)
@@ -153,7 +160,7 @@ public static class ProjectionNodes
         return (x, y);
     }
 
-    /// <summary>Convert Web Mercator (EPSG:3857) meters to WGS84 longitude/latitude.</summary>
+    /// <summary>Convert Web Mercator (EPSG:3857) metres to WGS84 longitude/latitude. Closed-form formula, no ProjNet involved.</summary>
     public static (double longitude, double latitude) WebMercatorToLonLat(double x, double y)
     {
         const double R = 6378137.0;

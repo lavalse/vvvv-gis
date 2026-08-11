@@ -75,6 +75,7 @@ public static class GeometryTessellator
 
     /// <summary>
     /// Tessellate a MultiPolygon into a single merged triangle mesh.
+    /// Uses NetTopologySuite (DelaunayTriangulationBuilder).
     /// </summary>
     public static void TessellateMultiPolygon(
         MultiPolygon multiPolygon,
@@ -108,6 +109,7 @@ public static class GeometryTessellator
     /// <summary>
     /// Convert a LineString into a series of Vector3 positions for line rendering.
     /// Use with Stride's line rendering or a custom tube mesh.
+    /// Own implementation; LineString is NetTopologySuite's type.
     /// </summary>
     public static IReadOnlyList<Vector3> LineStringToPositions(
         LineString lineString,
@@ -128,6 +130,7 @@ public static class GeometryTessellator
     /// <summary>
     /// Convert a LineString into a flat ribbon mesh (two triangles per segment).
     /// width: ribbon width in metres.
+    /// Own implementation; LineString is NetTopologySuite's type.
     /// </summary>
     public static void LineStringToRibbonMesh(
         LineString lineString,
@@ -183,6 +186,8 @@ public static class GeometryTessellator
     /// outputPositions: 4 vertices (corners of the quad).
     /// outputUVs:       4 UV coordinates (0,0)→(1,1).
     /// outputIndices:   6 indices (two triangles, CCW).
+    ///
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static void CreateTileQuad(
         float minX, float minZ,

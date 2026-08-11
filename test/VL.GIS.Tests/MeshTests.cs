@@ -175,9 +175,10 @@ public class MeshTests
         // Two triangles, as expected for a convex quad.
         Assert.Equal(2 * 3, indices.Count);
 
-        // Six positions, not four: LibTessDotNet emits its own vertex list and does not
-        // merge the two vertices the triangles share. Anything consuming this should treat
-        // the count as an upper bound rather than assuming shared corners.
+        // Six positions, not four: TessellatePolygon runs NTS's DelaunayTriangulationBuilder
+        // and emits three vertices per triangle without merging the two the triangles share.
+        // Anything consuming this should treat the count as an upper bound rather than
+        // assuming shared corners.
         Assert.Equal(6, positions.Count);
         Assert.All(indices, i => Assert.InRange(i, 0, positions.Count - 1));
     }

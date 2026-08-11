@@ -20,6 +20,7 @@ public static class ElevationNodes
     /// <summary>
     /// Create a flat float[] heightmap array of given dimensions, all zeros.
     /// Size: width × height floats, row-major (X = column, Y = row).
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static float[] CreateFlatHeightmap(int width, int height)
         => new float[width * height];
@@ -27,6 +28,7 @@ public static class ElevationNodes
     /// <summary>
     /// Create a heightmap from a 2D array of elevation values (in metres).
     /// input[row][col] → output float[] (row-major).
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static float[] HeightmapFromArray(float[][] elevationGrid)
     {
@@ -43,6 +45,7 @@ public static class ElevationNodes
     /// <summary>
     /// Normalize a heightmap to the 0–1 range (Stride requires this for some modes).
     /// Also outputs the min and max elevation for de-normalization.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static float[] NormalizeHeightmap(
         float[] heightmap,
@@ -69,6 +72,7 @@ public static class ElevationNodes
     /// <summary>
     /// Sample a heightmap at a fractional (u, v) coordinate using bilinear interpolation.
     /// u and v are in [0, 1] range.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static float SampleHeightmap(float[] heightmap, int width, int height, float u, float v)
     {
@@ -98,6 +102,7 @@ public static class ElevationNodes
     /// Generate a normal map from a heightmap using central differences.
     /// Returns Vector3[] normals (unit length, pointing upward from terrain).
     /// cellSizeMetres: horizontal distance between adjacent heightmap cells.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static Vector3[] GenerateNormals(float[] heightmap, int width, int height, float cellSizeMetres = 1f)
     {
@@ -127,6 +132,7 @@ public static class ElevationNodes
     /// Generate a terrain mesh from a heightmap.
     /// Creates a grid of (width × height) vertices with triangle list indices.
     /// scaleX, scaleZ: metres per cell in X and Z directions.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static void HeightmapToMesh(
         float[] heightmap, int width, int height,

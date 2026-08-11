@@ -32,12 +32,14 @@ public static class TileFetchNodes
     /// <summary>
     /// Create a TileIndex from explicit col/row/level values.
     /// Tile coordinates follow the XYZ/slippy map convention.
+    /// Uses BruTile.
     /// </summary>
     public static TileIndex CreateTileIndex(int col, int row, int level)
         => new TileIndex(col, row, level);
 
     /// <summary>
     /// Split a TileIndex into its column, row and zoom level.
+    /// Uses BruTile.
     /// </summary>
     public static void TileIndexParts(
         TileIndex tileIndex, out int col, out int row, out int level)
@@ -54,7 +56,8 @@ public static class TileFetchNodes
 
     /// <summary>
     /// Compute the TileIndex for a given longitude/latitude at a specific zoom level.
-    /// Uses Web Mercator / OSM tile numbering convention.
+    /// Uses the Web Mercator / OSM tile numbering convention.
+    /// Own arithmetic; the returned TileIndex is BruTile's type.
     /// </summary>
     public static TileIndex TileIndexFromLonLat(double longitude, double latitude, int zoom)
     {
@@ -72,6 +75,7 @@ public static class TileFetchNodes
     /// <summary>
     /// Return all tile indices needed to cover a bounding box at a given zoom level.
     /// Useful for pre-fetching a region.
+    /// Own arithmetic; TileIndex is BruTile's type.
     /// </summary>
     public static IReadOnlyList<TileIndex> TileIndicesForBounds(
         double minLon, double minLat,
@@ -90,6 +94,7 @@ public static class TileFetchNodes
     /// <summary>
     /// Convert a TileIndex back to its bounding box in WGS84 lon/lat.
     /// Returns SW corner (minLon, minLat) and NE corner (maxLon, maxLat).
+    /// Own arithmetic; TileIndex is BruTile's type.
     /// </summary>
     public static void TileBounds(
         TileIndex tileIndex,
@@ -113,6 +118,7 @@ public static class TileFetchNodes
     /// wrap it in a Cache region driven by the tile index, or by the region's Force pin, and
     /// take FetchTileAsync instead whenever tiles change as the patch runs.
     /// See help/HowTo Fetch a map tile.vl.
+    /// Uses BruTile.
     /// </summary>
     public static byte[]? FetchTileBytes(IHttpTileSource tileSource, TileIndex tileIndex)
     {
@@ -143,6 +149,7 @@ public static class TileFetchNodes
     /// <summary>
     /// Fetch a tile and write it to disk. Returns the file path on success.
     /// Useful for caching tiles locally.
+    /// Uses BruTile.
     /// </summary>
     public static string? FetchTileToFile(
         IHttpTileSource tileSource,
@@ -166,6 +173,7 @@ public static class TileFetchNodes
     /// Fetch a tile asynchronously, returning an IObservable that emits the bytes once.
     /// In vvvv, connect to an S+H node to latch the result.
     /// Emits null if the tile could not be fetched.
+    /// Uses BruTile.
     /// </summary>
     public static IObservable<byte[]?> FetchTileAsync(
         IHttpTileSource tileSource,
@@ -186,6 +194,7 @@ public static class TileFetchNodes
     /// <summary>
     /// Fetch multiple tiles in parallel, returning an IObservable that emits
     /// (TileIndex, bytes) pairs as they arrive.
+    /// Uses BruTile.
     /// </summary>
     public static IObservable<(TileIndex index, byte[]? bytes)> FetchTilesAsync(
         IHttpTileSource tileSource,
@@ -221,12 +230,14 @@ public static class TileFetchNodes
     /// <summary>
     /// Create a persistent file-system tile cache at the given directory.
     /// Tiles are stored as {level}/{col}/{row}.tile files.
+    /// Uses BruTile.
     /// </summary>
     public static FileCache CreateFileCache(string cacheDirectory)
         => new FileCache(cacheDirectory, "tile");
 
     /// <summary>
     /// Check whether a tile is present in a file cache without fetching it.
+    /// Uses BruTile.
     /// </summary>
     public static bool IsTileCached(FileCache fileCache, TileIndex tileIndex)
         => fileCache.Find(tileIndex) != null;

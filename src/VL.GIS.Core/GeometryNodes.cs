@@ -22,22 +22,22 @@ public static class GeometryNodes
 
     // ── Creation ──────────────────────────────────────────────────────────────
 
-    /// <summary>Create a Point geometry from longitude/latitude (WGS84).</summary>
+    /// <summary>Create a Point geometry from longitude/latitude (WGS84). Uses NetTopologySuite.</summary>
     public static Point CreatePoint(double longitude, double latitude)
         => Factory.CreatePoint(new Coordinate(longitude, latitude));
 
-    /// <summary>Create a Point with explicit Z (elevation in metres).</summary>
+    /// <summary>Create a Point with explicit Z (elevation in metres). Uses NetTopologySuite.</summary>
     public static Point CreatePoint3D(double longitude, double latitude, double elevation)
         => Factory.CreatePoint(new CoordinateZ(longitude, latitude, elevation));
 
-    /// <summary>Create a LineString from an ordered sequence of coordinates.</summary>
+    /// <summary>Create a LineString from an ordered sequence of coordinates. Uses NetTopologySuite.</summary>
     public static LineString CreateLineString(IEnumerable<(double longitude, double latitude)> points)
     {
         var coords = points.Select(p => new Coordinate(p.longitude, p.latitude)).ToArray();
         return Factory.CreateLineString(coords);
     }
 
-    /// <summary>Create a Polygon from an exterior ring. Ring is auto-closed.</summary>
+    /// <summary>Create a Polygon from an exterior ring. Ring is auto-closed. Uses NetTopologySuite.</summary>
     public static Polygon CreatePolygon(IEnumerable<(double longitude, double latitude)> exteriorRing)
     {
         var coords = exteriorRing.Select(p => new Coordinate(p.longitude, p.latitude)).ToList();
@@ -47,7 +47,7 @@ public static class GeometryNodes
         return Factory.CreatePolygon(coords.ToArray());
     }
 
-    /// <summary>Create a Polygon with exterior ring and interior holes.</summary>
+    /// <summary>Create a Polygon with exterior ring and interior holes. Uses NetTopologySuite.</summary>
     public static Polygon CreatePolygonWithHoles(
         IEnumerable<(double longitude, double latitude)> exteriorRing,
         IEnumerable<IEnumerable<(double longitude, double latitude)>> holes)
@@ -57,7 +57,7 @@ public static class GeometryNodes
         return Factory.CreatePolygon(shell, holeRings);
     }
 
-    /// <summary>Create a bounding box polygon from min/max lon/lat.</summary>
+    /// <summary>Create a bounding box polygon from min/max lon/lat. Uses NetTopologySuite.</summary>
     public static Polygon CreateBoundingBox(
         double minLongitude, double minLatitude,
         double maxLongitude, double maxLatitude)
@@ -74,11 +74,11 @@ public static class GeometryNodes
 
     // ── Spatial Operations ────────────────────────────────────────────────────
 
-    /// <summary>Buffer a geometry by a given distance (in the geometry's CRS units).</summary>
+    /// <summary>Buffer a geometry by a given distance (in the geometry's CRS units). Uses NetTopologySuite.</summary>
     public static Geometry Buffer(Geometry geometry, double distance, int segments = 16)
         => geometry.Buffer(distance, segments);
 
-    /// <summary>Buffer using flat/round/square end cap style.</summary>
+    /// <summary>Buffer using flat/round/square end cap style. Uses NetTopologySuite.</summary>
     public static Geometry BufferWithStyle(
         Geometry geometry,
         double distance,
@@ -89,63 +89,63 @@ public static class GeometryNodes
         return BufferOp.Buffer(geometry, distance, parameters);
     }
 
-    /// <summary>Compute the intersection of two geometries.</summary>
+    /// <summary>Compute the intersection of two geometries. Uses NetTopologySuite.</summary>
     public static Geometry Intersection(Geometry a, Geometry b) => a.Intersection(b);
 
-    /// <summary>Compute the union of two geometries.</summary>
+    /// <summary>Compute the union of two geometries. Uses NetTopologySuite.</summary>
     public static Geometry Union(Geometry a, Geometry b) => a.Union(b);
 
-    /// <summary>Compute the difference: A minus B.</summary>
+    /// <summary>Compute the difference: A minus B. Uses NetTopologySuite.</summary>
     public static Geometry Difference(Geometry a, Geometry b) => a.Difference(b);
 
-    /// <summary>Compute the symmetric difference (XOR) of two geometries.</summary>
+    /// <summary>Compute the symmetric difference (XOR) of two geometries. Uses NetTopologySuite.</summary>
     public static Geometry SymmetricDifference(Geometry a, Geometry b) => a.SymmetricDifference(b);
 
-    /// <summary>Compute the convex hull of a geometry.</summary>
+    /// <summary>Compute the convex hull of a geometry. Uses NetTopologySuite.</summary>
     public static Geometry ConvexHull(Geometry geometry) => geometry.ConvexHull();
 
-    /// <summary>Return the centroid of a geometry.</summary>
+    /// <summary>Return the centroid of a geometry. Uses NetTopologySuite.</summary>
     public static Point Centroid(Geometry geometry) => geometry.Centroid;
 
-    /// <summary>Return the envelope (bounding box) of a geometry.</summary>
+    /// <summary>Return the envelope (bounding box) of a geometry. Uses NetTopologySuite.</summary>
     public static Geometry Envelope(Geometry geometry) => geometry.Envelope;
 
-    /// <summary>Simplify geometry using Douglas-Peucker with given tolerance.</summary>
+    /// <summary>Simplify geometry using Douglas-Peucker with given tolerance. Uses NetTopologySuite.</summary>
     public static Geometry Simplify(Geometry geometry, double distanceTolerance)
         => NetTopologySuite.Simplify.DouglasPeuckerSimplifier.Simplify(geometry, distanceTolerance);
 
     // ── Predicates ────────────────────────────────────────────────────────────
 
-    /// <summary>Test whether geometry A intersects geometry B.</summary>
+    /// <summary>Test whether geometry A intersects geometry B. Uses NetTopologySuite.</summary>
     public static bool Intersects(Geometry a, Geometry b) => a.Intersects(b);
 
-    /// <summary>Test whether geometry A contains geometry B.</summary>
+    /// <summary>Test whether geometry A contains geometry B. Uses NetTopologySuite.</summary>
     public static bool Contains(Geometry a, Geometry b) => a.Contains(b);
 
-    /// <summary>Test whether geometry A is within geometry B.</summary>
+    /// <summary>Test whether geometry A is within geometry B. Uses NetTopologySuite.</summary>
     public static bool Within(Geometry a, Geometry b) => a.Within(b);
 
-    /// <summary>Test whether geometry A touches geometry B.</summary>
+    /// <summary>Test whether geometry A touches geometry B. Uses NetTopologySuite.</summary>
     public static bool Touches(Geometry a, Geometry b) => a.Touches(b);
 
-    /// <summary>Test whether geometry A is disjoint from geometry B.</summary>
+    /// <summary>Test whether geometry A is disjoint from geometry B. Uses NetTopologySuite.</summary>
     public static bool Disjoint(Geometry a, Geometry b) => a.Disjoint(b);
 
-    /// <summary>Test whether geometry A covers geometry B.</summary>
+    /// <summary>Test whether geometry A covers geometry B. Uses NetTopologySuite.</summary>
     public static bool Covers(Geometry a, Geometry b) => a.Covers(b);
 
     // ── Measurements ─────────────────────────────────────────────────────────
 
-    /// <summary>Return the area of a geometry (in CRS units squared).</summary>
+    /// <summary>Return the area of a geometry (in CRS units squared). Uses NetTopologySuite.</summary>
     public static double Area(Geometry geometry) => geometry.Area;
 
-    /// <summary>Return the length/perimeter of a geometry (in CRS units).</summary>
+    /// <summary>Return the length/perimeter of a geometry (in CRS units). Uses NetTopologySuite.</summary>
     public static double Length(Geometry geometry) => geometry.Length;
 
-    /// <summary>Return the minimum distance between two geometries (in CRS units).</summary>
+    /// <summary>Return the minimum distance between two geometries (in CRS units). Uses NetTopologySuite.</summary>
     public static double Distance(Geometry a, Geometry b) => a.Distance(b);
 
-    /// <summary>Decompose a Geometry into its component geometries.</summary>
+    /// <summary>Decompose a Geometry into its component geometries. Uses NetTopologySuite.</summary>
     public static IReadOnlyList<Geometry> GetGeometries(Geometry geometry)
     {
         var result = new List<Geometry>(geometry.NumGeometries);
@@ -154,7 +154,7 @@ public static class GeometryNodes
         return result;
     }
 
-    /// <summary>Get all coordinates of a geometry as (longitude, latitude) tuples.</summary>
+    /// <summary>Get all coordinates of a geometry as (longitude, latitude) tuples. Uses NetTopologySuite.</summary>
     public static IReadOnlyList<(double longitude, double latitude)> GetCoordinates(Geometry geometry)
         => geometry.Coordinates.Select(c => (c.X, c.Y)).ToList();
 

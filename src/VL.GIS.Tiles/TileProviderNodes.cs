@@ -45,6 +45,7 @@ public static class TileProviderNodes
     /// <summary>
     /// Create an OpenStreetMap tile source (standard tile.openstreetmap.org).
     /// Returns tiles at zoom levels 0–19, 256×256 px, Web Mercator (EPSG:3857).
+    /// Uses BruTile.
     /// </summary>
     public static IHttpTileSource OsmTileSource()
         => new HttpTileSource(
@@ -63,6 +64,7 @@ public static class TileProviderNodes
 
     /// <summary>
     /// Create an OpenTopoMap tile source — topographic rendering of OSM data.
+    /// Uses BruTile.
     /// </summary>
     public static IHttpTileSource OpenTopoMapTileSource()
         => new HttpTileSource(
@@ -83,6 +85,7 @@ public static class TileProviderNodes
     /// Template variables: {z} = zoom, {x} = tile X, {y} = tile Y.
     /// Example: "https://example.com/tiles/{z}/{x}/{y}.png"
     /// Set attributionText to whatever the provider requires you to display.
+    /// Uses BruTile.
     /// </summary>
     public static IHttpTileSource XyzTileSource(
         string urlTemplate,
@@ -111,10 +114,10 @@ public static class TileProviderNodes
 
     // ── Tile Schema Info ──────────────────────────────────────────────────────
 
-    /// <summary>Return the tile schema name (e.g. "GlobalSphericalMercator").</summary>
+    /// <summary>Return the tile schema name (e.g. "GlobalSphericalMercator"). Uses BruTile.</summary>
     public static string TileSchemaName(ITileSource tileSource) => tileSource.Schema.Name;
 
-    /// <summary>Return the min and max zoom levels of the tile schema.</summary>
+    /// <summary>Return the min and max zoom levels of the tile schema. Uses BruTile.</summary>
     public static void TileSchemaZoomRange(
         ITileSource tileSource,
         out int minZoom,
@@ -133,7 +136,7 @@ public static class TileProviderNodes
         if (maxZoom == int.MinValue) maxZoom = 0;
     }
 
-    /// <summary>Return the attribution text for a tile source (if available).</summary>
+    /// <summary>Return the attribution text for a tile source (if available). Uses BruTile.</summary>
     public static string TileAttribution(ITileSource tileSource)
         => tileSource.Attribution.Text ?? string.Empty;
 }

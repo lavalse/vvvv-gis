@@ -25,6 +25,7 @@ public static class CoordinateConverter
     /// Create a scene origin from a longitude/latitude reference point.
     /// All subsequent conversions subtract this origin before converting to float.
     /// Store this as a persistent node in your vvvv patch.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static (double originLon, double originLat) CreateSceneOrigin(
         double longitude, double latitude)
@@ -37,6 +38,7 @@ public static class CoordinateConverter
     /// Uses equirectangular approximation — accurate within ~50 km of origin.
     /// Scale: 1 unit = 1 metre.
     /// Y axis = up (Stride convention).
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static Vector3 LonLatToLocal(
         double longitude, double latitude,
@@ -60,6 +62,7 @@ public static class CoordinateConverter
 
     /// <summary>
     /// Convert a scene-local Vector3 back to WGS84 longitude/latitude.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static (double longitude, double latitude) LocalToLonLat(
         Vector3 localPosition,
@@ -79,6 +82,7 @@ public static class CoordinateConverter
     /// Convert Web Mercator (EPSG:3857) meters to scene-local Vector3.
     /// Suitable when your data is already in EPSG:3857 (tile coordinates, etc.).
     /// Scale: 1 unit = 1 metre.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static Vector3 WebMercatorToLocal(
         double mercatorX, double mercatorY,
@@ -94,6 +98,7 @@ public static class CoordinateConverter
     /// <summary>
     /// Create a Web Mercator origin from a longitude/latitude reference point.
     /// Converts to EPSG:3857 meters for use with WebMercatorToLocal.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static (double originX, double originY) CreateWebMercatorOrigin(
         double longitude, double latitude)
@@ -109,6 +114,7 @@ public static class CoordinateConverter
     /// <summary>
     /// Approximate metres-per-degree at a given latitude (longitude direction).
     /// Useful for setting up scale factors.
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static double MetresPerDegreeLongitude(double latitude)
     {
@@ -118,6 +124,7 @@ public static class CoordinateConverter
 
     /// <summary>
     /// Approximate metres-per-degree in the latitude direction (nearly constant).
+    /// VL.GIS's own implementation, not an upstream library.
     /// </summary>
     public static double MetresPerDegreeLatitude() => 111_319.491;
 }
