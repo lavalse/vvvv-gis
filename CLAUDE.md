@@ -40,14 +40,14 @@ vvvv-gis/
 │   ├── Find-Vvvv.ps1             # locate the newest installed gamma (>= 7.2)
 │   ├── Test-VLImportAttribute.ps1 # does an assembly carry [ImportAsIs]?
 │   └── Test-VLPackage.ps1        # static package validator — what CI runs
+├── start.ps1 + start.cmd  # build + open vvvv with the package loaded — the way in
 ├── test/
 │   ├── VL.GIS.Tests/      # xunit functional tests — `dotnet test`, no network
 │   ├── verify.ps1         # headless verification, 3 stages
-│   ├── test.ps1           # launch vvvv against dist\
 │   ├── dev.ps1 + DevLoop.vl   # C# hot-reload loop (ProjectDependency)
 │   └── SmokeTest.vl       # consumer document; pins the VL.GIS version
 ├── docs/VL-PACKAGING.md   # ⭐ the traps and why they are traps — read before packaging work
-└── help/                  # example patches: points, buffers
+└── help/                  # example patches: points, buffers, map tiles
 ```
 
 ### Three kinds of verification, no overlap
@@ -67,18 +67,21 @@ Prerequisites: .NET 8 SDK, and **vvvv gamma 7.2 or newer** (7.4 is what is insta
 Everything else — `NuGet.exe`, `vvvvc.exe` — ships inside vvvv; nothing extra to install.
 
 ```powershell
-.\build.ps1                  # build + stage dist\VL.GIS\
+.\start.ps1                  # build, pick a document, open vvvv with VL.GIS loaded
+.\start.ps1 tile             # same, skipping the menu by name fragment
+.\build.ps1                  # build + stage dist\VL.GIS\ only
 dotnet test VL.GIS.sln       # 95 functional tests, ~1s, no vvvv and no network
 .\test\verify.ps1            # headless check, seconds
 .\test\verify.ps1 -EndToEnd  # also packs and consumes the .nupkg like a real user would
-.\test\test.ps1              # launch vvvv against dist\ and open SmokeTest.vl
 .\tools\Test-VLPackage.ps1   # static checks only, no vvvv needed (this is what CI runs)
 .\test\dev.ps1               # C# hot-reload loop for writing node code
 ```
 
 **vvvv must be launched with `--package-repositories dist`** or VL.GIS is simply not
-available — it is never installed into `%LOCALAPPDATA%\vvvv\gamma\nugets\`. Use
-`test\test.ps1`; launching vvvv from the Start menu will not find the package.
+available — it is never installed into `%LOCALAPPDATA%\vvvv\gamma\nugets\`. Launching from
+the Start menu will not find the package, and nothing will say so. `start.ps1` exists so
+that cannot happen; it also ends a vvvv left running without a window, which otherwise
+blocks the next build.
 
 Do **not** use `dotnet pack` — it packs per-project. The package is defined by
 `VL.GIS.nuspec` and must be packed with `nuget pack VL.GIS.nuspec` (`pack.ps1` does this).

@@ -51,8 +51,13 @@ vvvv.exe --package-repositories D:\2026_Projects\vvvv-gis\dist\VL.GIS   # wrong,
 ```
 
 A *repository* is a directory containing one folder per package. Pointing it at the package
-folder finds nothing and says nothing. An early version of `test/test.ps1` pointed it at the
-repository root, where `VL.GIS.vl` sat loose — same silent nothing.
+folder finds nothing and says nothing. An early version of the launch script (then
+`test/test.ps1`, now `start.ps1`) pointed it at the repository root, where `VL.GIS.vl` sat
+loose — same silent nothing.
+
+Forgetting the switch entirely fails the same way, which is why `start.ps1` exists: it is
+the only thing standing between a developer and half an hour spent wondering where the
+nodes went.
 
 ### The entry point document
 
@@ -200,10 +205,10 @@ published version can never be replaced, and the feedback cycle was hours. Every
 local now.
 
 ```powershell
-.\build.ps1                     # build + stage dist\VL.GIS\
+.\start.ps1                     # build, pick a document, launch vvvv against dist\
+.\build.ps1                     # build + stage dist\VL.GIS\ only
 .\test\verify.ps1               # headless, seconds
 .\test\verify.ps1 -EndToEnd     # + pack to dist\feed + consume it from a separate document
-.\test\test.ps1                 # launch vvvv against dist\, open SmokeTest.vl
 .\tools\Test-VLPackage.ps1      # static only, no vvvv — what CI runs
 ```
 
@@ -310,8 +315,9 @@ old install, that is why.
 **Installing a package ≠ referencing it.** A blank patch does not reference VL.GIS, so
 searching for its nodes finds nothing — and the NodeBrowser will helpfully offer to install
 the package from nuget.org instead, which is how a broken published version got pulled in
-during testing. `test.ps1` opens `SmokeTest.vl`, which already declares the dependency.
-In the GUI: `Ctrl+J` → Solution Explorer → Dependencies.
+during testing. `start.ps1` always opens a document that already declares the dependency,
+rather than a blank patch, for exactly this reason. In the GUI: `Ctrl+J` → Solution Explorer
+→ Dependencies, then **right-click** the entry to toggle it.
 
 **The log window is `Ctrl+Shift+F2`.** (Not `Ctrl+Shift+L`.)
 

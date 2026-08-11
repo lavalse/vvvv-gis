@@ -108,20 +108,43 @@ an error message; that document is the write-up of why.
 ### The loop
 
 ```powershell
-.\build.ps1                     # build + stage dist\VL.GIS
-.\test\verify.ps1               # headless check (seconds)
-.\test\test.ps1                 # launch vvvv against dist\
+.\start.ps1                     # build, then open vvvv with VL.GIS loaded
 ```
 
-`build.ps1` stages the package into `dist\VL.GIS\` with exactly the layout it has once
-installed, and `dist\` is what you point vvvv at:
+That is the whole thing. It rebuilds, offers a list of documents to open, and launches vvvv
+against the freshly staged package. Double-clicking `start.cmd` in Explorer does the same.
+
+```
+  1  SmokeTest               test\
+  2  HowTo Buffer in metres  help\
+  3  HowTo Create a point    help\
+  4  HowTo Fetch a map tile  help\
+  5  (blank patch)           (you must add the VL.GIS dependency yourself)
+
+open [1-5], Enter for 1:
+```
+
+`.\start.ps1 tile` skips the menu by matching a name fragment. `-NoBuild` skips the build,
+`-Restart` ends a vvvv that is still running, `-Editable` loads VL.GIS from source.
+
+**Do not start vvvv from the Start menu while developing.** VL.GIS is never installed into
+`%LOCALAPPDATA%\vvvv\gamma\nugets`; it is read off disk from `dist\`, which only happens
+with
 
 ```powershell
 vvvv.exe --package-repositories <repo>\dist
 ```
 
 Note the nesting — the argument is the *repository* (`dist\`), which contains one folder
-per package (`dist\VL.GIS\`). Passing the package folder itself does not work.
+per package (`dist\VL.GIS\`). Passing the package folder itself finds nothing, and says
+nothing. Neither does launching without the switch at all: the nodes are simply absent.
+
+The other two commands, when you want them separately:
+
+```powershell
+.\build.ps1                     # build + stage dist\VL.GIS
+.\test\verify.ps1               # headless check (seconds)
+```
 
 A running vvvv holds the staged assemblies open, so `build.ps1` refuses to run while it is
 open. Rebuilding would not update the loaded nodes anyway.

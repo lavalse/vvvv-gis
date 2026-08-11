@@ -104,5 +104,5 @@ Write-Host @"
 
 Next:
   .\test\verify.ps1                     headless check (fast, exits non-zero on failure)
-  .\test\test.ps1                       launch vvvv against dist\
+  .\start.ps1                           launch vvvv against dist\ and pick a patch
 "@ -ForegroundColor Yellow
