@@ -32,13 +32,22 @@
     </description>
     <summary>Map viewport, tile placement and geometry-to-SKPath nodes for VL.GIS.</summary>
     <releaseNotes>
-      0.2.0-alpha - First release. Fifteen nodes covering viewport maths, tile layout and
-      geometry to SKPath. Verified by 31 tests plus a rendered map: 20 tiles seamless at
-      zoom 12, a 3 km buffer coming out round, and its radius matching the reported
-      metres-per-pixel.
+      0.2.0-alpha - First release. Sixteen nodes covering viewport maths, tile layout and
+      geometry to SKPath, verified by 39 tests.
 
-      Draws nothing. VL.Skia already has ImageLayer and DrawPath, and what a map looks like
-      belongs to whoever is patching it.
+      An OSM tile does reach the screen: help\HowTo Show a map.vl draws one in vvvv 7.4.
+      One tile, not many - a multi-tile patch needs a ForEach region and has not been built.
+      An earlier claim of "20 seamless tiles" came from an offscreen SKCanvas probe that
+      bypassed VL's coordinate space entirely, so it is not evidence about vvvv and has been
+      withdrawn.
+
+      Note ToRendererSpace, which converts view pixels into the units the renderer actually
+      draws in. It is not optional: VL.Skia's default space spans roughly 2.8 by 2 units, so
+      a pixel coordinate handed straight to a layer node lands far off screen with nothing
+      drawn and no error.
+
+      Draws nothing itself. VL.Skia already has DrawImage and DrawPath, and what a map looks
+      like belongs to whoever is patching it.
     </releaseNotes>
     <copyright>Copyright 2026 VL.GIS Contributors</copyright>
     <!-- The "VL" tag is what makes the pack discoverable at https://vvvv.org/packs -->

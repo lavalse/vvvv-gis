@@ -25,9 +25,10 @@ narrow, and it is worth being precise about where the edges are:
 | | |
 |---|---|
 | ✅ Verified | The package builds, packs, installs, and its nodes appear in the NodeBrowser under the right categories. |
-| ✅ Verified | Geometry, projection, serialization, tile indexing and mesh arithmetic, by 95 tests run on every push. Three help patches exercise the same paths inside vvvv. |
-| ⚠️ Thinly verified | **Tile fetching over the network** — one tile, fetched by hand, no test coverage. Also untested: WKT parsing of exotic CRS, tessellation of concave and holed polygons, everything to do with caching. |
-| ❌ Missing | More help patches. There are three, covering points, buffers and map tiles. |
+| ✅ Verified | Geometry, projection, serialization, tile indexing, mesh and viewport arithmetic, by 134 tests run on every push. Four help patches exercise the same paths inside vvvv. |
+| ✅ Verified | **A map tile reaches the screen.** `help\VL.GIS.Skia\HowTo Show a map.vl` fetches an OSM tile and draws it in vvvv 7.4 — the whole chain, from lon/lat to pixels. |
+| ⚠️ Thinly verified | **Tile fetching over the network** — no automated test crosses the network, and the map patch draws exactly one tile; many at once needs a `ForEach` region that has not been built. Also untested: WKT parsing of exotic CRS, tessellation of concave and holed polygons, everything to do with caching. |
+| ❌ Missing | Geometry drawn on the map. `GeometryToPath` exists, has tests, and has never been put on screen. |
 
 Expect missing edge cases and breaking changes to node names and categories between
 releases. If you try it, treat it as a starting point to read and fix rather than something
@@ -125,12 +126,13 @@ against the freshly staged package. Double-clicking `start.cmd` in Explorer does
 
 ```
   1  SmokeTest               test\
-  2  HowTo Buffer in metres  help\
-  3  HowTo Create a point    help\
-  4  HowTo Fetch a map tile  help\
-  5  (blank patch)           (you must add the VL.GIS dependency yourself)
+  2  HowTo Show a map        help\VL.GIS.Skia\
+  3  HowTo Buffer in metres  help\VL.GIS\
+  4  HowTo Create a point    help\VL.GIS\
+  5  HowTo Fetch a map tile  help\VL.GIS\
+  6  (blank patch)           (you must add the VL.GIS dependency yourself)
 
-open [1-5], Enter for 1:
+open [1-6], Enter for 1:
 ```
 
 `.\start.ps1 tile` skips the menu by matching a name fragment. `-NoBuild` skips the build,
@@ -340,21 +342,32 @@ A `MapView` is a centre in WGS84, a slippy-map zoom (fractional is fine) and a s
 pixels. Everything else in `GIS.Skia` is a function of it.
 
 `CreateMapView`, `MapViewInfo`, `Resolution`, `LonLatToScreen`, `ScreenToLonLat`,
-`ViewBounds`, `PanByPixels`, `ZoomAround`
+`ViewBounds`, `ToRendererSpace`, `PanByPixels`, `ZoomAround`
 
 `ZoomAround` holds one screen pixel still while zooming, which is what a scroll wheel over a
 map has to do. `Resolution` is metres per pixel at the view's centre latitude — the number a
 scale bar needs.
 
+**`ToRendererSpace` is the one you cannot skip.** Everything above works in pixels from the
+top-left of the view; VL.Skia does not. Its default space spans roughly 2.8 × 2 units with the
+origin at the centre, so a pixel position of a few hundred handed straight to a layer node lands
+far off screen — nothing drawn, no error, nowhere to look. `ToRendererSpace` converts a pixel
+rectangle into the units the renderer is actually using, and needs no configuration to do it.
+
 ### GIS.Skia.Tiles
 
 `src/VL.GIS.Skia/TileLayoutNodes.cs`
 
-`VisibleTiles`, `TileDestination`, `VisibleTileLayout`, `DecodeTile`
+`VisibleTiles`, `TileDestination`, `TileDestinationParts`, `VisibleTileLayout`, `DecodeTile`
 
 `VisibleTileLayout` gives the tile indices and their destination rectangles together, so the
-two cannot fall out of step. Fetch each index with `GIS.Tiles`, run the bytes through
-`DecodeTile`, and pass image and rectangle to VL.Skia's **ImageLayer**.
+two cannot fall out of step. The full chain: fetch each index with `GIS.Tiles`, decode the bytes
+with `DecodeTile`, take the rectangle from `TileDestinationParts`, put it through
+`ToRendererSpace`, and draw it with VL.Skia's **`DrawImage`** — setting its `Size Mode` to `Size`
+and `Anchor` to `TopLeft`, both of which draw nothing when left at their defaults.
+
+(`ImageLayer` takes an `SKRect` directly and would be the obvious choice, but it is internal to
+VL.Skia and the compiler rejects it. Hence `TileDestinationParts`, which returns plain floats.)
 
 ### GIS.Skia.Paths
 

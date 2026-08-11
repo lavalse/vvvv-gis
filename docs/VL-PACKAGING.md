@@ -20,6 +20,7 @@ This document exists so none of that has to be rediscovered.
 - [Trap 3 — `[ImportAsIs]`](#trap-3--importasis)
 - [Node categories](#node-categories)
 - [The local verification loop](#the-local-verification-loop)
+- [False proofs — verification that could not have failed](#false-proofs--verification-that-could-not-have-failed)
 - [Smaller traps](#smaller-traps)
 - [Environment reference](#environment-reference)
 - [Debugging checklist](#debugging-checklist)
@@ -416,6 +417,44 @@ output is blank, suspect evaluation, not logic:
 5. Check whether outputs are even *connected*. A node with nothing on its output pins
    displays nothing, which reads exactly like a node that failed.
 
+## False proofs — verification that could not have failed
+
+The most costly failure mode in this project is not any single trap. It is running a check that
+**cannot exhibit the bug**, then reporting the green result as evidence. It happened five times,
+and every time it sent the investigation somewhere else for hours.
+
+| The "proof" | Why it could not fail | What it cost |
+|---|---|---|
+| `FetchTileBytes` called from PowerShell returned 47967 bytes | PowerShell installs no `SynchronizationContext`, and the bug was a sync-over-async deadlock that needs one | Concluded "the node works, so the patch must be wrong" and searched the patch. The user found it instead, by reading a pin that went blank |
+| A console probe rendered a correct OSM map of Tokyo to PNG | It drew straight onto an `SKCanvas` in pixel coordinates, with no VL space in the path — the whole thing that was broken | Reinforced three wrong diagnoses of the black window |
+| `DrawImage.Actual Bounds` read (278.26, 61.40) / (256, 256) | That output echoes what it was handed, whatever space the numbers are in | Ruled out the arithmetic correctly, but read as "so the position is fine" |
+| A probe checked that `Test-VLPackage.ps1` rejects a known-bad `.vl` and saw nothing | The validator reports via `Write-Host`, which does not go to stdout, so its failures were invisible to the probe | Nearly concluded the validator was broken when it was working |
+| Two Mapsui dependency probes passed | Neither exercised the third constraint (BruTile 5 vs 6), and that one is an ABI break | Announced Mapsui as viable; retracted a day later |
+
+Two rules come out of this, and they are worth more than any individual trap above:
+
+**Before believing a green result, name the mechanism by which it could have gone red.** If you
+cannot, the check proved nothing. A deadlock needs a `SynchronizationContext`; a space bug needs
+VL's space; a validator's verdict needs to reach the thing reading it (use exit codes, not
+console output).
+
+**Verify in the host that can actually fail.** For this repository that means vvvv, which is why
+`start.ps1` exists and why "only the GUI proves a node appears" is stated three separate times.
+
+### The mirror image: a failing test whose expectation is wrong
+
+Four test failures in this project were the *test* being wrong, not the library:
+
+- a ratio of ~1e12 asserted to three decimal places
+- `LonLatToWebMercator(0, 0)` returning −7.1e−10, because `tan(π/4)` is `0.9999999999999999` — sub-nanometre, and correct
+- `TessellatePolygon` emitting 6 vertices for a square: NTS's `DelaunayTriangulationBuilder` does not merge coincident corners (and the credit for that belonged to NTS, not LibTessDotNet as first written)
+- a space's left edge asserted at −1.3975 for a **square** view, where it is −1
+
+So the rule cuts both ways: **check the expectation before changing the code.** Deriving the
+expected number from the definition takes a minute and it is the same minute either way.
+
+---
+
 ## Smaller traps
 
 **NuGet versions are immutable, including in the local cache.** Repacking `0.1.0` after
@@ -451,8 +490,33 @@ parses the version numerically and enforces `$MinimumVersion = '7.2'`.
 `docs\LICENSE.txt\LICENSE` — NuGet reads the extensionless target as a directory. LICENSE is
 not packed; `<license type="expression">MIT</license>` is what nuget.org displays anyway.
 
-**MSBuild XML comments cannot contain `--`** (MSB4025). Relevant because the csproj files
-carry long explanatory comments.
+**No XML comment anywhere can contain `--`.** It is an XML rule, not an MSBuild one, so it bites
+in csproj (as MSB4025), in a `.vl`, and in any script that generates either. Hit twice while
+writing explanatory comments with an em-dash typed as `--`; the second time it produced a
+150-node document that failed to parse. Any generator should check its own output:
+
+```powershell
+foreach ($m in [regex]::Matches($xml, '(?s)<!--(.*?)-->')) {
+    if ($m.Groups[1].Value -match '--') { throw "XML comment contains --" }
+}
+```
+
+**A help patch must ship in the package it depends on, not the one it demonstrates.**
+`VL.GIS.nuspec` packed `help\**\*.vl`, which swept in an example needing `VL.GIS.Skia`; anyone
+installing `VL.GIS` alone would open it to a missing dependency, and `VL.GIS.Skia` shipped no
+example at all. `help\` is now split into one folder per package and staged as `help\`, which is
+where vvvv looks. A patch belongs to the **last** package it depends on.
+
+**`ImageLayer` is internal to VL.Skia.** `vvvvc` rejects it with "Not found: ImageLayer" even
+though it appears in VL.Skia's own documents. Use `DrawImage`, which takes a `Vector2` position
+and size rather than an `SKRect`. That is also why `TileDestinationParts` exists alongside
+`TileDestination`: an `SKRect` has no node to open it, so a patch author handed one could see
+neither the numbers nor a way to use them.
+
+**A help patch can be hand-authored.** Claiming otherwise was wrong. `vvvvc` validates node and
+pin names, so a generated document that compiles is structurally sound — negative-tested with a
+misspelled pin and an unknown node, both rejected. What it cannot check is whether the patch
+means anything, which is what the GUI is for.
 
 **`dotnet pack` is the wrong tool.** It packs per-project. This package is defined by a
 hand-maintained `.nuspec` and needs `nuget pack VL.GIS.nuspec`.
@@ -479,9 +543,19 @@ source), `--editable-packages`, `-m` (allow a second instance). `--help` lists t
 (0.0.4, 0.0.6–0.0.11). They were **moved, not deleted** — 0.0.6 through 0.0.11 were never
 published, so those folders are the only surviving copies. Keep them as forensic samples.
 
-Published state: `0.1.0-alpha` is the only listed version. `0.0.1`–`0.0.4` are unlisted
-(nuget.org supports unlisting only, never deletion; `dotnet nuget delete` performs an
-unlist there).
+Published state, as of 2026-08-11: **`0.2.0-alpha` is the only listed version.** `0.1.0-alpha`
+and `0.0.1`–`0.0.4` are unlisted. nuget.org supports unlisting only, never deletion
+(`dotnet nuget delete` performs an unlist there), and unlisting is *silent* — an existing
+consumer keeps resolving the version with no notice. Deprecating instead attaches a reason that
+shows up in the client, which is the better tool for a version that actively breaks vvvv, as
+`0.1.0-alpha` does.
+
+`VL.GIS.Skia` has never been published. It shares VL.GIS's version number deliberately, and
+`publish.yml` pushes dependencies first.
+
+The repository moved from `lavalse/vvvv-gis` to `rednotfound/vvvv-gis`; the old URL redirects,
+but the `projectUrl` baked into the published `0.2.0-alpha` still points at it and cannot be
+changed — package metadata is as immutable as the package.
 
 ---
 
@@ -500,3 +574,7 @@ When a package's nodes do not appear, in this order — cheapest and most likely
 
 The meta-lesson: **change one variable per round.** The nine failed releases each changed
 the `.vl`, the csproj and the nuspec together, so no round produced usable information.
+
+And when a patch draws nothing rather than failing to load, add one more question before all of
+the above: **is the check you are about to run capable of failing?** See
+[False proofs](#false-proofs--verification-that-could-not-have-failed).
