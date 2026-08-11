@@ -17,7 +17,7 @@
     VL.GIS's own 0.0.x help patches did the opposite: they pinned 0.0.10 while the package
     was 0.0.11.
 
-    This has to run against the repo copy. VL.GIS.nuspec packs help\**\*.vl directly, so
+    This has to run against the repo copy. Each nuspec packs help\<PackageName>\**\*.vl directly, so
     dist\ plays no part at release time and normalising during staging would never reach
     a published package.
 
@@ -99,7 +99,7 @@ foreach ($patch in $patches) {
     }
     else {
         [IO.File]::WriteAllText($patch.FullName, $rewritten, (New-Object System.Text.UTF8Encoding($true)))
-        Write-Host "   help\$($patch.Name): pinned $was -> $Pinned"
+        Write-Host "   help\$($patch.Directory.Name)\$($patch.Name): pinned $was -> $Pinned"
     }
 }
 

@@ -126,12 +126,14 @@ $smoke = Join-Path $RepoRoot 'test\SmokeTest.vl'
 if (Test-Path $smoke) {
     $documents += [pscustomobject]@{ Name = 'SmokeTest'; Where = 'test\'; Path = $smoke }
 }
-Get-ChildItem (Join-Path $RepoRoot 'help') -Filter *.vl -ErrorAction SilentlyContinue |
-    Sort-Object Name |
+# Recursive, because help\ is split into one folder per package. The folder name is shown so
+# it is obvious which package an example belongs to.
+Get-ChildItem (Join-Path $RepoRoot 'help') -Filter *.vl -Recurse -ErrorAction SilentlyContinue |
+    Sort-Object FullName |
     ForEach-Object {
         $documents += [pscustomobject]@{
             Name  = $_.BaseName
-            Where = 'help\'
+            Where = "help\$($_.Directory.Name)\"
             Path  = $_.FullName
         }
     }

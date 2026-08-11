@@ -102,7 +102,7 @@ Double left-click an empty area of the patch to open the NodeBrowser and search 
 ## Working on the library
 
 ```powershell
-git clone https://github.com/lavalse/vvvv-gis
+git clone https://github.com/rednotfound/vvvv-gis
 cd vvvv-gis
 ```
 

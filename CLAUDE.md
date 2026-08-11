@@ -54,8 +54,14 @@ vvvv-gis/
 │   ├── dev.ps1 + DevLoop.vl   # C# hot-reload loop (ProjectDependency)
 │   └── SmokeTest.vl       # consumer document; pins the VL.GIS version
 ├── docs/VL-PACKAGING.md   # ⭐ the traps and why they are traps — read before packaging work
-└── help/                  # example patches: points, buffers, map tiles
+└── help/<PackageName>/    # example patches, one folder per package (see below)
 ```
+
+**Help patches live in `help\<PackageName>\` and are staged as `help\`.** `build.ps1` and each
+nuspec agree on that, and `start.ps1` scans it recursively. The split matters: `HowTo Show a
+map.vl` needs `VL.GIS.Skia`, and shipping it inside `VL.GIS` gave anyone who installed VL.GIS
+alone a patch that opens with a missing dependency. A patch belongs to the *last* package it
+depends on, not the first.
 
 ### Three kinds of verification, no overlap
 

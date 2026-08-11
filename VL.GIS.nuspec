@@ -21,7 +21,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <readme>docs\README.md</readme>
-    <projectUrl>https://github.com/lavalse/vvvv-gis</projectUrl>
+    <projectUrl>https://github.com/rednotfound/vvvv-gis</projectUrl>
     <description>
       EARLY - please be careful about using this in a real project yet.
 
@@ -102,7 +102,7 @@
     <copyright>Copyright 2026 VL.GIS Contributors</copyright>
     <!-- The "VL" tag is what makes the pack discoverable at https://vvvv.org/packs -->
     <tags>VL vvvv gamma gis geospatial geography map projection geometry</tags>
-    <repository type="git" url="https://github.com/lavalse/vvvv-gis" />
+    <repository type="git" url="https://github.com/rednotfound/vvvv-gis" />
 
     <!--
       VL.CoreLib is deliberately absent: it ships with vvvv itself, so packages must not
@@ -133,7 +133,12 @@
     <file src="src\VL.GIS.Mesh\bin\Release\net8.0\VL.GIS.Mesh.dll"   target="lib\net8.0\" />
     <file src="src\VL.GIS.Mesh\bin\Release\net8.0\VL.GIS.Mesh.xml"   target="lib\net8.0\" />
 
-    <file src="help\**\*.vl" target="help\" />
+    <!--
+      Only this package's own examples: help\ is split by package name so a patch that needs
+      VL.GIS.Skia does not ship to someone who installed VL.GIS alone, where it would open
+      with a missing dependency. target stays help\ because that is where vvvv looks.
+    -->
+    <file src="help\VL.GIS\**\*.vl" target="help\" />
 
     <!-- Shown on the nuget.org listing page. -->
     <file src="README.md"               target="docs\" />

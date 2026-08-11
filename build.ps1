@@ -109,14 +109,16 @@ foreach ($pkg in $Packages) {
         Write-Host "      forwards $asmName"
     }
 
-    # Help patches belong to whichever package's nuspec ships them, which is decided there
-    # rather than here.
+    # Help patches live in help\<PackageName>\ and are staged as help\, which is where vvvv
+    # looks for them. Splitting them by package keeps a patch that needs VL.GIS.Skia out of
+    # VL.GIS, where it would open with a missing dependency. The nuspec decides whether a
+    # package ships any; this only has to agree with it.
     [xml]$nuspec = Get-Content $pkg.Nuspec -Raw
     $shipsHelp = @($nuspec.package.files.file | Where-Object { $_.src -like 'help\*' }).Count -gt 0
-    $helpSrc = Join-Path $RepoRoot 'help'
+    $helpSrc = Join-Path $RepoRoot "help\$($pkg.Name)"
     if ($shipsHelp -and (Test-Path $helpSrc) -and (Get-ChildItem $helpSrc -File -Recurse -ErrorAction SilentlyContinue)) {
-        Copy-Item $helpSrc -Destination $pkg.PkgDir -Recurse
-        Write-Host "      help\"
+        Copy-Item $helpSrc -Destination (Join-Path $pkg.PkgDir 'help') -Recurse
+        Write-Host "      help\ (from help\$($pkg.Name))"
     }
 }
 

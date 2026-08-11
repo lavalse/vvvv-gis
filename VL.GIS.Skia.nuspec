@@ -14,7 +14,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <readme>docs\README.md</readme>
-    <projectUrl>https://github.com/lavalse/vvvv-gis</projectUrl>
+    <projectUrl>https://github.com/rednotfound/vvvv-gis</projectUrl>
     <description>
       EARLY - please be careful about using this in a real project yet.
 
@@ -43,7 +43,7 @@
     <copyright>Copyright 2026 VL.GIS Contributors</copyright>
     <!-- The "VL" tag is what makes the pack discoverable at https://vvvv.org/packs -->
     <tags>VL vvvv gamma gis geospatial map tiles skia rendering</tags>
-    <repository type="git" url="https://github.com/lavalse/vvvv-gis" />
+    <repository type="git" url="https://github.com/rednotfound/vvvv-gis" />
 
     <!--
       SkiaSharp is deliberately absent, for the same reason VL.Core and VL.CoreLib are:
@@ -65,6 +65,13 @@
 
     <file src="src\VL.GIS.Skia\bin\Release\net8.0\VL.GIS.Skia.dll" target="lib\net8.0\" />
     <file src="src\VL.GIS.Skia\bin\Release\net8.0\VL.GIS.Skia.xml" target="lib\net8.0\" />
+
+    <!--
+      This package's own examples only. help\ is split by package name so that a patch needing
+      VL.GIS.Skia ships here rather than with VL.GIS, where it would open with a missing
+      dependency. target stays help\ because that is where vvvv looks.
+    -->
+    <file src="help\VL.GIS.Skia\**\*.vl" target="help\" />
 
     <file src="README.md"              target="docs\" />
     <file src="THIRD-PARTY-NOTICES.md" target="docs\" />
