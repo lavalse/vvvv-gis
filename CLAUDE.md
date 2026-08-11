@@ -163,6 +163,62 @@ absent from the nuspec — it ships with vvvv.
 - **Async tiles.** `FetchTileAsync` returns `IObservable<byte[]?>` — latch it with S+H.
 - **Immutability.** NTS geometries are immutable; operations return new objects.
 
+## Package boundaries
+
+Settled by surveying every pack shipped with vvvv 7.4, the community packages installed
+here, and all 304 `VL.*` packages on nuget.org. Recorded so it does not have to be
+re-derived.
+
+**Declare the upstream nuget, forward only your own assembly.** Every community package
+that wraps a third-party library declares it as a `<NugetDependency>` in its `.vl` —
+`VL.OpenCV → OpenCvSharp4`, `VL.Assimp → AssimpNet`, `VL.PolyTools → com.angusj.Clipper`,
+`VL.SimpleHTTP → RestSharp`, `VL.IO.Midi → managed-midi` — and none of them sets
+`IsForward="true"` on anything but its own wrapper. VL.GIS matches this already.
+
+**Domain names for multi-library packages, library names for single-library ones.** The
+common second-level prefixes are `IO` (35), `Devices` (33), `Stride` (15), `Addons` (9),
+`Audio` (7), `2D` (5). Packages named after a library (`VL.OpenCV`, `VL.Rhino.3dm`) wrap
+exactly one. VL.GIS wraps four, so the domain name is right — it sits alongside `VL.Audio`
+and `VL.2D`, not `VL.NetTopologySuite`.
+
+**Renderers go in companion packages.** Four separate families do this: `VL.ImGui` /
+`.Skia` / `.Stride`, `VL.CEF` / `.Skia` / `.Stride`, `VL.Avalonia` / `.Skia` / `.Stride`,
+`VL.Flex` / `.Skia` / `.ImGui`. The core never depends on a renderer. So 2D and 3D work
+belongs in `VL.GIS.Skia` and `VL.GIS.Stride`, not in this package.
+
+**One package per wrapped library.** Anything that wraps Mapsui belongs in its own
+repository (`VL.Mapsui`), not folded in here.
+
+**Licence isolation has a precedent but is not required.** `VL.Audio.GPL` exists purely to
+keep GPL code out of `VL.Audio`. VL.GIS deliberately does *not* split ProjNet out despite
+its LGPL: reprojection is core GIS functionality rather than an optional extra, and under
+dynamic linking — what a normal vvvv export produces — LGPL-2.1 §6 imposes nothing beyond
+the attribution already in `THIRD-PARTY-NOTICES.md`.
+
+**Attribution is per node.** Each node's XML doc comment names its upstream library, which
+vvvv shows as the tooltip. Nodes that are our own arithmetic say so — that is information
+too, since our code lacks the mileage NTS has.
+
+## Mapsui compatibility, measured
+
+Wrapping Mapsui for 2D map rendering is viable. Verified on 2026-08-10 with a throwaway
+console project, not inferred:
+
+| | |
+|---|---|
+| Mapsui 4.1.9 (last of 4.x) | renders a correct, labelled OSM map of Tokyo to PNG, no UI involved |
+| the same, running against vvvv's SkiaSharp 2.88.8 | still renders — swap confirmed by file version and native-library size |
+| Mapsui 5.x | **unusable**: needs SkiaSharp >= 3.119.2, vvvv ships 2.88.8 |
+
+The 2.88.8/2.88.9 gap turns out not to matter because SkiaSharp keeps assembly version
+`2.88.0.0` across the whole 2.88.x line, so the CLR sees one identity. The probe was
+negative-tested first — pinning SkiaSharp 2.80.2 fails the build with NU1605 — because a
+compatibility check that has never rejected anything proves nothing.
+
+Still unresolved before `VL.Mapsui` can ship: Mapsui 4.1.9 resolves **BruTile 5.0.6** while
+VL.GIS uses **6.0.0**, and vvvv loads one assembly set for all packages. Whether the two can
+coexist in one vvvv has not been tested.
+
 ## Release process
 
 1. Bump `<version>` and `<releaseNotes>` in `VL.GIS.nuspec`, and keep the version pinned in
@@ -188,10 +244,19 @@ treats every `-suffix` identically; only the ordering differs
 
 ## Roadmap
 
+VL.GIS is a **toolbox, not a map engine**: geometry, projection, formats, tile indexing,
+mesh. What it looks like on screen is the patch author's business, which is also how vvvv
+users prefer to work.
+
 | | |
 |---|---|
-| Next | Help patches — building them is also the first real functional test of the nodes |
+| Next | See a map. Either `VL.Mapsui` (a separate repo, now known to be feasible) or `VL.GIS.Skia` as a thin bridge — tiles to positioned images, geometry to `SKPath` or SVG path data, both drawn by VL.Skia's existing nodes |
 | Next | GeoJSON → `GeoJSON4STJ 4.0.0`, dropping the Newtonsoft.Json clash with vvvv's 13.0.3 |
-| Later | 2D rendering via VL.Skia (tiles as `SKBitmap`, vectors as `SKPath`) |
-| Later | Real Stride integration (tile quads, meshes as Stride resources) |
-| Maybe | File I/O via MaxRev.Gdal.Core (GeoTIFF, SHP, KML) |
+| Later | File I/O via `MaxRev.Gdal.Core` — Shapefile, GeoTIFF. Without it users can only type coordinates by hand |
+| Later | `VL.GIS.Stride`: tile textures, terrain and extruded buildings, built on the existing `GIS.Mesh.*` |
+| Never | Our own map engine, or a Cesium-style 3D globe. There is no Cesium to wrap on .NET (`cesium-native` binds only Unity and Unreal), and writing one is a full-time team's project |
+
+On "wrap everything QGIS can do": **most vector algorithms are already in NetTopologySuite**
+— we simply have not exposed them all as nodes. What QGIS really adds beyond that is file
+formats, raster analysis and a GUI; the first two are GDAL's job and the third is not our
+goal. The work is smaller than it sounds.

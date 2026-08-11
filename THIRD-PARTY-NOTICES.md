@@ -6,6 +6,10 @@ geometry engine, the projection maths and the tile handling are all upstream.
 
 VL.GIS itself is MIT (see [LICENSE](LICENSE)). The libraries below keep their own terms.
 
+This file credits them by category. **Each individual node names its upstream library in its
+own documentation**, which vvvv shows as the tooltip — hover a node to see whether it is
+NetTopologySuite, ProjNet, BruTile, or arithmetic of our own.
+
 ## Libraries
 
 ### NetTopologySuite 2.6.0 — BSD-3-Clause
