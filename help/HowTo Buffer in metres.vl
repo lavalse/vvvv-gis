@@ -101,6 +101,19 @@
             <Pin Id="H5ikL43Fb1ENtsFAESfydB" Name="Is Northern Hemisphere" Kind="InputPin" />
             <Pin Id="U2TAQNga6DONro2uiksEW9" Name="Result" Kind="OutputPin" />
           </Node>
+          <Node Bounds="911,270,133,19" Id="PQyeR0TVCTfEinfv4ir3uj">
+            <p:NodeReference LastCategoryFullName="GIS.Projection" LastDependency="VL.GIS.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="CoordinateSystemInfo" />
+            </p:NodeReference>
+            <Pin Id="LBMgEqeG56XrXhbrT5OpT2" Name="Coordinate System" Kind="InputPin" />
+            <Pin Id="VmJ5LgJHGseyWnanLwqoQo" Name="Name" Kind="OutputPin" />
+            <Pin Id="AEK4vlh0fGCFBmIaVYvYDy" Name="Authority" Kind="OutputPin" />
+            <Pin Id="E0mH3JKXwxgkMTbBXCOrxe" Name="Authority Code" Kind="OutputPin" />
+            <Pin Id="L3T7h5A0m8K5oeQDgUpodv" Name="Wkt" Kind="OutputPin" />
+          </Node>
+          <Pad Id="QNUqh2JXe2BUCzJL7DCssj" Comment="CRS" Bounds="911,320,175,15" ShowValueBox="true" isIOBox="true" />
+          <Pad Id="USJFDDkbRkjMbU7eLCIydI" Comment="EPSG" Bounds="911,345,175,15" ShowValueBox="true" isIOBox="true" />
           <Node Bounds="728,270,103,19" Id="Tj4T28NvM60PFcDKsRtq17">
             <p:NodeReference LastCategoryFullName="GIS.Projection" LastDependency="VL.GIS.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
@@ -171,6 +184,9 @@
         <Link Id="PavVaWKjd1wNFogItlOtYy" Ids="UkSCXLu0OzZN1ofpKG8v5J,VbB1xXZeiyeP8SHi8IvOn3" />
         <Link Id="FjHOiMEBpiyO3tWtHyvM2K" Ids="T2DfuQ3KQQDNxvKiaCSutF,AQu9ApPFifZNR8H5T733zu" />
         <Link Id="VwQdxb53RLlOCwpu2HH2dr" Ids="NVFOxxhk2mwQTIdSTSKaZF,EqHEyVKb8wTMHhC9Inea8r" />
+        <Link Id="JEg9N6Jw1GLVTyQQogaLwv" Ids="U2TAQNga6DONro2uiksEW9,LBMgEqeG56XrXhbrT5OpT2" />
+        <Link Id="I93zCYxJTy46XNgvxevrVN" Ids="VmJ5LgJHGseyWnanLwqoQo,QNUqh2JXe2BUCzJL7DCssj" />
+        <Link Id="TG6BcvTLHcMmnRYbXJjSWl" Ids="E0mH3JKXwxgkMTbBXCOrxe,USJFDDkbRkjMbU7eLCIydI" />
       </Patch>
     </Node>
   </Patch>
