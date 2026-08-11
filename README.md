@@ -63,6 +63,15 @@ and contributed no nodes. They are unlisted. Do not use them.
 | `VL.GIS.Mesh` | `GIS.Mesh.Coordinates` | Convert geographic coordinates to float scene positions without precision loss |
 | `VL.GIS.Mesh` | `GIS.Mesh.Tessellation` | Tessellate polygons and lines into triangle meshes |
 | `VL.GIS.Mesh` | `GIS.Mesh.Elevation` | Heightmap creation, sampling, normals, terrain mesh |
+| `VL.GIS.Skia` | `GIS.Skia.Viewport` | What is on screen; geographic coordinates to pixels, panning, zooming |
+| `VL.GIS.Skia` | `GIS.Skia.Tiles` | Which tiles a view needs, and the `SKRect` each belongs in |
+| `VL.GIS.Skia` | `GIS.Skia.Paths` | Geometry to `SKPath`, positioned for a view |
+
+`VL.GIS.Skia` is a **separate package** — install it only if you want to draw. The core has
+no dependency on any renderer, which is the convention every other vvvv library follows
+(`VL.ImGui` / `.Skia` / `.Stride`, and the same for `VL.CEF` and `VL.Avalonia`). It draws
+nothing itself: it hands VL.Skia an `SKImage` and an `SKRect`, or an `SKPath`, and what
+those look like is yours to decide.
 
 `VL.GIS.Mesh` produces plain `Vector3` positions and `int` indices. Despite an earlier
 name it does **not** depend on Stride — any renderer can consume its output.
@@ -322,6 +331,40 @@ see the column, row and zoom, or `TileBounds` to see the area it covers.
 
 `CreateFlatHeightmap`, `HeightmapFromArray`, `NormalizeHeightmap`, `SampleHeightmap`,
 `GenerateNormals`, `HeightmapToMesh`
+
+### GIS.Skia.Viewport
+
+`src/VL.GIS.Skia/ViewportNodes.cs` — in the **VL.GIS.Skia** package.
+
+A `MapView` is a centre in WGS84, a slippy-map zoom (fractional is fine) and a size in
+pixels. Everything else in `GIS.Skia` is a function of it.
+
+`CreateMapView`, `MapViewInfo`, `Resolution`, `LonLatToScreen`, `ScreenToLonLat`,
+`ViewBounds`, `PanByPixels`, `ZoomAround`
+
+`ZoomAround` holds one screen pixel still while zooming, which is what a scroll wheel over a
+map has to do. `Resolution` is metres per pixel at the view's centre latitude — the number a
+scale bar needs.
+
+### GIS.Skia.Tiles
+
+`src/VL.GIS.Skia/TileLayoutNodes.cs`
+
+`VisibleTiles`, `TileDestination`, `VisibleTileLayout`, `DecodeTile`
+
+`VisibleTileLayout` gives the tile indices and their destination rectangles together, so the
+two cannot fall out of step. Fetch each index with `GIS.Tiles`, run the bytes through
+`DecodeTile`, and pass image and rectangle to VL.Skia's **ImageLayer**.
+
+### GIS.Skia.Paths
+
+`src/VL.GIS.Skia/GeometryPathNodes.cs`
+
+`GeometryToPath`, `GeometriesToPath`
+
+Points become circles — a point has no extent, so it needs one to be visible. Polygon holes
+work because the rings are given opposite winding; `SKPath` fills by the non-zero rule, under
+which two contours turning the same way would nest as solid instead.
 
 ---
 

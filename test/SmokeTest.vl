@@ -2,6 +2,7 @@
 <Document xmlns:p="property" xmlns:r="reflection" Id="GY4TrD9LWpty3Y0npO87d1" LanguageVersion="2024.6.7-0009-ga0a8422da0" Version="0.128">
   <NugetDependency Id="QzW0AGWavX80tFZFEChK70" Location="VL.CoreLib" Version="2025.7.0" />
   <NugetDependency Id="J9Yyk9Nu0r0lrrptihGxiH" Location="VL.GIS" Version="0.2.0-alpha" />
+  <NugetDependency Id="RRrs8i9WsDuH1zJUfpJPa8" Location="VL.GIS.Skia" Version="0.2.0-alpha" />
   <Patch Id="HvDA2tgnIukTbqIpISlK6D">
     <Canvas Id="OfH2eY0gCcWq78lQ1bA7FW" DefaultCategory="SmokeTest" CanvasType="FullCategory" />
     <!--

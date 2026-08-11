@@ -37,8 +37,15 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$VlFile = Join-Path $RepoRoot 'VL.GIS.vl'
-$Nuspec = Join-Path $RepoRoot 'VL.GIS.nuspec'
+# A package is a .vl at the repo root with a .nuspec of the same name. Discovered the same
+# way build.ps1 discovers them, so the two cannot drift apart.
+$Packages = @(
+    Get-ChildItem $RepoRoot -Filter '*.vl' -File |
+        Where-Object { Test-Path (Join-Path $RepoRoot "$($_.BaseName).nuspec") } |
+        Sort-Object BaseName
+)
+if ($Packages.Count -eq 0) { throw "No package found: expected a .vl with a matching .nuspec at $RepoRoot" }
+
 $errors = [System.Collections.Generic.List[string]]::new()
 
 function Fail([string]$message) { $script:errors.Add($message) }
@@ -57,105 +64,124 @@ function Get-Attr($node, [string]$name) {
     if ($a) { $a.Value } else { $null }
 }
 
-Write-Host "validating $VlFile`n"
+foreach ($package in $Packages) {
+    $pkgName = $package.BaseName
+    $VlFile  = $package.FullName
+    $Nuspec  = Join-Path $RepoRoot "$pkgName.nuspec"
 
-# 1. BOM ---------------------------------------------------------------------
-$firstBytes = Get-Content $VlFile -AsByteStream -TotalCount 3
-if ($firstBytes.Count -lt 3 -or $firstBytes[0] -ne 0xEF -or $firstBytes[1] -ne 0xBB -or $firstBytes[2] -ne 0xBF) {
-    Fail "VL.GIS.vl has no UTF-8 BOM. vvvv writes one on every .vl; without it the document fails to load silently."
-} else { Ok "UTF-8 BOM" }
+    Write-Host "validating $pkgName`n" -ForegroundColor White
 
-# 2. IDs ---------------------------------------------------------------------
-$raw = Get-Content $VlFile -Raw
-[xml]$vl = $raw
+    # 1. BOM -----------------------------------------------------------------
+    $firstBytes = Get-Content $VlFile -AsByteStream -TotalCount 3
+    if ($firstBytes.Count -lt 3 -or $firstBytes[0] -ne 0xEF -or $firstBytes[1] -ne 0xBB -or $firstBytes[2] -ne 0xBF) {
+        Fail "$pkgName.vl has no UTF-8 BOM. vvvv writes one on every .vl; without it the document fails to load silently."
+    } else { Ok "UTF-8 BOM" }
 
-$ids = [regex]::Matches($raw, 'Id="([^"]*)"') | ForEach-Object { $_.Groups[1].Value }
-$malformed = $ids | Where-Object { $_ -notmatch '^[A-V][0-9A-Za-z]{21}$' }
-if ($malformed) {
-    Fail "Malformed document IDs (must be 22 chars, first in A-V): $($malformed -join ', ')"
-} else { Ok "$($ids.Count) document IDs well formed" }
+    # 2. IDs -----------------------------------------------------------------
+    $raw = Get-Content $VlFile -Raw
 
-$dupes = $ids | Group-Object | Where-Object Count -gt 1 | ForEach-Object Name
-if ($dupes) { Fail "Duplicate document IDs: $($dupes -join ', ')" } else { Ok "IDs unique" }
-
-# 3 + 4. patch structure -----------------------------------------------------
-$doc      = $vl.DocumentElement
-$patch    = @(Get-Child $doc 'Patch') | Select-Object -First 1
-$canvas   = @(Get-Child $patch 'Canvas') | Select-Object -First 1
-$category = Get-Attr $canvas 'DefaultCategory'
-
-if (-not $patch) {
-    Fail "VL.GIS.vl has no <Patch>. Every shipped VL package has one containing an Application node."
-} elseif (-not $category) {
-    Fail "<Canvas> is missing DefaultCategory."
-} else { Ok "<Patch> with Canvas DefaultCategory=$category" }
-
-# 5 + 6. forwarded assemblies ------------------------------------------------
-$forwards = @(Get-Child $doc 'PlatformDependency' | Where-Object { (Get-Attr $_ 'Location') -like './lib/*' })
-if ($forwards.Count -eq 0) { Fail "VL.GIS.vl forwards no assemblies." }
-
-$importCheck = Join-Path $PSScriptRoot 'Test-VLImportAttribute.ps1'
-$forwardedNames = @()
-
-foreach ($fwd in $forwards) {
-    $rel  = (Get-Attr $fwd 'Location') -replace '^\./', ''
-    $name = Split-Path $rel -Leaf
-    $forwardedNames += $name
-
-    if ((Get-Attr $fwd 'IsForward') -ne 'true') {
-        Fail "$name is a PlatformDependency but not IsForward=`"true`", so its nodes stay invisible to consumers."
-    }
-
-    $dll = if ($FromBuildOutput) {
-        Join-Path $RepoRoot "src\$([IO.Path]::GetFileNameWithoutExtension($rel))\bin\$Configuration\net8.0\$name"
-    } else {
-        Join-Path $RepoRoot "dist\VL.GIS\$rel"
-    }
-
-    if (-not (Test-Path $dll)) {
-        Fail "$name not found at $dll (run .\build.ps1, or pass -FromBuildOutput)"
+    # Parse explicitly rather than letting the [xml] cast throw. A hand-edited .vl is quite
+    # capable of being malformed, and a validator that answers with a PowerShell stack trace
+    # instead of "this file is not valid XML" is failing at the one job it has.
+    $vl = New-Object System.Xml.XmlDocument
+    try { $vl.LoadXml($raw) }
+    catch {
+        Fail "$pkgName.vl is not well-formed XML: $($_.Exception.Message)"
+        Write-Host ''
         continue
     }
 
-    $attrs = @(& $importCheck -Path $dll)
-    if (-not $attrs) {
-        Fail "$name has no VL.Core.Import attribute. It will forward without error and contribute no nodes. Add [assembly: ImportAsIs(Namespace = `"VL`")]."
-    } else { Ok "$name forwards, $($attrs -join ', ')" }
-}
+    $ids = [regex]::Matches($raw, 'Id="([^"]*)"') | ForEach-Object { $_.Groups[1].Value }
+    $malformed = $ids | Where-Object { $_ -notmatch '^[A-V][0-9A-Za-z]{21}$' }
+    if ($malformed) {
+        Fail "$pkgName.vl has malformed document IDs (must be 22 chars, first in A-V): $($malformed -join ', ')"
+    } else { Ok "$($ids.Count) document IDs well formed" }
 
-# 7 + 8 + 9. nuspec ----------------------------------------------------------
-[xml]$nu   = Get-Content $Nuspec -Raw
-$pkg       = $nu.DocumentElement
-$files     = @(Get-Child (@(Get-Child $pkg 'files') | Select-Object -First 1) 'file')
-$metadata  = @(Get-Child $pkg 'metadata') | Select-Object -First 1
-$groups    = @(Get-Child (@(Get-Child $metadata 'dependencies') | Select-Object -First 1) 'group')
-$declared  = @($groups | ForEach-Object { Get-Child $_ 'dependency' } | ForEach-Object { Get-Attr $_ 'id' })
+    $dupes = $ids | Group-Object | Where-Object Count -gt 1 | ForEach-Object Name
+    if ($dupes) { Fail "$pkgName.vl has duplicate document IDs: $($dupes -join ', ')" } else { Ok "IDs unique" }
 
-if (-not ($files | Where-Object { (Get-Attr $_ 'src') -eq 'VL.GIS.vl' -and [string]::IsNullOrEmpty((Get-Attr $_ 'target')) })) {
-    Fail "The nuspec does not ship VL.GIS.vl at the package root (target must be empty)."
-} else { Ok "nuspec ships VL.GIS.vl at the package root" }
+    # 3 + 4. patch structure -------------------------------------------------
+    $doc      = $vl.DocumentElement
+    $patch    = @(Get-Child $doc 'Patch') | Select-Object -First 1
+    $canvas   = @(Get-Child $patch 'Canvas') | Select-Object -First 1
+    $category = Get-Attr $canvas 'DefaultCategory'
 
-foreach ($name in $forwardedNames) {
-    if (-not ($files | Where-Object { (Get-Attr $_ 'src') -like "*$name" })) {
-        Fail "VL.GIS.vl forwards $name but the nuspec does not ship it."
+    if (-not $patch) {
+        Fail "$pkgName.vl has no <Patch>. Every shipped VL package has one containing an Application node."
+    } elseif (-not $category) {
+        Fail "$pkgName.vl: <Canvas> is missing DefaultCategory."
+    } else { Ok "<Patch> with Canvas DefaultCategory=$category" }
+
+    # 5 + 6. forwarded assemblies --------------------------------------------
+    $forwards = @(Get-Child $doc 'PlatformDependency' | Where-Object { (Get-Attr $_ 'Location') -like './lib/*' })
+    if ($forwards.Count -eq 0) { Fail "$pkgName.vl forwards no assemblies." }
+
+    $importCheck = Join-Path $PSScriptRoot 'Test-VLImportAttribute.ps1'
+    $forwardedNames = @()
+
+    foreach ($fwd in $forwards) {
+        $rel  = (Get-Attr $fwd 'Location') -replace '^\./', ''
+        $name = Split-Path $rel -Leaf
+        $forwardedNames += $name
+
+        if ((Get-Attr $fwd 'IsForward') -ne 'true') {
+            Fail "$name is a PlatformDependency but not IsForward=`"true`", so its nodes stay invisible to consumers."
+        }
+
+        $dll = if ($FromBuildOutput) {
+            Join-Path $RepoRoot "src\$([IO.Path]::GetFileNameWithoutExtension($rel))\bin\$Configuration\net8.0\$name"
+        } else {
+            Join-Path $RepoRoot "dist\$pkgName\$rel"
+        }
+
+        if (-not (Test-Path $dll)) {
+            Fail "$name not found at $dll (run .\build.ps1, or pass -FromBuildOutput)"
+            continue
+        }
+
+        $attrs = @(& $importCheck -Path $dll)
+        if (-not $attrs) {
+            Fail "$name has no VL.Core.Import attribute. It will forward without error and contribute no nodes. Add [assembly: ImportAsIs(Namespace = `"VL`")]."
+        } else { Ok "$name forwards, $($attrs -join ', ')" }
     }
-}
 
-# VL.CoreLib and VL.Core ship with vvvv and are deliberately not nuspec dependencies.
-$needed = @(Get-Child $doc 'NugetDependency' |
-    ForEach-Object { Get-Attr $_ 'Location' } |
-    Where-Object { $_ -notin @('VL.CoreLib', 'VL.Core') })
+    # 7 + 8 + 9. nuspec ------------------------------------------------------
+    [xml]$nu   = Get-Content $Nuspec -Raw
+    $pkg       = $nu.DocumentElement
+    $files     = @(Get-Child (@(Get-Child $pkg 'files') | Select-Object -First 1) 'file')
+    $metadata  = @(Get-Child $pkg 'metadata') | Select-Object -First 1
+    $groups    = @(Get-Child (@(Get-Child $metadata 'dependencies') | Select-Object -First 1) 'group')
+    $declared  = @($groups | ForEach-Object { Get-Child $_ 'dependency' } | ForEach-Object { Get-Attr $_ 'id' })
 
-foreach ($dep in $needed) {
-    if ($dep -notin $declared) {
-        Fail "VL.GIS.vl references nuget '$dep' but the nuspec does not declare it, so it will be missing on install."
+    if (-not ($files | Where-Object { (Get-Attr $_ 'src') -eq "$pkgName.vl" -and [string]::IsNullOrEmpty((Get-Attr $_ 'target')) })) {
+        Fail "$pkgName.nuspec does not ship $pkgName.vl at the package root (target must be empty)."
+    } else { Ok "nuspec ships $pkgName.vl at the package root" }
+
+    foreach ($name in $forwardedNames) {
+        if (-not ($files | Where-Object { (Get-Attr $_ 'src') -like "*$name" })) {
+            Fail "$pkgName.vl forwards $name but the nuspec does not ship it."
+        }
     }
+
+    # VL.CoreLib, VL.Core and VL.Skia ship with vvvv and are deliberately not nuspec
+    # dependencies.
+    $needed = @(Get-Child $doc 'NugetDependency' |
+        ForEach-Object { Get-Attr $_ 'Location' } |
+        Where-Object { $_ -notin @('VL.CoreLib', 'VL.Core', 'VL.Skia') })
+
+    foreach ($dep in $needed) {
+        if ($dep -notin $declared) {
+            Fail "$pkgName.vl references nuget '$dep' but the nuspec does not declare it, so it will be missing on install."
+        }
+    }
+    if (-not ($needed | Where-Object { $_ -notin $declared })) { Ok "nuspec declares all $($needed.Count) referenced nugets" }
+
+    Write-Host ''
 }
-if (-not ($needed | Where-Object { $_ -notin $declared })) { Ok "nuspec declares all $($needed.Count) referenced nugets" }
 
 # 10. help patches -----------------------------------------------------------
 # These are shipped documents too -- VL.GIS.nuspec packs help\**\*.vl straight out of the
-# repo -- so they carry the same load-silently-fail risks as VL.GIS.vl itself.
+# repo -- so they carry the same load-silently-fail risks as an entry point itself.
 $helpDir = Join-Path $RepoRoot 'help'
 # The @() must wrap the whole if-expression: PowerShell unwraps a single-element array on
 # the way out of one, and StrictMode then throws on .Count. Same trap as Get-Child above.

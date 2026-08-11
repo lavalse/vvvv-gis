@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>VL.GIS.Skia</id>
+    <!--
+      Versioned alongside VL.GIS rather than independently. They are released together and
+      VL.GIS.Skia is meaningless without a matching VL.GIS, so two moving numbers would only
+      create combinations nobody has tested.
+    -->
+    <version>0.2.0-alpha</version>
+    <title>VL.GIS.Skia — 2D map rendering helpers for VL.GIS</title>
+    <authors>VL.GIS Contributors</authors>
+    <owners>VL.GIS Contributors</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <readme>docs\README.md</readme>
+    <projectUrl>https://github.com/lavalse/vvvv-gis</projectUrl>
+    <description>
+      EARLY - please be careful about using this in a real project yet.
+
+      Puts a map on screen in vvvv gamma, by supplying the arithmetic VL.Skia needs rather
+      than drawing anything itself. Styling stays in the patch.
+
+      - GIS.Skia.Viewport: a centre, a zoom and a pixel size; screen positions, view bounds,
+        panning, and zooming around a fixed pixel
+      - GIS.Skia.Tiles: which tiles a view needs, and the SKRect each one belongs in
+      - GIS.Skia.Paths: NetTopologySuite geometry to SKPath, in screen space
+
+      Wire the output into VL.Skia's ImageLayer and DrawPath.
+
+      Requires VL.GIS and vvvv gamma 7.2 or newer (.NET 8).
+    </description>
+    <summary>Map viewport, tile placement and geometry-to-SKPath nodes for VL.GIS.</summary>
+    <releaseNotes>
+      0.2.0-alpha - First release. Fifteen nodes covering viewport maths, tile layout and
+      geometry to SKPath. Verified by 31 tests plus a rendered map: 20 tiles seamless at
+      zoom 12, a 3 km buffer coming out round, and its radius matching the reported
+      metres-per-pixel.
+
+      Draws nothing. VL.Skia already has ImageLayer and DrawPath, and what a map looks like
+      belongs to whoever is patching it.
+    </releaseNotes>
+    <copyright>Copyright 2026 VL.GIS Contributors</copyright>
+    <!-- The "VL" tag is what makes the pack discoverable at https://vvvv.org/packs -->
+    <tags>VL vvvv gamma gis geospatial map tiles skia rendering</tags>
+    <repository type="git" url="https://github.com/lavalse/vvvv-gis" />
+
+    <!--
+      SkiaSharp is deliberately absent, for the same reason VL.Core and VL.CoreLib are:
+      it ships inside vvvv, which substitutes its own copy for anything declared here.
+      VL.Skia is likewise part of vvvv and is declared in VL.GIS.Skia.vl instead.
+    -->
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="VL.GIS"                      version="0.2.0-alpha" />
+        <dependency id="NetTopologySuite"            version="2.6.0" />
+        <dependency id="BruTile"                     version="6.0.0" />
+      </group>
+    </dependencies>
+  </metadata>
+
+  <files>
+    <!-- Entry point. Must sit at the package root, no subfolder. -->
+    <file src="VL.GIS.Skia.vl" target="" />
+
+    <file src="src\VL.GIS.Skia\bin\Release\net8.0\VL.GIS.Skia.dll" target="lib\net8.0\" />
+    <file src="src\VL.GIS.Skia\bin\Release\net8.0\VL.GIS.Skia.xml" target="lib\net8.0\" />
+
+    <file src="README.md"              target="docs\" />
+    <file src="THIRD-PARTY-NOTICES.md" target="docs\" />
+  </files>
+</package>

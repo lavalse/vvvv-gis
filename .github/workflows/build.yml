@@ -40,33 +40,49 @@ jobs:
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v2
 
+      # Every .vl at the root with a matching .nuspec, discovered the same way build.ps1 and
+      # Test-VLPackage.ps1 discover them, so a new package is covered without editing this.
       - name: Pack
-        run: nuget pack VL.GIS.nuspec -OutputDirectory nupkg/
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-ChildItem . -Filter '*.vl' -File |
+            Where-Object { Test-Path "$($_.BaseName).nuspec" } |
+            ForEach-Object {
+              nuget pack "$($_.BaseName).nuspec" -OutputDirectory nupkg/
+              if ($LASTEXITCODE -ne 0) { throw "nuget pack failed for $($_.BaseName)" }
+            }
 
       - name: Validate packed contents
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $nupkg = Get-Item nupkg\*.nupkg | Select-Object -First 1
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $zip = [IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
-          try   { $entries = $zip.Entries | ForEach-Object { $_.FullName } }
-          finally { $zip.Dispose() }
 
-          # Derived from VL.GIS.vl rather than hardcoded, so adding an assembly cannot
-          # leave this list stale (the old hardcoded list still named VL.GIS.Stride).
-          [xml]$vl = Get-Content VL.GIS.vl -Raw
-          $required = @('VL.GIS.vl') + @(
-            $vl.DocumentElement.ChildNodes |
-              Where-Object { $_.LocalName -eq 'PlatformDependency' } |
-              ForEach-Object { $_.Attributes['Location'].Value } |
-              Where-Object { $_ -like './lib/*' } |
-              ForEach-Object { $_ -replace '^\./', '' }
-          )
+          foreach ($vlFile in Get-ChildItem . -Filter '*.vl' -File | Where-Object { Test-Path "$($_.BaseName).nuspec" }) {
+            $name  = $vlFile.BaseName
+            $nupkg = Get-Item "nupkg\$name.*.nupkg" | Select-Object -First 1
+            if (-not $nupkg) { throw "No .nupkg produced for $name" }
 
-          $missing = $required | Where-Object { $_ -notin $entries }
-          if ($missing) { throw "Missing from package: $($missing -join ', ')" }
-          $required | ForEach-Object { Write-Host "  ok  $_" }
+            $zip = [IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
+            try   { $entries = $zip.Entries | ForEach-Object { $_.FullName } }
+            finally { $zip.Dispose() }
+
+            # Derived from the .vl rather than hardcoded, so adding an assembly cannot leave
+            # this list stale (an older hardcoded list still named VL.GIS.Stride).
+            [xml]$vl = Get-Content $vlFile.FullName -Raw
+            $required = @("$name.vl") + @(
+              $vl.DocumentElement.ChildNodes |
+                Where-Object { $_.LocalName -eq 'PlatformDependency' } |
+                ForEach-Object { $_.Attributes['Location'].Value } |
+                Where-Object { $_ -like './lib/*' } |
+                ForEach-Object { $_ -replace '^\./', '' }
+            )
+
+            $missing = $required | Where-Object { $_ -notin $entries }
+            if ($missing) { throw "Missing from $name : $($missing -join ', ')" }
+            $required | ForEach-Object { Write-Host "  ok  $name -> $_" }
+          }
 
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4

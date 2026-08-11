@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document xmlns:p="property" xmlns:r="reflection" Id="CPulIZAEHlte2DP6joqEkL" LanguageVersion="2024.6.7-0009-ga0a8422da0" Version="0.128">
+  <NugetDependency Id="Dy9VlIeII7D3rRS6o2uNcb" Location="VL.CoreLib" Version="2025.7.0" />
+  <NugetDependency Id="MXp9sV7jUvzSN3fGi3o804" Location="VL.Skia" Version="2025.7.0" />
+  <NugetDependency Id="U69MtMubD56eije6P6DqN1" Location="VL.GIS" Version="0.0.0" />
+  <NugetDependency Id="MobPlFXfGUUkby7LjYCIKl" Location="NetTopologySuite" Version="2.6.0" />
+  <NugetDependency Id="LYNSdXesU3fZ029Qpq5RTF" Location="BruTile" Version="6.0.0" />
+  <Patch Id="JYs97e6RlAdcoFoYyP4xzq">
+    <Canvas Id="DWEQZACAjmI0AmTzCeb5DO" DefaultCategory="GIS.Skia" CanvasType="FullCategory" />
+    <!--
+
+    ************************ Application ************************
+
+-->
+    <Node Name="Application" Bounds="100,100" Id="PksiK6GPnGBWiBt6PIfgWa">
+      <p:NodeReference>
+        <Choice Kind="ContainerDefinition" Name="Process" />
+        <FullNameCategoryReference ID="Primitive" />
+      </p:NodeReference>
+      <Patch Id="OhJ3T8ja9cdmv1SIKKbDio">
+        <Canvas Id="OvMeV5Dv5yGmSvwASLkGnG" CanvasType="Group" />
+        <Patch Id="MBW9W19Qb8BVnt2iYOEPtd" Name="Create" />
+        <Patch Id="TnFvWSuwsNuVwAVGJlECMR" Name="Update" />
+        <ProcessDefinition Id="IH0FuPODWROJTawn8YJTyi">
+          <Fragment Id="QBeyIVxmNOzqRrhNsJDtyD" Patch="MBW9W19Qb8BVnt2iYOEPtd" Enabled="true" />
+          <Fragment Id="D6cQvOD2evoYOtQnXk6RyD" Patch="TnFvWSuwsNuVwAVGJlECMR" Enabled="true" />
+        </ProcessDefinition>
+      </Patch>
+    </Node>
+  </Patch>
+  <PlatformDependency Id="Nj1wFf3yGx7ox38VhQmxvQ" Location="./lib/net8.0/VL.GIS.Skia.dll" IsForward="true" />
+</Document>

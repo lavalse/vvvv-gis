@@ -37,7 +37,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          # The tag is the source of truth for the version; the nuspec value is only used
+          # The tag is the source of truth for the version; the nuspec values are only used
           # for local packs. "v0.1.0" -> "0.1.0" (Substring, not TrimStart, which trims a
           # character set and would eat a leading digit).
           $tag = "${{ github.ref_name }}"
@@ -46,7 +46,17 @@ jobs:
           }
           $version = $Matches[1]
           Write-Host "publishing version $version"
-          nuget pack VL.GIS.nuspec -Version $version -OutputDirectory nupkg/
+
+          # One version for every package here. They are released together and a companion
+          # like VL.GIS.Skia is meaningless against a mismatched VL.GIS, so independent
+          # numbers would only create combinations nobody has tested.
+          Get-ChildItem . -Filter '*.vl' -File |
+            Where-Object { Test-Path "$($_.BaseName).nuspec" } |
+            ForEach-Object {
+              nuget pack "$($_.BaseName).nuspec" -Version $version -OutputDirectory nupkg/
+              if ($LASTEXITCODE -ne 0) { throw "nuget pack failed for $($_.BaseName)" }
+            }
+
           "PKG_VERSION=$version" | Out-File $env:GITHUB_ENV -Append
 
       - name: Push to nuget.org
@@ -56,9 +66,29 @@ jobs:
           if (-not "${{ secrets.NUGET_KEY }}") {
             throw "Repository secret NUGET_KEY is not set (Settings > Secrets and variables > Actions)."
           }
-          dotnet nuget push "nupkg\VL.GIS.$env:PKG_VERSION.nupkg" `
-            --api-key "${{ secrets.NUGET_KEY }}" `
-            --source https://api.nuget.org/v3/index.json
+
+          # Dependencies first, so a consumer never sees VL.GIS.Skia before the VL.GIS it
+          # needs. Sorting by name happens to give that order, since a package name is a
+          # prefix of anything built on it -- asserted rather than assumed, because the day
+          # that stops being true this would publish an unresolvable package.
+          $nupkgs = Get-ChildItem nupkg\*.nupkg | Sort-Object Name
+          foreach ($nupkg in $nupkgs) {
+            $id = ($nupkg.BaseName -replace "\.$([regex]::Escape($env:PKG_VERSION))$", '')
+            $dependsOn = $nupkgs | Where-Object { $_ -ne $nupkg -and $id.StartsWith(($_.BaseName -replace "\.$([regex]::Escape($env:PKG_VERSION))$", '') + '.') }
+            foreach ($d in $dependsOn) {
+              if ($nupkgs.IndexOf($d) -gt $nupkgs.IndexOf($nupkg)) {
+                throw "$id would be pushed before $($d.BaseName), which it depends on"
+              }
+            }
+          }
+
+          foreach ($nupkg in $nupkgs) {
+            Write-Host "pushing $($nupkg.Name)"
+            dotnet nuget push $nupkg.FullName `
+              --api-key "${{ secrets.NUGET_KEY }}" `
+              --source https://api.nuget.org/v3/index.json
+            if ($LASTEXITCODE -ne 0) { throw "push failed for $($nupkg.Name)" }
+          }
 
       - name: Upload nupkg artifact
         uses: actions/upload-artifact@v4

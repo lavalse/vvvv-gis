@@ -31,7 +31,15 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = $PSScriptRoot
 $FeedDir  = Join-Path $RepoRoot 'dist\feed'
-$Nuspec   = Join-Path $RepoRoot 'VL.GIS.nuspec'
+
+# Same discovery rule as build.ps1 and Test-VLPackage.ps1: a .vl at the root with a .nuspec
+# of the same name beside it.
+$Packages = @(
+    Get-ChildItem $RepoRoot -Filter '*.vl' -File |
+        Where-Object { Test-Path (Join-Path $RepoRoot "$($_.BaseName).nuspec") } |
+        Sort-Object BaseName
+)
+if ($Packages.Count -eq 0) { throw "No package found at $RepoRoot" }
 
 if (-not $NoBuild) {
     & (Join-Path $RepoRoot 'build.ps1') -Configuration $Configuration
@@ -50,45 +58,62 @@ Get-ChildItem $FeedDir -Filter '*.nupkg' -ErrorAction SilentlyContinue | Remove-
 
 Write-Host "`n== pack ==" -ForegroundColor Cyan
 Write-Host "nuget : $NuGetPath"
-& $NuGetPath pack $Nuspec -OutputDirectory $FeedDir -NonInteractive
-if ($LASTEXITCODE -ne 0) { throw "nuget pack failed ($LASTEXITCODE)" }
 
-$pkg = Get-ChildItem $FeedDir -Filter '*.nupkg' | Select-Object -First 1
-
-# A package missing its .vl at the root, or missing a forwarded assembly, installs fine
-# and then silently contributes no nodes -- so assert the layout here.
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$zip = [IO.Compression.ZipFile]::OpenRead($pkg.FullName)
-try   { $entries = $zip.Entries | ForEach-Object { $_.FullName } }
-finally { $zip.Dispose() }
 
-[xml]$vl = Get-Content (Join-Path $RepoRoot 'VL.GIS.vl') -Raw
-$required = @('VL.GIS.vl') + @(
-    $vl.Document.PlatformDependency |
-        Where-Object { $_.Location -like './lib/*' } |
-        ForEach-Object { $_.Location -replace '^\./', '' }
-)
+foreach ($package in $Packages) {
+    $pkgName = $package.BaseName
+    $Nuspec  = Join-Path $RepoRoot "$pkgName.nuspec"
 
-$missing = $required | Where-Object { $_ -notin $entries }
-if ($missing) {
-    throw "Package is missing required entries: $($missing -join ', ')"
-}
+    & $NuGetPath pack $Nuspec -OutputDirectory $FeedDir -NonInteractive
+    if ($LASTEXITCODE -ne 0) { throw "nuget pack failed for $pkgName ($LASTEXITCODE)" }
 
-# NuGet treats a version as immutable and will happily reuse an already-extracted copy
-# from the global cache, so repacking 0.1.0 with different contents is invisible to any
-# consumer that resolved it earlier. Evict our own entry; without this, verify.ps1's
-# consumer test silently validates a stale package.
-$id      = ([xml](Get-Content $Nuspec -Raw)).package.metadata.id
-$version = ([xml](Get-Content $Nuspec -Raw)).package.metadata.version
-$cached  = Join-Path $env:USERPROFILE ".nuget\packages\$($id.ToLowerInvariant())\$version"
-if (Test-Path $cached) {
-    Remove-Item $cached -Recurse -Force
-    Write-Host "   evicted stale $id $version from the global NuGet cache"
+    $nupkg = Get-ChildItem $FeedDir -Filter "$pkgName.*.nupkg" |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $nupkg) { throw "nuget pack produced no .nupkg for $pkgName" }
+
+    # A package missing its .vl at the root, or missing a forwarded assembly, installs fine
+    # and then silently contributes no nodes -- so assert the layout here.
+    $zip = [IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
+    try   { $entries = $zip.Entries | ForEach-Object { $_.FullName } }
+    finally { $zip.Dispose() }
+
+    [xml]$vl = Get-Content $package.FullName -Raw
+    $required = @("$pkgName.vl") + @(
+        $vl.Document.PlatformDependency |
+            Where-Object { $_.Location -like './lib/*' } |
+            ForEach-Object { $_.Location -replace '^\./', '' }
+    )
+
+    $missing = $required | Where-Object { $_ -notin $entries }
+    if ($missing) {
+        throw "$pkgName is missing required entries: $($missing -join ', ')"
+    }
+
+    # NuGet treats a version as immutable and will happily reuse an already-extracted copy
+    # from the global cache, so repacking 0.2.0 with different contents is invisible to any
+    # consumer that resolved it earlier. Evict our own entry; without this, verify.ps1's
+    # consumer test silently validates a stale package.
+    $meta    = ([xml](Get-Content $Nuspec -Raw)).package.metadata
+    $cached  = Join-Path $env:USERPROFILE ".nuget\packages\$($meta.id.ToLowerInvariant())\$($meta.version)"
+    if (Test-Path $cached) {
+        Remove-Item $cached -Recurse -Force
+        Write-Host "   evicted stale $($meta.id) $($meta.version) from the global NuGet cache"
+    }
 }
 
 Write-Host "`n== done ==" -ForegroundColor Green
-Write-Host "   $($pkg.Name)  [$($pkg.Length) B]"
-$entries | Where-Object { $_ -notmatch '^_rels|^package/|Content_Types' } | ForEach-Object { "   $_" }
+foreach ($nupkg in Get-ChildItem $FeedDir -Filter '*.nupkg' | Sort-Object Name) {
+    Write-Host "   $($nupkg.Name)  [$($nupkg.Length) B]"
+    $zip = [IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
+    try {
+        $zip.Entries |
+            ForEach-Object { $_.FullName } |
+            Where-Object { $_ -notmatch '^_rels|^package/|Content_Types' } |
+            ForEach-Object { "      $_" }
+    }
+    finally { $zip.Dispose() }
+}
 
 Write-Host @"
 

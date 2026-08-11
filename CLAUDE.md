@@ -24,16 +24,21 @@ thoroughly enough that the window closes without the process exiting.
 
 ## Repository Structure
 
+**A package is a `.vl` at the repo root with a `.nuspec` of the same name beside it.**
+`build.ps1`, `pack.ps1`, `Test-VLPackage.ps1` and both workflows all discover them that way,
+so adding one needs no edit to any of them.
+
 ```
 vvvv-gis/
-├── VL.GIS.vl              # package entry point — GENERATED, never hand-edit (see below)
-├── VL.GIS.nuspec          # NuGet metadata; also the file that gets packed
-├── build.ps1              # build + stage dist\VL.GIS\  (the installed-package layout)
-├── pack.ps1               # pack into dist\feed\        (a local NuGet feed)
+├── VL.GIS.vl / .nuspec        # package 1 — .vl is GENERATED, never hand-edit (see below)
+├── VL.GIS.Skia.vl / .nuspec   # package 2 — depends on VL.GIS
+├── build.ps1              # build + stage every package under dist\
+├── pack.ps1               # pack every package into dist\feed\  (a local NuGet feed)
 ├── src/
 │   ├── VL.GIS.Core/       # GIS.Geometry, GIS.Projection, GIS.Serialization, GIS.About
 │   ├── VL.GIS.Tiles/      # GIS.Tiles
-│   └── VL.GIS.Mesh/       # GIS.Mesh.* — no Stride dependency despite the old name
+│   ├── VL.GIS.Mesh/       # GIS.Mesh.* — no Stride dependency despite the old name
+│   └── VL.GIS.Skia/       # GIS.Skia.* — viewport, tile layout, geometry to SKPath
 ├── tools/
 │   ├── New-VLId.ps1              # generate a valid 22-char VL document ID
 │   ├── New-VLDocument.ps1        # generate a .vl entry point
@@ -55,11 +60,19 @@ vvvv-gis/
 | | Proves |
 |---|---|
 | `dotnet test` | the arithmetic is right |
-| `Test-VLPackage.ps1` | the package is structurally capable of contributing nodes |
-| `verify.ps1` | vvvv actually loads, compiles and can consume it |
+| `Test-VLPackage.ps1` | every package is structurally capable of contributing nodes |
+| `verify.ps1` | vvvv actually loads, compiles and can consume them |
 
 Only the GUI proves a node appears under the expected category. Be precise about which of
 these you have shown.
+
+**A package that depends on another package in this repository cannot be compiled by
+`vvvvc` in stage 1.** Resolving the dependency needs `--package-repositories dist`, but
+that directory also contains the document being compiled, and vvvvc then treats it as a
+package rather than as something to build: *"Entry point for document X.vl not found"*.
+Confirmed against VL.GIS itself, so it is the flag and not the document. Those packages are
+deferred to stage 2, where `test\SmokeTest.vl` consumes them from the packed feed — which is
+the real usage anyway, and stronger evidence.
 
 ## Commands
 
