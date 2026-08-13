@@ -6,7 +6,7 @@
     VL.GIS is never installed into %LOCALAPPDATA%\vvvv\gamma\nugets. It is read straight off
     disk from dist\, which only happens when vvvv is launched with
 
-        --package-repositories <repo>\dist
+        --package-repositories <repo>\dist;<repo>\deps
 
     so starting vvvv from the Start menu leaves the library invisible, with no error to
     explain why. That is the single most common way to lose time on this repository, and
@@ -65,6 +65,7 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = $PSScriptRoot
 $Dist     = Join-Path $RepoRoot 'dist'
+$Deps     = Join-Path $RepoRoot 'deps'   # upstream packages; VL needs them to resolve their types
 
 # ---------------------------------------------------------------- running vvvv
 # vvvv holds dist\VL.GIS\lib\**\*.dll open, so build.ps1 refuses to run while it is up. It
@@ -195,7 +196,10 @@ if (-not (Test-Path $VvvvPath)) { throw "vvvv.exe not found at '$VvvvPath'. Pass
 # --log is always on. Its absence cost an evening: with no log there was no way to tell a
 # patch that failed from one that never ran, and an empty log file turns out to be strong
 # evidence of the latter.
-$vvvvArgs = @('--package-repositories', $Dist, '--log')
+# Both repositories: ours, and the upstream libraries whose types appear on our pins. Without
+# deps\, a node returning BruTile's IHttpTileSource is built with no working pins and every
+# link to it is silently dropped.
+$vvvvArgs = @('--package-repositories', "$Dist;$Deps", '--log')
 if ($Editable) { $vvvvArgs += @('--editable-packages', 'VL.GIS') }
 if ($doc)      { $vvvvArgs += @('--open', $doc.Path) }
 

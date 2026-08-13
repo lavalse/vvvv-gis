@@ -64,6 +64,7 @@ if (-not (Test-Path $VvvvcPath)) {
 # vvvvc rejects relative paths outright ("The file path must be absolute").
 $StagedVls = @($StagedVls | ForEach-Object { (Resolve-Path $_).Path })
 $Dist      = (Resolve-Path (Join-Path $RepoRoot 'dist')).Path
+$Deps      = (Resolve-Path (Join-Path $RepoRoot 'deps')).Path
 
 Write-Host "compiler : $VvvvcPath"
 Write-Host "packages : $(($StagedVls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) }) -join ', ')"
@@ -108,14 +109,16 @@ FAIL - no VL.Core.Import attribute in: $($noImport -join ', ')
 # ---------------------------------------------------------------- stage 1
 Write-Host "`n== stage 1: package documents compile ==" -ForegroundColor Cyan
 
-# A package that depends on another package in this repository cannot be compiled here.
-# vvvvc needs --package-repositories to resolve the dependency, but pointing it at dist\ --
-# which also contains the document being compiled -- makes vvvvc treat that document as a
-# package rather than as something to build, and it fails with "Entry point for document
-# X.vl not found". Confirmed on VL.GIS itself, so it is the flag and not the document.
+# The upstream libraries are resolved from deps\, which is why build.ps1 keeps them out of
+# dist\. Pointing --package-repositories at a directory that also contains the document being
+# compiled makes vvvvc treat that document as a package rather than as something to build, and
+# it fails with "Entry point for document X.vl not found". A separate deps\ sidesteps that
+# while still letting VL resolve BruTile, ProjNet and NetTopologySuite - without which nodes
+# whose signatures mention their types are built with no working pins, silently.
 #
-# Those packages are proven by stage 2 instead, where a consumer document references them
-# from the packed feed. That is the real usage anyway.
+# A package that depends on another package in *this* repository still cannot be compiled
+# here, since that dependency does live in dist\. Those are proven by stage 2 instead, where a
+# consumer document references them from the packed feed. That is the real usage anyway.
 $packageNames = @($StagedVls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
 $deferred = @()
 
@@ -136,7 +139,7 @@ foreach ($vlPath in $StagedVls) {
     Write-Host "`ndocument : $vlPath`n"
 
     $out1 = Join-Path $Dist "_verify\$pkgName"
-    & $VvvvcPath $vlPath --output-directory $out1 -v Information
+    & $VvvvcPath $vlPath --package-repositories $Deps --output-directory $out1 -v Information
     if ($LASTEXITCODE -ne 0) {
         Write-Host "`nFAIL - vvvvc exited with $LASTEXITCODE for $pkgName" -ForegroundColor Red
         exit $LASTEXITCODE
@@ -179,7 +182,7 @@ if (Test-Path $out2) { Remove-Item $out2 -Recurse -Force }
 Write-Host "`ndocument : $smoke"
 Write-Host "feed     : $feed`n"
 
-& $VvvvcPath $smoke --package-repositories $Dist --export-package-sources $feed `
+& $VvvvcPath $smoke --package-repositories "$Dist;$Deps" --export-package-sources $feed `
     --output-directory $out2 -v Warning
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`nFAIL - consumer document failed to build ($LASTEXITCODE)" -ForegroundColor Red

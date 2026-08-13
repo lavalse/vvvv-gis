@@ -35,6 +35,7 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = $PSScriptRoot
 $Dist     = Join-Path $RepoRoot 'dist'
+$Deps     = Join-Path $RepoRoot 'deps'   # upstream packages, kept apart from ours - see step 3
 
 # A package is a .vl at the repo root with a .nuspec of the same name beside it. Discovered
 # rather than listed, so adding VL.GIS.<Something> needs no edit here.
@@ -68,11 +69,11 @@ restarting, use .\test\dev.ps1 instead.
 "@
 }
 
-Write-Host "== 1/4 build ==" -ForegroundColor Cyan
+Write-Host "== 1/5 build ==" -ForegroundColor Cyan
 dotnet build (Join-Path $RepoRoot 'VL.GIS.sln') -c $Configuration -v minimal
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed ($LASTEXITCODE)" }
 
-Write-Host "`n== 2/4 stage dist\ ==" -ForegroundColor Cyan
+Write-Host "`n== 2/5 stage dist\ ==" -ForegroundColor Cyan
 if (Test-Path $Dist) { Remove-Item $Dist -Recurse -Force }
 
 # Normalise the repo copy of the help patches, not the staged one. The nuspec packs
@@ -122,13 +123,45 @@ foreach ($pkg in $Packages) {
     }
 }
 
-Write-Host "`n== 3/4 staged ==" -ForegroundColor Cyan
+Write-Host "`n== 3/5 upstream packages ==" -ForegroundColor Cyan
+#
+# The upstream libraries have to sit in the package repository as packages, not merely be
+# restorable as assemblies. Without that, VL cannot resolve their types, and the failure is the
+# quiet kind: a node whose signature mentions BruTile's IHttpTileSource is built but none of its
+# links attach, so it vanishes from the compiled program and whatever consumed it silently
+# receives a default.
+#
+# This used to work by accident. Installing VL.GIS from nuget.org had put BruTile, ProjNet and
+# NetTopologySuite into %LOCALAPPDATA%\vvvv\gamma\nugets\ back in February, and everything here
+# quietly resolved through that shared folder. Moving BruTile out of it on 2026-08-13 - to stop
+# it shadowing the BruTile 5 that VL.Mapsui needs - broke this repository until this step
+# existed. A dist\ that carries its own upstream packages does not depend on what some other
+# project happens to have installed machine-wide, and the two repositories stop fighting.
+#
+# Discovered from each .vl rather than listed: anything not starting with VL. is an upstream
+# library, since the VL.* ones ship inside vvvv. Transitive dependencies come too, because a
+# real install gets them.
+$NuGetExe = & (Join-Path $RepoRoot 'tools\Find-Vvvv.ps1') -NuGet
+foreach ($pkg in $Packages) {
+    [xml]$vlDoc = Get-Content $pkg.VlFile -Raw
+    foreach ($dep in @($vlDoc.Document.NugetDependency | Where-Object { $_.Location -notlike 'VL.*' })) {
+        $folder = Join-Path $Deps "$($dep.Location).$($dep.Version)"
+        if (Test-Path $folder) { continue }
+
+        & $NuGetExe install $dep.Location -Version $dep.Version -OutputDirectory $Deps `
+            -Source 'https://api.nuget.org/v3/index.json' -NonInteractive | Out-Null
+        if (-not (Test-Path $folder)) { throw "Could not install $($dep.Location) $($dep.Version) into $Deps" }
+        Write-Host "      $($dep.Location) $($dep.Version)"
+    }
+}
+
+Write-Host "`n== 4/5 staged ==" -ForegroundColor Cyan
 foreach ($pkg in $Packages) {
     Get-ChildItem $pkg.PkgDir -Recurse -File |
         ForEach-Object { "   " + $_.FullName.Replace("$Dist\", '') + "  [$($_.Length) B]" }
 }
 
-Write-Host "`n== 4/4 done ==" -ForegroundColor Green
+Write-Host "`n== 5/5 done ==" -ForegroundColor Green
 
 Write-Host @"
 
