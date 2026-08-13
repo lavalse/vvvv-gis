@@ -103,6 +103,37 @@ numbers instead and needs no configuration.
 Generalised: **when a setting's wrong value is indistinguishable from a bug, design the thing
 that does not need the setting.** Three separate debugging rounds were lost to this one.
 
+### A machine-dependent default is a node, and a path is a `Path`
+
+Not yet needed here, and it will be the moment file I/O arrives — `MaxRev.Gdal.Core`, Shapefile,
+GeoTIFF are all on the roadmap, and every one of them takes a path. Established in VL.Mapsui while
+adding a cache-folder pin, so it does not have to be rediscovered.
+
+**A default that depends on the machine cannot be a pin's initial value.** A C# default parameter
+value must be a compile-time constant, so `Environment.GetFolderPath(...)` is rejected outright:
+
+```
+error CS1736: Default parameter value for 'folder' must be a compile-time constant
+```
+
+Nor should a literal be substituted: that ships one machine's path inside the node definition, which
+is exactly what vvvv's own `VL.Audio.vl` does — its `Filename` pin arrives reading
+`C:\temp\foo.wav`. **vvvv's answer is a node that yields the path**: `SystemFolder [IO]` takes a
+`VL.Lib.IO.SpecialFolder` and outputs a `VL.Lib.IO.Path`. So leave the pin empty for "use the
+default" and add a node that makes the default *discoverable by patching*.
+
+**And a path pin is `VL.Lib.IO.Path`, never `string`.** 54 members of VL.CoreLib take that type, and
+its IOBox opens a file chooser on rightclick, a directory chooser on SHIFT+rightclick. A `string`
+pin makes the author type the path out by hand. Verified that a C#-imported node accepts it even
+though no C# assembly shipped with vvvv 7.4 does this — every precedent is in `.vl`-defined nodes.
+Declare it `Path? folder = null`, which is legal because `null` *is* a constant.
+
+One trap, which the Gray Book states outright: *"Path IOBoxes always store relative paths if
+possible but actually hide this fact from you!"* A relative path arriving at a node that writes
+files cannot be honestly rooted — relative to the document, to vvvv's install folder, to whatever
+the working directory happens to be? `Directory.CreateDirectory` silently picks the last. Refuse it
+and say so, the same way an unusable folder must never silently fall back to a default.
+
 ### Never block on a task inside a node
 
 `FetchTileBytes` in `0.1.0-alpha` awaited an async call and blocked on the result, which

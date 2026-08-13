@@ -181,6 +181,20 @@ Every `public static` method on a public class becomes a node. camelCase paramet
 become "Camel Case" pin labels, `out` parameters become extra output pins, XML doc
 comments become tooltips.
 
+Two things about pins that are settled facts rather than preferences, and will bite as soon as file
+I/O lands (`MaxRev.Gdal.Core` is on the roadmap and every node it brings takes a path). Full
+reasoning in [docs/DESIGN.md](docs/DESIGN.md); established in VL.Mapsui, recorded here because
+**a rule transfers**:
+
+- **A path pin is `VL.Lib.IO.Path`, never `string`.** Its IOBox opens a file chooser on rightclick
+  and a directory chooser on SHIFT+rightclick; a `string` pin makes the author type the path out.
+  Beware that a Path IOBox stores a *relative* path whenever it can and hides that from you, so a
+  node that writes files must refuse a non-rooted path rather than guess what it is relative to.
+- **A machine-dependent default cannot be a pin's initial value** — a C# default must be a
+  compile-time constant (`CS1736`) — and a hardcoded literal would ship one machine's path inside
+  the node, as `VL.Audio.vl`'s `Filename` pin does. Declare it `Path? x = null`, resolve empty
+  internally, and expose the default through a node the way `SystemFolder [IO]` does.
+
 ### Node category rule
 
 ```
