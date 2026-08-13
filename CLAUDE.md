@@ -53,7 +53,9 @@ vvvv-gis/
 │   ├── verify.ps1         # headless verification, 3 stages
 │   ├── dev.ps1 + DevLoop.vl   # C# hot-reload loop (ProjectDependency)
 │   └── SmokeTest.vl       # consumer document; pins the VL.GIS version
-├── docs/VL-PACKAGING.md   # ⭐ the traps and why they are traps — read before packaging work
+├── docs/VL-PACKAGING.md   # ⭐ getting a node to EXIST — read before packaging work
+├── docs/VL-RUNTIME.md     # ⭐ what happens once it RUNS — read before writing any node that
+│                          #   touches the network, a file, or any other resource
 ├── docs/DESIGN.md         # why the library is shaped this way — read before adding a node
 │                          #   or answering "should VL.GIS also do X?"
 └── help/<PackageName>/    # example patches, one folder per package (see below)
@@ -138,6 +140,30 @@ message anywhere. Three independent causes, all listed here. Full forensics in
    `pack.ps1` evicts that directory; keep it that way.
 6. **nuget.org is not a test environment.** The whole loop is local — `dist\` as a package
    repository, `dist\feed` as a NuGet feed. A published version can never be replaced.
+
+### Runtime invariants — break these and something *outside* the package fails
+
+Numbered alongside the packaging rules deliberately. When work moved to a second repository,
+all six above were carried over correctly and these were not, because they had only ever been
+written as prose about one particular help patch. **A rule transfers; a note about a file does
+not.** Full forensics in [docs/VL-RUNTIME.md](docs/VL-RUNTIME.md).
+
+7. **A `public static` method is evaluated on every frame.** Sixty times a second, from the
+   moment the document is opened — opening a `.vl` *is* running it. Anything that acquires a
+   connection, file handle, GPU resource, cache, thread or subscription must therefore be a
+   `[ProcessNode]` class instead, built once and rebuilt only when an input actually changes.
+   Written as a static method, a map node opened **17,000 TCP connections in 13 minutes**,
+   exhausted the machine's 16,384 ephemeral ports and took down a home network.
+8. **Never block on a task inside a node.** vvvv's runtime thread owns a
+   `SynchronizationContext`, so `.Result` / `.Wait()` deadlocks it — the window closes without
+   the process exiting. Return `IObservable`, or wrap in `Task.Run`. This shipped in
+   `0.1.0-alpha`.
+9. **A node pointing at free public infrastructure is off by default.** Zero requests on open,
+   a disk cache, a User-Agent naming the package, and an on-screen counter of what has been
+   allocated. OpenStreetMap's tile policy forbids bulk downloading, and whoever opens a patch
+   has not agreed to anything yet.
+10. **Never leave vvvv running unattended, and never start it in the background.** Read the
+    value, close it. Leaks accumulate across sessions.
 
 ## Architecture
 
@@ -225,11 +251,21 @@ too, since our code lacks the mileage NTS has.
 
 ## Mapsui: blocked, and exactly why
 
-Measured on 2026-08-10 with a throwaway console project. **Wrapping Mapsui is not currently
-possible**, and it is worth recording precisely what blocks it, because the blockage is
-narrow and will lift on its own.
+Measured on 2026-08-10 with a throwaway console project. **Folding Mapsui into VL.GIS is not
+possible**, and it is worth recording precisely what blocks it, because the blockage is narrow
+and will lift on its own.
 
-Each Mapsui line is individually fine and collectively unusable:
+> **Corrected 2026-08-13.** This section used to say "wrapping Mapsui is not currently
+> possible", full stop. That was the right answer to the wrong question. The BruTile constraint
+> lives only in `Mapsui.Tiling`, so a *separate* package that never sits beside VL.GIS is
+> unaffected — and `D:\2026_Projects\vl-mapsui` (`VL.Mapsui`) now does exactly that, using
+> Mapsui 4.1.9 against vvvv's own SkiaSharp. The verdict below is about **coexistence with this
+> package**, not about Mapsui.
+>
+> A verdict is only as good as the premise it was measured under. Write the premise down next
+> to the result, or the result outlives it.
+
+Each Mapsui line is individually fine and collectively unusable *inside VL.GIS*:
 
 | | SkiaSharp | BruTile | verdict |
 |---|---|---|---|
@@ -253,11 +289,33 @@ VL.GIS's whole tile API returns it, so downgrading is a redesign rather than a v
 **Mapsui 5.x otherwise matches VL.GIS exactly** — BruTile 6.0.0, NetTopologySuite 2.6.0,
 GeoJSON4STJ 4.0. The single obstacle is SkiaSharp, and vvvv is two majors behind (SkiaSharp
 reached a stable 4.x in June 2026, co-maintained by Microsoft and Uno). There is no public
-signal about when vvvv will move, so **nothing near-term may depend on Mapsui**. Revisit the
-moment vvvv ships SkiaSharp 3 or newer; at that point everything lines up at once.
+signal about when vvvv will move, so **nothing in VL.GIS may depend on Mapsui**. Revisit the
+moment vvvv ships SkiaSharp 3 or newer; at that point VL.Mapsui can move to 5.x, the BruTile
+conflict disappears, and the two packages become installable side by side.
 
 Both probes were negative-tested before being believed: pinning SkiaSharp 2.80.2 fails the
 build with NU1605, so the check can in fact reject something.
+
+### The conflict is machine-wide, not per-project
+
+Measured 2026-08-13, and worth knowing before touching either package. `%LOCALAPPDATA%\vvvv\
+gamma\nugets\` is a **flat folder with one version of each library**, shared by everything vvvv
+loads, and whatever it finds there wins over a copy sitting next to your own assembly.
+
+Installing VL.GIS from nuget.org therefore put `BruTile.6.0.0` in it — along with
+`BruTile.MbTiles.6.0.0` and an SQLite stack, because the very first VL.GIS build declared
+MbTiles before `c75f12f` removed it. **Uninstalling a package does not remove its
+dependencies**, so all of that outlived VL.GIS's own removal by five months and was still there
+with nothing referencing it.
+
+That orphaned BruTile 6 is what made VL.Mapsui throw `TypeLoadException` inside the vvvv editor
+even though its own output folder held the correct BruTile 5.0.6 — and note the shape of it: a
+`vvvvc` export of the same patch bundles 5.0.6 and runs fine, so only the editor is affected.
+Both were moved to `_nugets-backup-VL.GIS\`.
+
+If VL.GIS is ever installed from nuget.org again, BruTile 6 comes back and VL.Mapsui breaks
+again. Everyday VL.GIS work goes through `start.ps1` with `--package-repositories dist`, which
+never touches that folder, so this only bites after a NodeBrowser install.
 
 ## Release process
 
