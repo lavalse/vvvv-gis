@@ -140,29 +140,37 @@ message anywhere. Three independent causes, all listed here. Full forensics in
    `pack.ps1` evicts that directory; keep it that way.
 6. **nuget.org is not a test environment.** The whole loop is local — `dist\` as a package
    repository, `dist\feed` as a NuGet feed. A published version can never be replaced.
+7. **An upstream library must be a *package in a package repository*, not just a
+   `<NugetDependency>` line.** Declaring it is necessary and not sufficient: without the package
+   present, VL cannot resolve its types, so a node whose signature mentions `IHttpTileSource` is
+   constructed with no working pins and every link to it is dropped — `vvvvc` exits 0 and nothing
+   is red. `build.ps1` installs them into `deps\`, which is kept apart from `dist\` because
+   pointing `--package-repositories` at the document being compiled fails with *"Entry point for
+   document X.vl not found"*. This repository resolved through vvvv's shared
+   `%LOCALAPPDATA%\vvvv\gamma\nugets\` for months without knowing it.
 
 ### Runtime invariants — break these and something *outside* the package fails
 
 Numbered alongside the packaging rules deliberately. When work moved to a second repository,
-all six above were carried over correctly and these were not, because they had only ever been
-written as prose about one particular help patch. **A rule transfers; a note about a file does
+the numbered packaging rules were carried over correctly and these were not, because they had
+only ever been written as prose about one particular help patch. **A rule transfers; a note about a file does
 not.** Full forensics in [docs/VL-RUNTIME.md](docs/VL-RUNTIME.md).
 
-7. **A `public static` method is evaluated on every frame.** Sixty times a second, from the
+8. **A `public static` method is evaluated on every frame.** Sixty times a second, from the
    moment the document is opened — opening a `.vl` *is* running it. Anything that acquires a
    connection, file handle, GPU resource, cache, thread or subscription must therefore be a
    `[ProcessNode]` class instead, built once and rebuilt only when an input actually changes.
    Written as a static method, a map node opened **17,000 TCP connections in 13 minutes**,
    exhausted the machine's 16,384 ephemeral ports and took down a home network.
-8. **Never block on a task inside a node.** vvvv's runtime thread owns a
+9. **Never block on a task inside a node.** vvvv's runtime thread owns a
    `SynchronizationContext`, so `.Result` / `.Wait()` deadlocks it — the window closes without
    the process exiting. Return `IObservable`, or wrap in `Task.Run`. This shipped in
    `0.1.0-alpha`.
-9. **A node pointing at free public infrastructure is off by default.** Zero requests on open,
+10. **A node pointing at free public infrastructure is off by default.** Zero requests on open,
    a disk cache, a User-Agent naming the package, and an on-screen counter of what has been
    allocated. OpenStreetMap's tile policy forbids bulk downloading, and whoever opens a patch
    has not agreed to anything yet.
-10. **Never leave vvvv running unattended, and never start it in the background.** Read the
+11. **Never leave vvvv running unattended, and never start it in the background.** Read the
     value, close it. Leaks accumulate across sessions.
 
 ## Architecture
@@ -222,8 +230,14 @@ design philosophy, is in [docs/DESIGN.md](docs/DESIGN.md).
 **Declare the upstream nuget, forward only your own assembly.** Every community package
 that wraps a third-party library declares it as a `<NugetDependency>` in its `.vl` —
 `VL.OpenCV → OpenCvSharp4`, `VL.Assimp → AssimpNet`, `VL.PolyTools → com.angusj.Clipper`,
-`VL.SimpleHTTP → RestSharp`, `VL.IO.Midi → managed-midi` — and none of them sets
-`IsForward="true"` on anything but its own wrapper. VL.GIS matches this already.
+`VL.SimpleHTTP → RestSharp`, `VL.IO.Midi → managed-midi` — and VL.GIS matches this already.
+
+**Corrected 2026-08-13:** this used to add "and none of them sets `IsForward="true"` on anything
+but its own wrapper". `VL.Rhino.3dm` does exactly that:
+`<NugetDependency Location="Rhino3dm" IsForward="true" Version="7.14.0" />`, to expose that
+library's own members as nodes. The survey behind the wrong claim only examined
+`PlatformDependency`. VL.GIS does not need it — a package merely being *resolvable* is enough for
+its types to appear on pins, see invariant 7 — but the claim as written was false.
 
 **Domain names for multi-library packages, library names for single-library ones.** The
 common second-level prefixes are `IO` (35), `Devices` (33), `Stride` (15), `Addons` (9),

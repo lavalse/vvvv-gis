@@ -417,6 +417,68 @@ output is blank, suspect evaluation, not logic:
 5. Check whether outputs are even *connected*. A node with nothing on its output pins
    displays nothing, which reads exactly like a node that failed.
 
+## An upstream library must be a package in a package repository
+
+Declaring `<NugetDependency Location="BruTile" Version="6.0.0" />` in your `.vl` is necessary and
+**not sufficient**. For VL to resolve that library's *types* — so a node whose signature mentions
+`IHttpTileSource` can exist — the package has to be present in a package repository vvvv is
+looking at.
+
+Fail that and the symptom is the quietest yet: the node **is constructed**, none of its pins
+connect, every link to it is silently dropped, and the compiled program does not contain the
+call. `vvvvc` exits 0. Nothing is red. The log says nothing.
+
+A real install satisfies this by accident — NuGet pulls your dependencies into
+`%LOCALAPPDATA%\vvvv\gamma\nugets\` alongside your package, which is why `Rhino3dm`,
+`AssimpNet`, `OpenCvSharp4` and `BruTile` are all sitting in there. **That folder is flat: one
+version of each library, shared by everything vvvv loads, and it wins over a copy next to your
+own assembly.** So this repository worked for months without knowing it depended on a package
+installed there in February, and broke the moment that package was moved out to stop it clashing
+with another project.
+
+`build.ps1` now installs each `.vl`'s non-`VL.*` dependencies into `deps\`, transitively,
+discovered rather than listed. Nothing here depends on what some other project happens to have
+installed machine-wide.
+
+**`deps\` is deliberately separate from `dist\`.** `--package-repositories` takes a
+semicolon-separated list, and pointing it at a directory that *also* contains the document being
+compiled makes `vvvvc` treat that document as a package rather than as something to build:
+*"Entry point for document X.vl not found"*. Stage 1 of `verify.ps1` passes `deps\` only for
+exactly this reason.
+
+Two related facts worth having:
+
+- **A consuming document must not declare the upstream package.** A help patch that adds
+  `<NugetDependency Location="Mapsui" …/>` fails with *"Missing package: Mapsui"* — plain nugets
+  are not VL packages. Only the wrapper package declares them.
+- **`IsForward="true"` works on a `NugetDependency`, not just a `PlatformDependency`.**
+  `VL.Rhino.3dm` does `<NugetDependency Location="Rhino3dm" IsForward="true" …/>` to expose that
+  library's own members as nodes. VL.GIS does not need it — resolvability is enough for types on
+  pins — but an earlier claim here that *no* package forwards anything but its own wrapper was
+  wrong, and it was wrong because the survey behind it only looked at `PlatformDependency`.
+
+### It wore three disguises
+
+Worth recording, because each looked confirmed while the real cause was still in place:
+
+| looked like | actually |
+|---|---|
+| "VL cannot build a pin for `IEnumerable<>` of a foreign interface" | It builds `Sequence<T>` fine; a single item was being wired into a spread |
+| "these BruTile pins were broken all along" | They were fine. **My own control experiment was contaminated by my own action earlier that morning** |
+| "no package forwards a foreign nuget" | `VL.Rhino.3dm` does |
+
+The evidence that settled it was a pair of probe nodes differing in exactly one thing:
+
+```csharp
+ILayer? Update(int input)                // Update called, links attached   ✅
+ILayer? Update(global::Mapsui.Map? map)  // Update never called             ❌
+```
+
+And once types resolved, vvvv's messages became precise immediately —
+`ILayer is no Sequence<ILayer>!` rather than silence. **Silence was the tell.**
+
+---
+
 ## False proofs — verification that could not have failed
 
 The most costly failure mode in this project is not any single trap. It is running a check that
