@@ -255,7 +255,25 @@
           </Node>
           <Pad Id="Gn4dd70YTr8qi6w9gr9eWK" Comment="Radius (degrees)" Bounds="300,740,62,15" ShowValueBox="true" isIOBox="true" Value="0.002" />
 
-          <!-- A layer takes a spread of geometry; this one has a single shape in it. -->
+          <!--
+            Geometry becomes a Feature: NetTopologySuite's own type, geometry plus attributes,
+            knowing nothing about maps or rendering. That is what crosses the line between the two
+            packages - VL.GIS computed this shape and has never heard of Mapsui.
+
+            Attributes are left unconnected here; a shape needs none to be drawn. They are what a
+            click will be able to report once picking exists.
+          -->
+          <Node Bounds="420,745,100,19" Id="QBpyDPyaytOcKHJ87MlEcq">
+            <p:NodeReference LastCategoryFullName="Mapsui" LastDependency="VL.Mapsui.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="OperationCallFlag" Name="Feature" />
+            </p:NodeReference>
+            <Pin Id="JsQnUGcppMgErM7XhGc5hj" Name="Geometry" Kind="InputPin" />
+            <Pin Id="RepNNlIuDranaJUPdyVNfJ" Name="Attributes" Kind="InputPin" />
+            <Pin Id="DSgMVxvdnXj7EXWRM3hvuc" Name="Result" Kind="OutputPin" />
+          </Node>
+
+          <!-- A layer takes a spread of features; this one has a single shape in it. -->
           <Node Bounds="420,780,39,19" Id="Rq5lnXj4oB9qzm6LAldOuG">
             <p:NodeReference LastCategoryFullName="Collections.Spread" LastDependency="VL.CoreLib.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
@@ -267,15 +285,30 @@
             <Pin Id="BnjoVdFEx6QegQQxiOUzA1" Name="Result" Kind="OutputPin" />
           </Node>
 
+          <!--
+            The style is its own node and its own value. It is a process node even though it holds
+            nothing: a layer treats a new style object as a change and would rebuild, and Mapsui
+            keys its rendered-geometry cache on the style object itself.
+          -->
+          <Node Bounds="640,780,130,19" Id="MbGodDL60NgOCHjF6HYgWF">
+            <p:NodeReference LastCategoryFullName="Mapsui.Styles" LastDependency="VL.Mapsui.vl">
+              <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
+              <Choice Kind="ProcessAppFlag" Name="VectorStyle" />
+            </p:NodeReference>
+            <Pin Id="Vy9hlWDrVePs9fi3Q4mmMJ" Name="Fill Color" Kind="InputPin" />
+            <Pin Id="PCLsJUAWVjEFfi3ueLwSYM" Name="Line Color" Kind="InputPin" />
+            <Pin Id="TbEgpU9hju1JJ84nqoK0bU" Name="Line Width" Kind="InputPin" />
+            <Pin Id="SUXZjwaEwkYuwG3xHw5OCX" Name="Result" Kind="OutputPin" />
+          </Node>
+
           <Node Bounds="420,820,150,19" Id="Mp5Tx9et3AQBiToGhyspwn">
             <p:NodeReference LastCategoryFullName="Mapsui.Layers" LastDependency="VL.Mapsui.vl">
               <Choice Kind="NodeFlag" Name="Node" Fixed="true" />
-              <Choice Kind="ProcessAppFlag" Name="Geometry" />
+              <Choice Kind="ProcessAppFlag" Name="FeatureLayer" />
             </p:NodeReference>
-            <Pin Id="SI0ZxfCIn57pbaOOReLpea" Name="Geometries" Kind="InputPin" />
-            <Pin Id="V7e908mm9SYWcxtzIdeFY6" Name="Fill Color" Kind="InputPin" />
-            <Pin Id="OVBNvokFNtfjiwLhvIutfe" Name="Line Color" Kind="InputPin" />
-            <Pin Id="REpEeNydRezhEPK20w3Mpl" Name="Line Width" Kind="InputPin" />
+            <Pin Id="SI0ZxfCIn57pbaOOReLpea" Name="Features" Kind="InputPin" />
+            <Pin Id="V7e908mm9SYWcxtzIdeFY6" Name="Style" Kind="InputPin" />
+            <Pin Id="OVBNvokFNtfjiwLhvIutfe" Name="Name" Kind="InputPin" />
             <Pin Id="UFzYodslySaxRQBxO8NwqI" Name="Layers Built" Kind="OutputPin" />
             <Pin Id="HgK2aX3X3SnXuUb0pVlhAi" Name="Result" Kind="OutputPin" />
           </Node>
@@ -315,7 +348,9 @@
         <Link Id="CZiqZoldVHZlIQrieXgxZF" Ids="DQgYqNplKQw88zxhlgAuEs,EKHjuvvNkF1wgG4eM99a7B" />
         <Link Id="OZH6WPpxHN3P7omVIWFGRS" Ids="S20r8lVL4zB4PeMT9mwWf5,K2cCo4Qlwxf5xF72Q27628" />
         <Link Id="QBlsMGaZEiThHrqscVGkdC" Ids="Gn4dd70YTr8qi6w9gr9eWK,MbSXhIC6RvtYb5pD0dF0Ut" />
-        <Link Id="OCmeJkZ4IxfNpFzA2YzcW6" Ids="QOY2Vgh5Fu85kgEoRUfWzL,EMMF33ShEyrhRfv0MCQZ8H" />
+        <Link Id="OCmeJkZ4IxfNpFzA2YzcW6" Ids="QOY2Vgh5Fu85kgEoRUfWzL,JsQnUGcppMgErM7XhGc5hj" />
+        <Link Id="BN37ktmA9uyTvzyD7T4ifk" Ids="DSgMVxvdnXj7EXWRM3hvuc,EMMF33ShEyrhRfv0MCQZ8H" />
+        <Link Id="P7xPh9z2NFdDwV1oFJZOjv" Ids="SUXZjwaEwkYuwG3xHw5OCX,V7e908mm9SYWcxtzIdeFY6" />
         <Link Id="I8GcDEtRdB68ibMDezEQuH" Ids="BnjoVdFEx6QegQQxiOUzA1,SI0ZxfCIn57pbaOOReLpea" />
         <Link Id="PE7FMERpqcM0qQ40EF9t2o" Ids="UFzYodslySaxRQBxO8NwqI,NTm8Vznk6Xhvn3XOkJgS24" />
         <Link Id="Dru7GjsTQ7l0Q6EY364MDV" Ids="HgK2aX3X3SnXuUb0pVlhAi,Udad8igNKGlXkj4SIfvVV8" />
