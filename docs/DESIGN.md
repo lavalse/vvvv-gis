@@ -79,6 +79,12 @@ NetTopologySuite's mileage, and a bug there is our bug. Nodes say which case the
 
 Each of these came out of something that went wrong or read badly in a patch.
 
+**For the unit of work itself — what earns a node, how many pins it may have, what may be bundled
+into one and what must never be — see [NODE-DESIGN.md](NODE-DESIGN.md).** It is the measured
+version of this section: 94% of the ecosystem's nodes take three inputs or fewer, help patches
+outnumber nodes in every library people learn from, and the answer to "make it easier to
+understand" turns out to be more help patches rather than fatter nodes.
+
 ### Every opaque value needs a reader node
 
 A record or struct shows up in a patch as a name with no way to see inside. If a node returns

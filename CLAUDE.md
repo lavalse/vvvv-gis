@@ -58,6 +58,8 @@ vvvv-gis/
 │                          #   touches the network, a file, or any other resource
 ├── docs/DESIGN.md         # why the library is shaped this way — read before adding a node
 │                          #   or answering "should VL.GIS also do X?"
+├── docs/NODE-DESIGN.md    # ⭐ what earns a node, how many pins, what may be bundled — read
+│                          #   before adding a node, and before "let's make one node that does it all"
 └── help/<PackageName>/    # example patches, one folder per package (see below)
 ```
 
@@ -359,6 +361,20 @@ Prerelease suffix is `-alpha`. That is the ecosystem norm — of 304 `VL.*` pack
 nuget.org, 81 are prerelease and 52 of those use `-alpha` against 9 using `-pre`. NuGet
 treats every `-suffix` identically; only the ordering differs
 (`alpha` < `beta` < `pre` < `rc` < release). Drop it once the nodes have been exercised.
+
+## A second repository is developed alongside this one
+
+`D:\2026_Projects\vl-mapsui` (`VL.Mapsui`) wraps the Mapsui map engine and is a separate package
+for the reason recorded above. Three consequences that have already caused mistakes:
+
+1. **Only this repository's `CLAUDE.md` loads automatically.** `vl-mapsui\CLAUDE.md` has its own
+   rules — read it before touching that repository. This is the same mechanism as "a rule
+   transfers, a note about a file does not", one level up.
+2. **Memory is keyed to the project directory.** Sessions started in `vl-mapsui` get an empty
+   memory index and see none of what was recorded here. Start sessions for both from this
+   directory, or accept that the two halves of the memory never meet.
+3. **The two packages cannot be loaded into vvvv at the same time** (BruTile 5 vs 6). GUI
+   verification for them is therefore always two separate vvvv sessions, never one.
 
 ## Working style for this repository
 
