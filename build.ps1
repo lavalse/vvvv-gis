@@ -155,6 +155,65 @@ foreach ($pkg in $Packages) {
     }
 }
 
+# Then remove what is no longer wanted. Installing without ever pruning is how a dependency
+# outlives the thing that needed it -- exactly what happened machine-wide when VL.GIS was
+# uninstalled from vvvv and its BruTile 6 stayed behind for five months, breaking VL.Mapsui.
+# deps\ is handed to vvvv with --package-repositories, so a leftover here does the same damage
+# in this repository's own dev loop: BruTile 6 remained after the packages stopped declaring it,
+# and would still have been offered to anything loading alongside.
+#
+# Reachability, not a name list: NuGet installs transitive dependencies too, and deleting those
+# would break the build on the next run. Walk each installed package's own nuspec from the
+# declared roots and keep the closure.
+$wanted = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+$queue  = [System.Collections.Generic.Queue[string]]::new()
+foreach ($pkg in $Packages) {
+    [xml]$vlDoc = Get-Content $pkg.VlFile -Raw
+    foreach ($dep in @($vlDoc.Document.NugetDependency | Where-Object { $_.Location -notlike 'VL.*' })) {
+        $queue.Enqueue("$($dep.Location).$($dep.Version)")
+    }
+}
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+while ($queue.Count -gt 0) {
+    $name = $queue.Dequeue()
+    if (-not $wanted.Add($name)) { continue }
+    $folder = Join-Path $Deps $name
+    if (-not (Test-Path $folder)) { continue }   # about to be installed, or already gone
+
+    # The manifest lives inside the .nupkg; nuget install does not lay a .nuspec beside it.
+    # Reading it wrongly is not allowed to fail quietly: a package whose dependencies cannot be
+    # read would look like a leaf, and everything it needs would be pruned as unreferenced. That
+    # is exactly what happened the first time this was written - Newtonsoft.Json and
+    # NetTopologySuite.Features were deleted while NetTopologySuite.IO.GeoJSON still required
+    # them, and nothing said so.
+    $nupkg = Get-ChildItem $folder -Filter '*.nupkg' | Select-Object -First 1
+    if (-not $nupkg) { throw "No .nupkg in $folder - cannot read what $name depends on" }
+
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($nupkg.FullName)
+    try {
+        $entry = $zip.Entries | Where-Object { $_.FullName -like '*.nuspec' -and $_.FullName -notlike '*/*' } | Select-Object -First 1
+        if (-not $entry) { throw "No .nuspec inside $($nupkg.Name)" }
+        $reader = [System.IO.StreamReader]::new($entry.Open())
+        try { [xml]$spec = $reader.ReadToEnd() } finally { $reader.Dispose() }
+    }
+    finally { $zip.Dispose() }
+
+    # local-name() because a nuspec carries a default namespace, and because dependencies sit
+    # either directly under <dependencies> or inside per-framework <group> elements. Dotted
+    # navigation throws under StrictMode the moment a package uses only one of the two shapes.
+    foreach ($d in @($spec.SelectNodes("//*[local-name()='dependency']"))) {
+        if (-not $d -or -not $d.id) { continue }
+        # A nuspec range like [4.5.0, ) is not a folder name; match what is actually installed.
+        foreach ($f in @(Get-ChildItem $Deps -Directory -Filter "$($d.id).*" -EA SilentlyContinue)) {
+            $queue.Enqueue($f.Name)
+        }
+    }
+}
+foreach ($stale in @(Get-ChildItem $Deps -Directory -EA SilentlyContinue | Where-Object { -not $wanted.Contains($_.Name) })) {
+    Remove-Item $stale.FullName -Recurse -Force
+    Write-Host "      removed $($stale.Name) - no package declares it any more" -ForegroundColor Yellow
+}
+
 Write-Host "`n== 4/5 staged ==" -ForegroundColor Cyan
 foreach ($pkg in $Packages) {
     Get-ChildItem $pkg.PkgDir -Recurse -File |

@@ -1,12 +1,8 @@
-using BruTile;
-using BruTile.Cache;
-using BruTile.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using VL.Core.Import;
 
@@ -18,13 +14,16 @@ namespace VL.GIS.Tiles;
 [SkipCategory]
 public static class TileFetchNodes
 {
-    // Shared HttpClient — reuse across all fetch calls (BruTile 6.0 requires caller to supply it)
+    // One HttpClient for every fetch. A client per call exhausts sockets, which is the same
+    // failure the runtime rules are about, one layer down.
     private static readonly HttpClient SharedClient;
 
     static TileFetchNodes()
     {
         SharedClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        SharedClient.DefaultRequestHeaders.Add("User-Agent", "VL.GIS/0.1 (vvvv gamma)");
+        // OSM's tile usage policy requires a User-Agent identifying the application.
+        SharedClient.DefaultRequestHeaders.Add(
+            "User-Agent", "VL.GIS/0.2 (+https://github.com/rednotfound/vvvv-gis)");
     }
 
     // ── Tile Index ────────────────────────────────────────────────────────────
@@ -32,23 +31,30 @@ public static class TileFetchNodes
     /// <summary>
     /// Create a TileIndex from explicit col/row/level values.
     /// Tile coordinates follow the XYZ/slippy map convention.
-    /// Uses BruTile.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static TileIndex CreateTileIndex(int col, int row, int level)
         => new TileIndex(col, row, level);
 
     /// <summary>
     /// Split a TileIndex into its column, row and zoom level.
-    /// Uses BruTile.
+    /// VL.GIS's own implementation.
     /// </summary>
-    public static void TileIndexParts(
+    /// <remarks>
+    /// Named Split because that is the ecosystem's word for opening a value — it appears 194
+    /// times in the help patches shipped with vvvv, so it is what someone types into the
+    /// NodeBrowser. It was TileIndexParts, which is a word only we used.
+    ///
+    /// Without it the first question you ask when a tile looks wrong — which tile am I
+    /// requesting — could not be answered inside a patch, because BruTile's TileIndex arrived
+    /// through a plain NugetDependency and its members were reachable only as raw .NET
+    /// reflection nodes that the NodeBrowser hides. TileIndex is now our own type in an
+    /// [ImportAsIs] assembly, so Col/Row/Level are reachable directly; this node stays because
+    /// it is the discoverable name and it splits all three at once.
+    /// </remarks>
+    public static void Split(
         TileIndex tileIndex, out int col, out int row, out int level)
     {
-        // TileIndex is a BruTile struct, so an IOBox can only display its type name, and
-        // BruTile is a plain NugetDependency rather than an [ImportAsIs] assembly, which
-        // leaves Col/Row/Level reachable only as raw .NET reflection nodes that the
-        // NodeBrowser hides. Without this node the first question you ask when a tile looks
-        // wrong -- which tile am I requesting -- cannot be answered inside a patch.
         col   = tileIndex.Col;
         row   = tileIndex.Row;
         level = tileIndex.Level;
@@ -57,7 +63,7 @@ public static class TileFetchNodes
     /// <summary>
     /// Compute the TileIndex for a given longitude/latitude at a specific zoom level.
     /// Uses the Web Mercator / OSM tile numbering convention.
-    /// Own arithmetic; the returned TileIndex is BruTile's type.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static TileIndex TileIndexFromLonLat(double longitude, double latitude, int zoom)
     {
@@ -75,7 +81,7 @@ public static class TileFetchNodes
     /// <summary>
     /// Return all tile indices needed to cover a bounding box at a given zoom level.
     /// Useful for pre-fetching a region.
-    /// Own arithmetic; TileIndex is BruTile's type.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static IReadOnlyList<TileIndex> TileIndicesForBounds(
         double minLon, double minLat,
@@ -94,7 +100,7 @@ public static class TileFetchNodes
     /// <summary>
     /// Convert a TileIndex back to its bounding box in WGS84 lon/lat.
     /// Returns SW corner (minLon, minLat) and NE corner (maxLon, maxLat).
-    /// Own arithmetic; TileIndex is BruTile's type.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static void TileBounds(
         TileIndex tileIndex,
@@ -109,6 +115,10 @@ public static class TileFetchNodes
         minLat = Math.Atan(Math.Sinh(Math.PI * (1 - 2.0 * (tileIndex.Row + 1) / n))) * 180.0 / Math.PI;
     }
 
+    /// <summary>The URL a tile would be fetched from. Useful for checking a template by eye.</summary>
+    public static string TileUrl(ITileSource tileSource, TileIndex tileIndex)
+        => tileSource.UrlFor(tileIndex);
+
     // ── Synchronous Fetch ─────────────────────────────────────────────────────
 
     /// <summary>
@@ -118,9 +128,9 @@ public static class TileFetchNodes
     /// wrap it in a Cache region driven by the tile index, or by the region's Force pin, and
     /// take FetchTileAsync instead whenever tiles change as the patch runs.
     /// See help/HowTo Fetch a map tile.vl.
-    /// Uses BruTile.
+    /// VL.GIS's own implementation.
     /// </summary>
-    public static byte[]? FetchTileBytes(IHttpTileSource tileSource, TileIndex tileIndex)
+    public static byte[]? FetchTileBytes(ITileSource tileSource, TileIndex tileIndex)
     {
         try
         {
@@ -136,8 +146,10 @@ public static class TileFetchNodes
             // This is also why it appeared to work when called from PowerShell, which has
             // no SynchronizationContext at all. Testing sync-over-async in a host without
             // one proves nothing about a host that has one.
-            return Task.Run(() =>
-                       tileSource.GetTileAsync(SharedClient, new TileInfo { Index = tileIndex }))
+            //
+            // Still true now that the fetch is our own code rather than BruTile's: the hazard
+            // was never in the library, it was in awaiting anything on that thread.
+            return Task.Run(() => tileSource.GetTileAsync(SharedClient, tileIndex))
                        .GetAwaiter().GetResult();
         }
         catch
@@ -149,10 +161,10 @@ public static class TileFetchNodes
     /// <summary>
     /// Fetch a tile and write it to disk. Returns the file path on success.
     /// Useful for caching tiles locally.
-    /// Uses BruTile.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static string? FetchTileToFile(
-        IHttpTileSource tileSource,
+        ITileSource tileSource,
         TileIndex tileIndex,
         string cacheDirectory)
     {
@@ -173,17 +185,16 @@ public static class TileFetchNodes
     /// Fetch a tile asynchronously, returning an IObservable that emits the bytes once.
     /// In vvvv, connect to an S+H node to latch the result.
     /// Emits null if the tile could not be fetched.
-    /// Uses BruTile.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static IObservable<byte[]?> FetchTileAsync(
-        IHttpTileSource tileSource,
+        ITileSource tileSource,
         TileIndex tileIndex)
         => Observable.FromAsync(async ct =>
         {
             try
             {
-                return await tileSource.GetTileAsync(SharedClient,
-                    new TileInfo { Index = tileIndex }, ct);
+                return await tileSource.GetTileAsync(SharedClient, tileIndex, ct);
             }
             catch
             {
@@ -194,10 +205,10 @@ public static class TileFetchNodes
     /// <summary>
     /// Fetch multiple tiles in parallel, returning an IObservable that emits
     /// (TileIndex, bytes) pairs as they arrive.
-    /// Uses BruTile.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static IObservable<(TileIndex index, byte[]? bytes)> FetchTilesAsync(
-        IHttpTileSource tileSource,
+        ITileSource tileSource,
         IEnumerable<TileIndex> tileIndices)
     {
         return Observable.Create<(TileIndex, byte[]?)>(async (observer, ct) =>
@@ -210,8 +221,7 @@ public static class TileFetchNodes
                 {
                     try
                     {
-                        byte[]? bytes = await tileSource.GetTileAsync(SharedClient,
-                            new TileInfo { Index = localIdx }, ct);
+                        byte[]? bytes = await tileSource.GetTileAsync(SharedClient, localIdx, ct);
                         observer.OnNext((localIdx, bytes));
                     }
                     catch
@@ -229,16 +239,23 @@ public static class TileFetchNodes
 
     /// <summary>
     /// Create a persistent file-system tile cache at the given directory.
-    /// Tiles are stored as {level}/{col}/{row}.tile files.
-    /// Uses BruTile.
+    /// Tiles are stored as {level}/{col}/{row}.png files.
+    /// VL.GIS's own implementation.
     /// </summary>
-    public static FileCache CreateFileCache(string cacheDirectory)
-        => new FileCache(cacheDirectory, "tile");
+    public static TileFileCache CreateFileCache(string cacheDirectory)
+        => new TileFileCache(cacheDirectory);
 
     /// <summary>
     /// Check whether a tile is present in a file cache without fetching it.
-    /// Uses BruTile.
+    /// VL.GIS's own implementation.
     /// </summary>
-    public static bool IsTileCached(FileCache fileCache, TileIndex tileIndex)
+    public static bool IsTileCached(TileFileCache fileCache, TileIndex tileIndex)
         => fileCache.Find(tileIndex) != null;
+
+    /// <summary>
+    /// The cached bytes for a tile, or null if it has never been stored. Never fetches.
+    /// VL.GIS's own implementation.
+    /// </summary>
+    public static byte[]? ReadCachedTile(TileFileCache fileCache, TileIndex tileIndex)
+        => fileCache.Find(tileIndex);
 }

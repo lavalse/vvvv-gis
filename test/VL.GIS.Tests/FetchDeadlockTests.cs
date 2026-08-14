@@ -1,6 +1,4 @@
 using System.Collections.Concurrent;
-using BruTile;
-using BruTile.Predefined;
 using VL.GIS.Tiles;
 
 namespace VL.GIS.Tests;
@@ -8,7 +6,7 @@ namespace VL.GIS.Tests;
 /// <summary>
 /// Regression cover for a deadlock that stopped vvvv dead.
 ///
-/// FetchTileBytes used to await BruTile's GetTileAsync directly on the calling thread and
+/// FetchTileBytes used to await GetTileAsync directly on the calling thread and
 /// block on the result. vvvv's runtime thread carries a SynchronizationContext, so the
 /// continuation was posted back to the thread already sitting in GetResult(), and neither
 /// side ever moved again. The runtime stopped evaluating, F5 could not restart it, the log
@@ -63,23 +61,27 @@ public class FetchDeadlockTests
     /// Returns bytes from a task that completes on the thread pool, so awaiting it inside a
     /// SynchronizationContext produces a continuation that has to be posted back.
     /// </summary>
-    sealed class FakeHttpTileSource : IHttpTileSource
+    sealed class FakeHttpTileSource : ITileSource
     {
         readonly byte[] _payload;
 
         public FakeHttpTileSource(byte[] payload) => _payload = payload;
 
-        public ITileSchema Schema { get; } = new GlobalSphericalMercator(0, 19);
         public string Name => "Fake";
-        public Attribution Attribution { get; } = new Attribution("Fake", "https://example.com");
+        public int MinZoom => 0;
+        public int MaxZoom => 19;
+        public string AttributionText => "Fake";
+        public string AttributionUrl => "https://example.com";
+        public string UrlFor(TileIndex index) => $"https://example.com/{index.Level}/{index.Col}/{index.Row}.png";
 
         public async Task<byte[]?> GetTileAsync(
-            HttpClient httpClient, TileInfo tileInfo, CancellationToken? cancellation = null)
+            HttpClient httpClient, TileIndex index, CancellationToken token = default)
         {
-            // Deliberately no ConfigureAwait(false). That omission is what makes a library
-            // hazardous to block on, and BruTile behaves the same way -- with it, the
-            // continuation would not need the caller's context and there would be no
-            // deadlock to reproduce.
+            // Deliberately no ConfigureAwait(false). That omission is what makes an awaited call
+            // hazardous to block on -- with it, the continuation would not need the caller's
+            // context and there would be no deadlock to reproduce. It was BruTile that behaved
+            // this way; our own HttpTileSource does use ConfigureAwait(false), which makes this
+            // fake the *stricter* case rather than an imitation of the real one.
             await Task.Delay(20);
             return _payload;
         }
@@ -96,7 +98,7 @@ public class FetchDeadlockTests
         // finish. If this ever starts completing, the harness has stopped being sensitive
         // and the test below has stopped proving anything.
         var source = new FakeHttpTileSource(new byte[] { 1 });
-        var tileInfo = new TileInfo { Index = TileFetchNodes.CreateTileIndex(0, 0, 0) };
+        var index0 = TileFetchNodes.CreateTileIndex(0, 0, 0);
 
         using var context = new SingleThreadedContext();
 
@@ -104,7 +106,7 @@ public class FetchDeadlockTests
         // that deadlock on purpose is the entire point of this test.
 #pragma warning disable xUnit1031
         bool finished = context.TryRun(
-            () => _ = source.GetTileAsync(new HttpClient(), tileInfo).GetAwaiter().GetResult(),
+            () => _ = source.GetTileAsync(new HttpClient(), index0).GetAwaiter().GetResult(),
             TimeSpan.FromSeconds(2));
 #pragma warning restore xUnit1031
 
@@ -177,14 +179,17 @@ public class FetchDeadlockTests
         Assert.Null(result);
     }
 
-    sealed class ThrowingTileSource : IHttpTileSource
+    sealed class ThrowingTileSource : ITileSource
     {
-        public ITileSchema Schema { get; } = new GlobalSphericalMercator(0, 19);
         public string Name => "Throwing";
-        public Attribution Attribution { get; } = new Attribution("", "");
+        public int MinZoom => 0;
+        public int MaxZoom => 19;
+        public string AttributionText => "";
+        public string AttributionUrl => "";
+        public string UrlFor(TileIndex index) => "https://example.invalid/";
 
         public Task<byte[]?> GetTileAsync(
-            HttpClient httpClient, TileInfo tileInfo, CancellationToken? cancellation = null)
+            HttpClient httpClient, TileIndex index, CancellationToken token = default)
             => throw new HttpRequestException("simulated failure");
     }
 

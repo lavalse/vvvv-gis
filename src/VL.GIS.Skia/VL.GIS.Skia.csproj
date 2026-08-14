@@ -31,7 +31,8 @@
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
 
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
-    <PackageReference Include="BruTile" Version="6.0.0" />
+    <!-- BruTile was here, for its TileIndex alone. That type is ours now (VL.GIS.Tiles), which
+         is what lets VL.GIS and VL.Mapsui be installed together. -->
   </ItemGroup>
 
   <ItemGroup>

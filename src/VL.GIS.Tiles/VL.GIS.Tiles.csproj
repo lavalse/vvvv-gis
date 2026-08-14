@@ -16,7 +16,9 @@
     <!-- See src\VL.GIS.Core\VL.GIS.Core.csproj for why this is here and not in the nuspec. -->
     <PackageReference Include="VL.Core" Version="2025.7.2" />
 
-    <PackageReference Include="BruTile" Version="6.0.0" />
+    <!-- BruTile was here. Removing it is what lets VL.GIS and VL.Mapsui be installed together:
+         Mapsui.Tiling pins BruTile to 5.x, we were on 6, and vvvv's package folder is flat.
+         Everything it gave us is now in TileTypes.cs. See docs/DESIGN.md. -->
     <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>
 

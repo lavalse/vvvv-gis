@@ -103,6 +103,45 @@ public static class ViewportNodes
     private static double Clamp(double latitude)
         => Math.Max(-MaxLatitude, Math.Min(MaxLatitude, latitude));
 
+    // ── Meeting another map engine halfway ────────────────────────────────────
+    //
+    // A map engine states where it is looking as a resolution rather than a zoom level -- Mapsui
+    // does, and so does almost everything built on Web Mercator. These two convert, so a view
+    // driven by one can be drawn on by the other. Nothing here knows what that engine is.
+
+    /// <summary>
+    /// Projection units — Web Mercator metres — covered by one pixel at this view's zoom.
+    /// This is what a map engine means by "resolution", and the inverse of ZoomFromMercatorResolution.
+    /// VL.GIS's own implementation, not an upstream library.
+    /// </summary>
+    /// <remarks>
+    /// **Not the same number as <see cref="Resolution"/>, and the difference is a trap.**
+    /// Resolution reports *ground* metres at the view's centre latitude, so it carries a
+    /// cos(latitude) factor; this one reports *projection* metres, which Web Mercator stretches
+    /// by exactly that factor as you move away from the equator. Feeding one where the other is
+    /// expected leaves an overlay 19% out at Tokyo and 31% out at Berlin — a drift that grows
+    /// with latitude and looks, at a glance, like something merely slightly misaligned.
+    /// </remarks>
+    public static double MercatorResolution(MapView view)
+        => EquatorMercatorMetres / view.WorldSize;
+
+    /// <summary>
+    /// The zoom level at which one pixel covers the given number of Web Mercator metres.
+    /// Pass a map engine's resolution to get a zoom a MapView can be built from.
+    /// VL.GIS's own implementation, not an upstream library.
+    /// </summary>
+    public static double ZoomFromMercatorResolution(double mercatorMetresPerPixel)
+        => mercatorMetresPerPixel <= 0
+            ? 0
+            : Math.Log2(EquatorMercatorMetres / (MapView.TileSize * mercatorMetresPerPixel));
+
+    /// <summary>
+    /// The circumference of the equator in metres — the width of the whole Web Mercator world.
+    /// Divided by 256 it gives 156543.034, the resolution at zoom 0 that every tile service
+    /// quotes.
+    /// </summary>
+    internal const double EquatorMercatorMetres = 2.0 * Math.PI * 6378137.0;
+
     // ── Screen ────────────────────────────────────────────────────────────────
 
     /// <summary>

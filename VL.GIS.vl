@@ -4,7 +4,6 @@
   <NugetDependency Id="GR2BZIR7FDuJtIsXko6N7p" Location="NetTopologySuite" Version="2.6.0" />
   <NugetDependency Id="FTM4S6hcf96g6roWLiXt1M" Location="NetTopologySuite.IO.GeoJSON" Version="3.0.0" />
   <NugetDependency Id="LamOVJE1DRs2jMHdH2ZYPz" Location="ProjNet" Version="2.1.0" />
-  <NugetDependency Id="M94KcFMx6tqyn3SCWD4aJN" Location="BruTile" Version="6.0.0" />
   <Patch Id="BHeGLVnDJMW8978PekxtWJ">
     <Canvas Id="AfttJ2yDuN0Wx1dEvvypns" DefaultCategory="GIS" CanvasType="FullCategory" />
     <!--

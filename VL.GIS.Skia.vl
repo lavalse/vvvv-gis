@@ -4,7 +4,6 @@
   <NugetDependency Id="MXp9sV7jUvzSN3fGi3o804" Location="VL.Skia" Version="2025.7.0" />
   <NugetDependency Id="U69MtMubD56eije6P6DqN1" Location="VL.GIS" Version="0.0.0" />
   <NugetDependency Id="MobPlFXfGUUkby7LjYCIKl" Location="NetTopologySuite" Version="2.6.0" />
-  <NugetDependency Id="LYNSdXesU3fZ029Qpq5RTF" Location="BruTile" Version="6.0.0" />
   <Patch Id="JYs97e6RlAdcoFoYyP4xzq">
     <Canvas Id="DWEQZACAjmI0AmTzCeb5DO" DefaultCategory="GIS.Skia" CanvasType="FullCategory" />
     <!--

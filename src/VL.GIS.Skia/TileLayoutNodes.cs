@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using BruTile;
+using VL.GIS.Tiles;
 using SkiaSharp;
 using VL.Core.Import;
 
@@ -26,7 +26,7 @@ public static class TileLayoutNodes
     /// Every tile index needed to fill the view, at the given zoom level.
     /// Pass -1 for zoomLevel to use the view's own zoom rounded down, which draws tiles at
     /// their natural size.
-    /// VL.GIS's own implementation; TileIndex is BruTile's type.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static IReadOnlyList<TileIndex> VisibleTiles(MapView view, int zoomLevel = -1)
     {
@@ -71,7 +71,7 @@ public static class TileLayoutNodes
     /// Where a tile belongs on screen, as a rectangle in pixels from the top-left of the view.
     /// Prefer TileDestinationParts for drawing: VL.Skia's public image node takes a position
     /// and a size rather than a rectangle.
-    /// VL.GIS's own implementation; TileIndex is BruTile's type, SKRect is SkiaSharp's.
+    /// VL.GIS's own implementation; SKRect is SkiaSharp's.
     /// </summary>
     public static SKRect TileDestination(MapView view, TileIndex tileIndex)
     {
@@ -94,7 +94,7 @@ public static class TileLayoutNodes
     /// These are pixels: pass them through GIS.Skia.Viewport ToRendererSpace before building
     /// the Vector2s for DrawImage, and set its Size Mode to <c>Size</c> and Anchor to
     /// <c>TopLeft</c>.
-    /// VL.GIS's own implementation; TileIndex is BruTile's type.
+    /// VL.GIS's own implementation.
     /// </summary>
     public static void TileDestinationParts(
         MapView view, TileIndex tileIndex,
@@ -115,7 +115,7 @@ public static class TileLayoutNodes
     /// <summary>
     /// Both halves at once: the tiles a view needs, each paired with the rectangle to draw
     /// it into. Saves keeping two lists in step.
-    /// VL.GIS's own implementation; TileIndex is BruTile's type, SKRect is SkiaSharp's.
+    /// VL.GIS's own implementation; SKRect is SkiaSharp's.
     /// </summary>
     public static void VisibleTileLayout(
         MapView view,

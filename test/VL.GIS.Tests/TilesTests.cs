@@ -168,9 +168,9 @@ public class TilesTests
     }
 
     [Fact]
-    public void TileIndexParts_reads_back_what_CreateTileIndex_was_given()
+    public void Split_reads_back_what_CreateTileIndex_was_given()
     {
-        TileFetchNodes.TileIndexParts(
+        TileFetchNodes.Split(
             TileFetchNodes.CreateTileIndex(3637, 1612, 12),
             out int col, out int row, out int level);
 
@@ -180,11 +180,11 @@ public class TilesTests
     }
 
     [Fact]
-    public void TileIndexParts_exposes_what_TileIndexFromLonLat_computed()
+    public void Split_exposes_what_TileIndexFromLonLat_computed()
     {
         // The whole reason this node exists: a TileIndex is opaque inside a patch, so
         // debugging a tile request meant guessing which tile had been asked for.
-        TileFetchNodes.TileIndexParts(
+        TileFetchNodes.Split(
             TileFetchNodes.TileIndexFromLonLat(Lon, Lat, Zoom),
             out int col, out int row, out int level);
 
@@ -197,11 +197,11 @@ public class TilesTests
     [InlineData(0)]
     [InlineData(8)]
     [InlineData(19)]
-    public void TileIndexParts_round_trips_through_CreateTileIndex(int zoom)
+    public void Split_round_trips_through_CreateTileIndex(int zoom)
     {
         var original = TileFetchNodes.TileIndexFromLonLat(Lon, Lat, zoom);
 
-        TileFetchNodes.TileIndexParts(original, out int col, out int row, out int level);
+        TileFetchNodes.Split(original, out int col, out int row, out int level);
         var rebuilt = TileFetchNodes.CreateTileIndex(col, row, level);
 
         Assert.Equal(original.Col, rebuilt.Col);
@@ -234,20 +234,21 @@ public class TilesTests
     [Fact]
     public void Tile_sources_are_fetchable_without_a_cast()
     {
-        // Regression test for a defect that was invisible in C#: the factories used to
-        // return ITileSource while every fetch node takes IHttpTileSource, so in a patch
-        // the two pins would not connect. The compiler is the assertion here -- passing
-        // these to a fetch signature has to type-check.
-        Assert.IsAssignableFrom<BruTile.IHttpTileSource>(TileProviderNodes.OsmTileSource());
-        Assert.IsAssignableFrom<BruTile.IHttpTileSource>(TileProviderNodes.OpenTopoMapTileSource());
-        Assert.IsAssignableFrom<BruTile.IHttpTileSource>(
+        // Regression test for a defect that was invisible in C#: the factories used to return
+        // BruTile's ITileSource while every fetch node took its IHttpTileSource, so in a patch
+        // the two pins would not connect. The compiler is the assertion here -- passing these
+        // to a fetch signature has to type-check. There is only one interface now, so the
+        // failure is impossible rather than merely absent; the test stays as the record of it.
+        Assert.IsAssignableFrom<ITileSource>(TileProviderNodes.OsmTileSource());
+        Assert.IsAssignableFrom<ITileSource>(TileProviderNodes.OpenTopoMapTileSource());
+        Assert.IsAssignableFrom<ITileSource>(
             TileProviderNodes.XyzTileSource("https://example.com/{z}/{x}/{y}.png"));
     }
 
     [Fact]
     public void OsmTileSource_reports_the_documented_zoom_range()
     {
-        TileProviderNodes.TileSchemaZoomRange(
+        TileProviderNodes.TileSourceZoomRange(
             TileProviderNodes.OsmTileSource(), out int minZoom, out int maxZoom);
 
         Assert.Equal(0, minZoom);
@@ -255,9 +256,9 @@ public class TilesTests
     }
 
     [Fact]
-    public void Tile_schema_has_a_name()
+    public void A_tile_source_has_a_name()
     {
         Assert.False(string.IsNullOrWhiteSpace(
-            TileProviderNodes.TileSchemaName(TileProviderNodes.OsmTileSource())));
+            TileProviderNodes.TileSourceName(TileProviderNodes.OsmTileSource())));
     }
 }
