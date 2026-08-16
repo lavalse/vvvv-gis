@@ -1,33 +1,89 @@
-# VL.GIS
+# VL.GIS — retired, and worth reading anyway
 
-A community GIS / geospatial library for [vvvv gamma](https://vvvv.org). It wraps mature
-.NET GIS libraries — NetTopologySuite, ProjNet, BruTile — as vvvv nodes, so you can work
-with coordinates, geometries and map tiles without leaving the patch.
+**This was the first attempt, and what it found out was that the shape was wrong.**
 
-Credit where it is due: this is a thin wrapper. The geometry engine, the projection maths
-and the tile handling are all upstream work by the
-[NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite),
-[ProjNet](https://github.com/NetTopologySuite/ProjNet4GeoAPI) and
-[BruTile](https://github.com/BruTile/BruTile) teams. VL.GIS mostly decides how they show
-up in a patch. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for their licences —
-and note that **exporting a vvvv app redistributes their binaries**, which carries
-attribution obligations that installing VL.GIS alone does not.
+VL.GIS set out to be *the* GIS library for [vvvv gamma](https://vvvv.org): geometry, projections,
+serialization, map tiles, meshes, drawing — all in one package, wrapping NetTopologySuite, ProjNet
+and BruTile together. It was as much an exercise in learning how vvvv packaging works as it was a
+library, and on that count it succeeded: it builds, packs, installs, its nodes appear in the
+NodeBrowser, 134 tests pass, and a map tile really does reach the screen.
+
+**And then the topic turned out to be too big to hold.** Geometry is somebody's whole library.
+So are projections. So is reading GeoJSON, and drawing a slippy map, and tessellating terrain. Put
+them in one package and you get something that is shallow in six directions at once — six surfaces
+to keep up to date, six sets of upstream dependencies pulled into every install whether you wanted
+them or not, and no single question it answers well. The all-in-one map node in this repository is
+the clearest example: it did everything, so nothing in it could be tested, replaced or explained on
+its own.
+
+**So it was split, and is being rebuilt one piece at a time.** One package per wrapped library,
+each doing one thing and testable alone — plus a course for the examples, because anything worth
+demonstrating needs several of them at once and no single library may depend on the others.
+
+None of this is a criticism of the work here. **You cannot find out that a topic is too large for
+one package without building the package.** The rules the sibling repositories follow were written
+against the mistakes made in this one — `vl-mapsui/docs/RULES.md` opens by saying so.
 
 ---
 
-## 🛑 Superseded — and if you installed it, you need to clean up by hand
+## Where the work went
 
-**`VL.GIS 0.2.0-alpha` is unlisted on nuget.org. Do not install it.** What it did has been split
-into three focused packages, each wrapping one library, plus a course that teaches them together:
+| repository | what it is | state |
+|---|---|---|
+| [VL.NetTopologySuite](https://github.com/rednotfound/VL.NetTopologySuite) | geometry — points, lines, polygons, and operations on them | working, not published |
+| [VL.GeoJSON](https://github.com/rednotfound/VL.GeoJSON) | reading and writing the format the data actually arrives in | working, not published |
+| [VL.Mapsui](https://github.com/rednotfound/VL.Mapsui) | drawing maps — tiles, layers, styles, labels, picking. Wraps [Mapsui](https://mapsui.com), a real map engine | working, not published |
+| [VL.Cartography](https://github.com/rednotfound/VL.Cartography) | the course. No nodes of its own; declares the other three so one install brings the family | early, not published |
 
-| instead of VL.GIS | use |
-|---|---|
-| geometry | [VL.NetTopologySuite](https://github.com/rednotfound/VL.NetTopologySuite) |
-| reading and writing GeoJSON | [VL.GeoJSON](https://github.com/rednotfound/VL.GeoJSON) |
-| tiles, layers, drawing a map | [VL.Mapsui](https://github.com/rednotfound/VL.Mapsui) |
-| learning any of it | [VL.Cartography](https://github.com/rednotfound/VL.Cartography) — installs all three |
+**Nothing above is on nuget.org yet.** They are built, tested and used together, but not released.
 
-**Uninstalling VL.GIS is not enough, and this is the part that catches people.** vvvv keeps every
+They compose through **NetTopologySuite** — a library they share rather than an agreement they
+made. None of them references another, and that is deliberate: a map engine has no business
+requiring a GeoJSON reader, and a reader has no business requiring a map engine. Examples that need
+several of them live in VL.Cartography, which is the whole reason it exists.
+
+### What is still here, and has nowhere to go
+
+Two parts of VL.GIS have **no successor in the new family**, and they are why this repository is
+not archived:
+
+- **`GIS.Projection` (ProjNet)** — transformation between arbitrary coordinate reference systems.
+  VL.Mapsui only converts WGS84 to spherical mercator internally, which is not the same thing at
+  all: real data arrives in national grids and local projections. Nothing else does this.
+- **`GIS.Mesh`** — elevation and tessellation, the beginnings of 3D terrain. A different axis
+  entirely from drawing a 2D map.
+
+Splitting these out is real future work rather than a promise with a date. A naming note for
+whoever does it: **`Projection` is a bad package name in vvvv**, where the word means a projector
+and `VL.Mapper` / `VL.BadMapper` already own that territory. `VL.ProjNet` — the library's own name
+— is the safe one.
+
+`docs/` is the other reason this repository stays: [DESIGN.md](docs/DESIGN.md),
+[NODE-DESIGN.md](docs/NODE-DESIGN.md), [VL-PACKAGING.md](docs/VL-PACKAGING.md) and
+[VL-RUNTIME.md](docs/VL-RUNTIME.md) are where the family's practices were first written down, and
+the sibling repositories still cite them.
+
+---
+
+## Credit
+
+This was always a thin wrapper. The geometry engine, the projection maths and the tile handling are
+upstream work by the
+[NetTopologySuite](https://github.com/NetTopologySuite/NetTopologySuite),
+[ProjNet](https://github.com/NetTopologySuite/ProjNet4GeoAPI) and
+[BruTile](https://github.com/BruTile/BruTile) teams. VL.GIS mostly decided how they show up in a
+patch. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for their licences — and note that
+**exporting a vvvv app redistributes their binaries**, which carries attribution obligations that
+installing a package alone does not.
+
+---
+
+## 🛑 If you installed it, you need to clean up by hand
+
+**`VL.GIS 0.2.0-alpha` is unlisted on nuget.org. Do not install it** — see the table above for what
+to use instead.
+
+**Uninstalling it is not enough, and this is the part that catches people.** vvvv keeps every
 package's dependencies in one flat, machine-wide folder, and **uninstalling never removes them** —
 nor does reinstalling vvvv, because the folder lives in your user profile. Two of VL.GIS's
 dependencies actively break VL.Mapsui while they sit there:
@@ -64,28 +120,27 @@ published, so the package on nuget.org is worse than the code here.
 
 ---
 
-## ⚠️ Status: early
+## 📗 Everything below describes the retired package
 
-**Be careful about using this in a real project yet.**
+It is kept because **the code is still here** — the node reference is accurate about what is in
+this repository, and the contributor sections still work if you want to build it or lift a piece
+of it. What none of it is any more is advice about what to install.
 
-This is a spare-time project that moves slowly. What has actually been verified is still
-narrow, and it is worth being precise about where the edges are:
+Where it got to, for the record:
 
 | | |
 |---|---|
 | ✅ Verified | The package builds, packs, installs, and its nodes appear in the NodeBrowser under the right categories. |
 | ✅ Verified | Geometry, projection, serialization, tile indexing, mesh and viewport arithmetic, by 134 tests run on every push. Four help patches exercise the same paths inside vvvv. |
 | ✅ Verified | **A map tile reaches the screen.** `help\VL.GIS.Skia\HowTo Show a map.vl` fetches an OSM tile and draws it in vvvv 7.4 — the whole chain, from lon/lat to pixels. |
-| ⚠️ Thinly verified | **Tile fetching over the network** — no automated test crosses the network, and the map patch draws exactly one tile; many at once needs a `ForEach` region that has not been built. Also untested: WKT parsing of exotic CRS, tessellation of concave and holed polygons, everything to do with caching. |
-| ❌ Missing | Geometry drawn on the map. `GeometryToPath` exists, has tests, and has never been put on screen. |
+| ⚠️ Thinly verified | **Tile fetching over the network** — no automated test crosses the network, and the map patch draws exactly one tile; many at once needs a `ForEach` region that was never built. Also untested: WKT parsing of exotic CRS, tessellation of concave and holed polygons, everything to do with caching. |
+| ❌ Never done | Geometry drawn on the map. `GeometryToPath` exists, has tests, and was never put on screen. **VL.Mapsui does this now**, and getting it right took a whole style model that would not have fitted here. |
 
-Expect missing edge cases and breaking changes to node names and categories between
-releases. If you try it, treat it as a starting point to read and fix rather than something
-to build on. Bug reports and PRs are very welcome — that is the fastest way for this to
-become trustworthy.
+That last row is the retirement in miniature: the piece that mattered most was the piece the
+all-in-one shape made hardest to finish.
 
-The 0.0.x releases on nuget.org (0.0.1 – 0.0.4) never worked at all: the package installed
-and contributed no nodes. They are unlisted. Do not use them.
+Earlier releases: 0.0.1 – 0.0.4 never worked at all — the package installed and contributed no
+nodes. 0.1.0-alpha and 0.2.0-alpha followed. All are unlisted.
 
 ---
 
@@ -93,12 +148,12 @@ and contributed no nodes. They are unlisted. Do not use them.
 
 - [What's included](#whats-included)
 - [Requirements](#requirements)
-- [Install](#install)
+- [Building it, since you cannot install it](#building-it-since-you-cannot-install-it)
 - [Working on the library](#working-on-the-library)
 - [Node reference](#node-reference)
 - [Key concepts](#key-concepts)
 - [Dependencies and licences](#dependencies-and-licences)
-- [Roadmap](#roadmap)
+- [What became of the roadmap](#what-became-of-the-roadmap)
 
 Two documents sit behind this one: [docs/DESIGN.md](docs/DESIGN.md) explains why the library is
 shaped the way it is — what it is for, what it will never contain, and the principles a new node
@@ -141,16 +196,28 @@ name it does **not** depend on Stride — any renderer can consume its output.
 
 ---
 
-## Install
+## Building it, since you cannot install it
 
-In vvvv: **Manage NuGets** → `nuget install VL.GIS` → restart vvvv.
+**`nuget install VL.GIS` is not the answer any more** — the package is unlisted, and the published
+one carries the two dependencies described at the top of this file. Do not install it, and if you
+already did, go back and read the cleanup section.
 
-Then, in a patch, add `VL.GIS` under **Dependencies** (`Ctrl+J` → Solution Explorer).
-A package being installed is not the same as your document referencing it — until you add
-the dependency, the nodes will not show up in the NodeBrowser.
+If you want the projection or mesh code — the two parts with no successor — build from source:
 
-Double left-click an empty area of the patch to open the NodeBrowser and search for
-`CreatePoint`.
+```powershell
+git clone https://github.com/rednotfound/vvvv-gis
+cd vvvv-gis
+.\build.ps1                       # builds and stages dist\
+vvvv.exe <patch> --package-repositories "<repo>\dist;<repo>\deps"
+```
+
+Then add `VL.GIS` under **Dependencies** in your document (`Ctrl+J` → Solution Explorer). A package
+being present is not the same as your document referencing it — until you add the dependency, the
+nodes do not appear in the NodeBrowser. That trap is the same in every VL package and is worth
+knowing wherever you meet it.
+
+**Do not run this alongside VL.Mapsui.** The BruTile conflict is real and is exactly what is
+described above.
 
 ---
 
@@ -486,19 +553,24 @@ that touches ProjNet.
 
 ---
 
-## Roadmap
+## What became of the roadmap
 
-Ordered by what would make the library trustworthy soonest, not by ambition.
+The old roadmap is worth keeping visible, because **most of it happened — somewhere else**, and
+that is the clearest argument that splitting was right. Each of these took a whole package to do
+properly, which is exactly what the one-package shape could not give them.
 
-| | |
+| the old plan | what actually happened |
 |---|---|
-| Now | **A whole map, not one tile.** `VisibleTiles` already returns every index a view needs; drawing them all needs a `ForEach` region in the patch |
-| Now | Geometry on top of that map — `GeometryToPath` exists and has never been drawn |
-| Next | Publish `VL.GIS.Skia`, which is built and working but unreleased |
-| Next | Move GeoJSON to `GeoJSON4STJ`, dropping the Newtonsoft.Json version clash with vvvv's own |
-| Later | `VL.GIS.Stride`: tile textures, terrain and extruded buildings on the existing `GIS.Mesh.*` |
-| Maybe | File I/O — GeoTIFF, Shapefile, KML — via MaxRev.Gdal.Core |
-| Never | Our own map engine, or a Cesium-style globe. [Why](docs/DESIGN.md#what-this-will-never-contain) |
+| **A whole map, not one tile** | **Done, in VL.Mapsui.** Not by adding a `ForEach` — by wrapping [Mapsui](https://mapsui.com), an engine that already handles fetching, caching, panning and zoom. The tile arithmetic here was reimplementing the easy tenth of it |
+| **Geometry on top of that map** | **Done, in VL.Mapsui.** And it turned out to need a style model — a style per geometry type, labels that clear their markers, draw order, zoom ranges. `GeometryToPath` was never going to be enough |
+| Publish `VL.GIS.Skia` | Abandoned. VL.Mapsui's `ToSkiaLayer` does the same job against a real engine |
+| Move GeoJSON to `GeoJSON4STJ` | **Done, in VL.GeoJSON** — as its own package, with the memory measurements to justify the choice. The Newtonsoft clash that prompted it is also the reason this package is unlisted |
+| `VL.GIS.Stride`: terrain, extruded buildings | **Still nobody's.** `GIS.Mesh` here is the only start anyone made |
+| File I/O — GeoTIFF, Shapefile, KML | Still open. One package each, if ever — that is the rule now |
+| **Never**: our own map engine, or a globe | Still never, and more firmly. [Why](docs/DESIGN.md#what-this-will-never-contain) — and note that the "whole map" row above is that principle finally being followed |
+
+**What is left here with no home** is the projection and mesh work described further up. Splitting
+those out is real work someone could do; it is not scheduled.
 
 ---
 

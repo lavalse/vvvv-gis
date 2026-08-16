@@ -2,6 +2,37 @@
 
 Guidance for Claude Code (claude.ai/code) working in this repository.
 
+## ⚠️ Read this first: VL.GIS is retired
+
+**Do not add nodes here.** The one-package shape is the thing this repository disproved: geometry,
+projections, formats, tiles, drawing and terrain are each somebody's whole library, and wrapping
+them together produced something shallow in six directions at once. The work was split, one package
+per wrapped library, and lives in:
+
+| repository | what it is |
+|---|---|
+| `D:\2026_Projects\vl-nettopologysuite` | geometry |
+| `D:\2026_Projects\vl-geojson` | reading and writing GeoJSON |
+| `D:\2026_Projects\vl-mapsui` | drawing maps — wraps Mapsui, a real engine |
+| `D:\2026_Projects\vl-cartography` | the course; no nodes, declares the other three |
+
+**Two reasons this repository is still here**, and both constrain what may be done to it:
+
+1. **`GIS.Projection` (ProjNet) and `GIS.Mesh` have no successor.** Arbitrary CRS transformation
+   and 3D terrain exist nowhere else in the family. Splitting them out is real future work — and
+   note that `Projection` is a bad package name in vvvv, where the word means a projector, so
+   `VL.ProjNet`.
+2. **`docs/` is where the family's practices were first written down.** `DESIGN.md`,
+   `NODE-DESIGN.md`, `VL-PACKAGING.md`, `VL-RUNTIME.md` — the sibling repositories still cite them,
+   and `vl-mapsui\docs\RULES.md` opens by saying its rules were carried over from here.
+
+`VL.GIS 0.2.0-alpha` on nuget.org is unlisted. It declares BruTile 6, which breaks VL.Mapsui with
+`TypeLoadException`; `README.md` carries the manual cleanup a user needs, because uninstalling does
+not remove it.
+
+**Everything below describes the retired package.** It is accurate about the code that is still
+here; it is not advice about what to build next.
+
 ## Project Overview
 
 **VL.GIS** is a community GIS/geospatial library for [vvvv gamma](https://vvvv.org), a
