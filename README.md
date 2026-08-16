@@ -83,6 +83,15 @@ installing a package alone does not.
 **`VL.GIS 0.2.0-alpha` is unlisted on nuget.org. Do not install it** — see the table above for what
 to use instead.
 
+*Verified 2026-08-16: all six published versions carry `listed = false` in nuget.org's registration
+index, and a `packageid:VL.GIS` search returns zero hits. Both were checked, because the search
+index lags behind an unlisting and "not found in search" alone would not have proved it.*
+
+**Unlisted is not deleted, and nuget.org has no way to delete.** The package page still opens, and
+the package can still be installed by naming its exact version — that is deliberate, or every build
+script referencing it would break. Unlisting stops it being *found*; it does nothing for anyone who
+already has it, which is what the rest of this section is for.
+
 **Uninstalling it is not enough, and this is the part that catches people.** vvvv keeps every
 package's dependencies in one flat, machine-wide folder, and **uninstalling never removes them** —
 nor does reinstalling vvvv, because the folder lives in your user profile. Two of VL.GIS's
