@@ -15,6 +15,55 @@ attribution obligations that installing VL.GIS alone does not.
 
 ---
 
+## 🛑 Superseded — and if you installed it, you need to clean up by hand
+
+**`VL.GIS 0.2.0-alpha` is unlisted on nuget.org. Do not install it.** What it did has been split
+into three focused packages, each wrapping one library, plus a course that teaches them together:
+
+| instead of VL.GIS | use |
+|---|---|
+| geometry | [VL.NetTopologySuite](https://github.com/rednotfound/VL.NetTopologySuite) |
+| reading and writing GeoJSON | [VL.GeoJSON](https://github.com/rednotfound/VL.GeoJSON) |
+| tiles, layers, drawing a map | [VL.Mapsui](https://github.com/rednotfound/VL.Mapsui) |
+| learning any of it | [VL.Cartography](https://github.com/rednotfound/VL.Cartography) — installs all three |
+
+**Uninstalling VL.GIS is not enough, and this is the part that catches people.** vvvv keeps every
+package's dependencies in one flat, machine-wide folder, and **uninstalling never removes them** —
+nor does reinstalling vvvv, because the folder lives in your user profile. Two of VL.GIS's
+dependencies actively break VL.Mapsui while they sit there:
+
+```
+%LOCALAPPDATA%\vvvv\gamma\nugets\BruTile.6.0.0
+%LOCALAPPDATA%\vvvv\gamma\nugets\NetTopologySuite.Features.2.0.0
+%LOCALAPPDATA%\vvvv\gamma\nugets\NetTopologySuite.IO.GeoJSON.3.0.0
+```
+
+Delete those three, or better, **move them somewhere else first** — that is reversible, and it is
+what we did on our own machine.
+
+Why each one hurts:
+
+- **BruTile 6** — `Mapsui.Tiling` requires `BruTile [5.0.6, 6.0.0)`, and `BruTile.Attribution`
+  changed layout between 5 and 6. Loading both throws `TypeLoadException`. The flat folder holds
+  **one** version of each library and it wins over the copy shipped beside a package's own
+  assembly, so whichever landed there first decides for everything vvvv loads.
+- **NetTopologySuite.Features 2.0.0** — VL.GIS declares `NetTopologySuite.IO.GeoJSON 3.0.0`, whose
+  own nuspec requires `NetTopologySuite.Features [2.0.0, 3.0.0)`. **NuGet resolves the floor of a
+  range**, so 2.0.0 was installed. VL.GeoJSON needs 2.1.0 — the two differ only by additions,
+  `FeatureExtensions.GetOptionalId` and `IUnique`, which are exactly what reads a GeoJSON `id`.
+  With 2.0.0 present you get `TypeLoadException: Could not load type
+  'NetTopologySuite.Features.IUnique'`.
+
+  The sharp detail, for anyone writing a nuspec: `NetTopologySuite` itself has the *same* range in
+  the same file and resolved to 2.6.0, because something else asked for 2.6.0 **explicitly**.
+  Nobody asked for a `NetTopologySuite.Features` version, so it got the floor. **One missing
+  explicit declaration, five months of consequences.**
+
+The source in this repository dropped BruTile in commit `15d40f5` — but that fix was never
+published, so the package on nuget.org is worse than the code here.
+
+---
+
 ## ⚠️ Status: early
 
 **Be careful about using this in a real project yet.**
